@@ -9,7 +9,7 @@ if (!isset($_GET['room_id']) || !is_numeric($_GET['room_id'])) {
 
 $room_id = intval($_GET['room_id']);
 
-// Fetch bookings for this room
+
 $bookings_sql = "
     SELECT check_in, check_out
     FROM bookings
@@ -23,7 +23,7 @@ $result = $stmt->get_result();
 
 $events = [];
 
-// Add booked events (red)
+
 while ($row = $result->fetch_assoc()) {
     $events[] = [
         'title' => 'Booked',
@@ -33,7 +33,7 @@ while ($row = $result->fetch_assoc()) {
     ];
 }
 
-// Fetch room status for maintenance
+
 $room_sql = "SELECT status FROM rooms WHERE id = ?";
 $stmt2 = $conn->prepare($room_sql);
 $stmt2->bind_param('i', $room_id);

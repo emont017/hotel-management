@@ -7,10 +7,10 @@ if (session_status() === PHP_SESSION_NONE) session_start();
   <meta charset="UTF-8">
   <title><?= isset($title) ? htmlspecialchars($title) : "FIU Hotel Management"; ?></title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https:
 
   <style>
-    /* Reset */
+    
     * {
       box-sizing: border-box;
     }
@@ -18,8 +18,8 @@ if (session_status() === PHP_SESSION_NONE) session_start();
     body {
       margin: 0;
       font-family: 'Roboto', sans-serif;
-      background: linear-gradient(180deg, #081C3A 0%, #0C2A58 100%);
-      color: #F7B223;
+      background: linear-gradient(180deg, 
+      color: 
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -28,7 +28,7 @@ if (session_status() === PHP_SESSION_NONE) session_start();
     header {
       padding: 40px 20px 20px;
       text-align: center;
-      background-color: #06162B;
+      background-color: 
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
       user-select: none;
     }
@@ -37,12 +37,12 @@ if (session_status() === PHP_SESSION_NONE) session_start();
       font-family: 'Orbitron', sans-serif;
       font-size: 2.8rem;
       margin: 0;
-      color: #F7B223;
-      text-shadow: 2px 2px 8px #000;
+      color: 
+      text-shadow: 2px 2px 8px 
     }
 
     nav {
-      background-color: #0C2A58;
+      background-color: 
       text-align: center;
       padding: 12px 0 18px;
       box-shadow: inset 0 -2px 5px rgba(0, 0, 0, 0.4);
@@ -53,7 +53,7 @@ if (session_status() === PHP_SESSION_NONE) session_start();
     }
 
     nav a {
-      color: #F7B223;
+      color: 
       text-decoration: none;
       margin: 0 20px;
       padding: 6px 12px;
@@ -63,8 +63,8 @@ if (session_status() === PHP_SESSION_NONE) session_start();
     }
 
     nav a:hover, nav a:focus {
-      background-color: #F7B223;
-      color: #081C3A;
+      background-color: 
+      color: 
       outline: none;
     }
 
@@ -76,7 +76,7 @@ if (session_status() === PHP_SESSION_NONE) session_start();
       background-color: rgba(7, 28, 58, 0.85);
       border-radius: 15px;
       box-shadow: 0 0 25px rgba(247, 178, 35, 0.8);
-      color: #F7B223;
+      color: 
       min-height: 400px;
       user-select: text;
     }

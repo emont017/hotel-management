@@ -15,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['email'] ?? '');
     $phone = trim($_POST['phone'] ?? '');
 
-    // Basic validation
+    
     if (!$username || !$password || !$full_name || !$email) {
         $error = "Please fill all required fields.";
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($phone !== '' && !preg_match('/^[0-9+\-\s\(\)]+$/', $phone)) {
         $error = "Invalid phone number format.";
     } else {
-        // Check if username exists
+        
         $check_sql = "SELECT id FROM users WHERE username = ?";
         $stmt = $conn->prepare($check_sql);
         $stmt->bind_param("s", $username);
@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->bind_param("ssssss", $username, $hashed_password, $full_name, $email, $phone, $role);
 
             if ($stmt->execute()) {
-                // Auto login after registration (optional)
+                
                 $_SESSION['user_id'] = $stmt->insert_id;
                 $_SESSION['role'] = $role;
                 session_regenerate_id(true);
@@ -71,22 +71,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     background-color: rgba(7, 28, 58, 0.85);
     border-radius: 12px;
     box-shadow: 0 0 15px rgba(247, 178, 35, 0.7);
-    color: #F7B223;
+    color: 
     font-size: 1.1rem;
 ">
-    <label for="username" style="display:block; margin-bottom:8px;">Username <span style="color:#e57373">*</span>:</label>
+    <label for="username" style="display:block; margin-bottom:8px;">Username <span style="color:
     <input type="text" id="username" name="username" required
         style="width: 100%; padding: 10px; border-radius: 8px; border: none; font-size: 1rem; margin-bottom: 20px;">
 
-    <label for="password" style="display:block; margin-bottom:8px;">Password <span style="color:#e57373">*</span>:</label>
+    <label for="password" style="display:block; margin-bottom:8px;">Password <span style="color:
     <input type="password" id="password" name="password" required
         style="width: 100%; padding: 10px; border-radius: 8px; border: none; font-size: 1rem; margin-bottom: 20px;">
 
-    <label for="full_name" style="display:block; margin-bottom:8px;">Full Name <span style="color:#e57373">*</span>:</label>
+    <label for="full_name" style="display:block; margin-bottom:8px;">Full Name <span style="color:
     <input type="text" id="full_name" name="full_name" required
         style="width: 100%; padding: 10px; border-radius: 8px; border: none; font-size: 1rem; margin-bottom: 20px;">
 
-    <label for="email" style="display:block; margin-bottom:8px;">Email <span style="color:#e57373">*</span>:</label>
+    <label for="email" style="display:block; margin-bottom:8px;">Email <span style="color:
     <input type="email" id="email" name="email" required
         style="width: 100%; padding: 10px; border-radius: 8px; border: none; font-size: 1rem; margin-bottom: 20px;">
 
@@ -97,17 +97,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <button type="submit" style="
         width: 100%;
         padding: 12px;
-        background-color: #F7B223;
+        background-color: 
         border: none;
         border-radius: 12px;
         font-weight: 700;
         font-size: 1.3rem;
-        color: #081C3A;
+        color: 
         cursor: pointer;
         transition: background-color 0.3s ease;
     "
-    onmouseover="this.style.backgroundColor='#e5a91d'"
-    onmouseout="this.style.backgroundColor='#F7B223'">
+    onmouseover="this.style.backgroundColor='
+    onmouseout="this.style.backgroundColor='
         Register
     </button>
 </form>

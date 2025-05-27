@@ -24,7 +24,7 @@ if (isset($_GET['error'])) {
     background-color: rgba(7, 28, 58, 0.85);
     border-radius: 12px;
     box-shadow: 0 0 15px rgba(247, 178, 35, 0.7);
-    color: #F7B223;
+    color: 
     font-size: 1.1rem;
 ">
     <label for="username" style="display:block; margin-bottom:8px;">Username:</label>
@@ -38,17 +38,17 @@ if (isset($_GET['error'])) {
     <button type="submit" style="
         width: 100%;
         padding: 12px;
-        background-color: #F7B223;
+        background-color: 
         border: none;
         border-radius: 12px;
         font-weight: 700;
         font-size: 1.3rem;
-        color: #081C3A;
+        color: 
         cursor: pointer;
         transition: background-color 0.3s ease;
     "
-    onmouseover="this.style.backgroundColor='#e5a91d'"
-    onmouseout="this.style.backgroundColor='#F7B223'">
+    onmouseover="this.style.backgroundColor='
+    onmouseout="this.style.backgroundColor='
         Login
     </button>
 </form>

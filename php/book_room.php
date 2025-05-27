@@ -11,7 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-// Trim inputs
+
 $room_type = trim($_POST['room_type'] ?? '');
 $checkin_date = trim($_POST['checkin_date'] ?? '');
 $checkout_date = trim($_POST['checkout_date'] ?? '');
@@ -19,7 +19,7 @@ $full_name = trim($_POST['full_name'] ?? '');
 $email = trim($_POST['email'] ?? '');
 $phone = trim($_POST['phone'] ?? '');
 
-// Basic validation
+
 if (!$room_type || !$checkin_date || !$checkout_date || !$full_name || !$email) {
     echo "<p style='color: red; font-weight: bold; text-align:center; margin-top:30px;'>❌ Please fill all required fields.</p>";
     exit;
@@ -40,7 +40,7 @@ if ($phone !== '' && !preg_match('/^[0-9+\-\s\(\)]+$/', $phone)) {
     exit;
 }
 
-// Determine or create user_id
+
 if (isset($_SESSION['user_id'])) {
     $user_id = $_SESSION['user_id'];
 } else {
@@ -78,7 +78,7 @@ if (isset($_SESSION['user_id'])) {
     session_regenerate_id(true);
 }
 
-// Find available room
+
 $find_room_sql = "
     SELECT r.id, r.price FROM rooms r
     WHERE r.room_type = ?
@@ -105,16 +105,16 @@ $room = $result->fetch_assoc();
 $room_id = $room['id'];
 $price = $room['price'];
 
-// Calculate total price
+
 $checkin = new DateTime($checkin_date);
 $checkout = new DateTime($checkout_date);
 $nights = $checkin->diff($checkout)->days;
 $total_price = $nights * $price;
 
-// Generate confirmation number (FIU-YYYYMMDD-XXXX)
+
 $confirmation_number = "FIU-" . date("Ymd") . "-" . strtoupper(substr(bin2hex(random_bytes(3)), 0, 4));
 
-// Insert booking with confirmation number
+
 $insert_booking_sql = "
     INSERT INTO bookings (user_id, room_id, check_in, check_out, total_price, confirmation_number)
     VALUES (?, ?, ?, ?, ?, ?)
@@ -138,33 +138,33 @@ require_once '../includes/header.php';
         padding: 30px;
         background-color: rgba(247, 178, 35, 0.1);
         border-radius: 15px;
-        color: #FFFFFF; /* WHITE text */
+        color: 
         text-align: center;
         box-shadow: 0 0 20px rgba(247,178,35,0.7);
         font-family: 'Roboto', sans-serif;
     }
     .confirmation-card h2 {
-        color: #F7B223;
+        color: 
         font-family: 'Orbitron', sans-serif;
         font-size: 3rem;
         margin-bottom: 10px;
     }
     .checkmark {
         font-size: 4rem;
-        color: #4BB543; /* green */
+        color: 
         margin-bottom: 20px;
     }
     .confirmation-details p {
         font-size: 1.2rem;
         margin: 8px 0;
-        color: #FFFFFF;  /* white */
+        color: 
     }
     .home-button {
         display: inline-block;
         margin-top: 25px;
         padding: 12px 25px;
-        background-color: #F7B223;
-        color: #081C3A;
+        background-color: 
+        color: 
         font-weight: bold;
         font-size: 1.2rem;
         border-radius: 12px;
@@ -172,12 +172,12 @@ require_once '../includes/header.php';
         transition: background-color 0.3s ease;
     }
     .home-button:hover {
-        background-color: #e5a91d;
+        background-color: 
     }
 </style>
 
 <div class="confirmation-card">
-    <div class="checkmark">&#10004;</div>
+    <div class="checkmark">&
     <h2>Booking Confirmed!</h2>
     <p><strong>Confirmation Number:</strong> <?= htmlspecialchars($confirmation_number) ?></p>
     <div class="confirmation-details">

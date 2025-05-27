@@ -12,7 +12,7 @@ require_once 'php/db.php';
 $title = "Manage Bookings";
 require_once 'includes/header.php';
 
-// Fetch bookings with user and room info
+
 $sql = "
 SELECT b.id AS booking_id, u.username, r.room_number, r.room_type, b.check_in, b.check_out, b.total_price
 FROM bookings b
@@ -27,21 +27,21 @@ $result = $conn->query($sql);
 
 <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
     <thead>
-        <tr style="background-color: #0D2B56; color: #F7B223;">
-            <th style="padding: 10px; border-bottom: 1px solid #F7B223;">Booking ID</th>
-            <th style="padding: 10px; border-bottom: 1px solid #F7B223;">Guest Username</th>
-            <th style="padding: 10px; border-bottom: 1px solid #F7B223;">Room #</th>
-            <th style="padding: 10px; border-bottom: 1px solid #F7B223;">Room Type</th>
-            <th style="padding: 10px; border-bottom: 1px solid #F7B223;">Check-in</th>
-            <th style="padding: 10px; border-bottom: 1px solid #F7B223;">Check-out</th>
-            <th style="padding: 10px; border-bottom: 1px solid #F7B223;">Total Price</th>
+        <tr style="background-color: 
+            <th style="padding: 10px; border-bottom: 1px solid 
+            <th style="padding: 10px; border-bottom: 1px solid 
+            <th style="padding: 10px; border-bottom: 1px solid 
+            <th style="padding: 10px; border-bottom: 1px solid 
+            <th style="padding: 10px; border-bottom: 1px solid 
+            <th style="padding: 10px; border-bottom: 1px solid 
+            <th style="padding: 10px; border-bottom: 1px solid 
         </tr>
     </thead>
     <tbody>
         <?php while ($row = $result->fetch_assoc()): ?>
             <tr>
                 <td style="padding: 10px;">
-                    <a href="admin_booking_detail.php?booking_id=<?= $row['booking_id'] ?>" style="color:#F7B223; font-weight:bold; text-decoration:underline;">
+                    <a href="admin_booking_detail.php?booking_id=<?= $row['booking_id'] ?>" style="color:
                         <?= $row['booking_id'] ?>
                     </a>
                 </td>

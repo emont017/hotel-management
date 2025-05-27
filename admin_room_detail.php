@@ -10,14 +10,14 @@ if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['admin', 'gues
 
 require_once 'php/db.php';
 
-// Validate & get room_id
+
 if (!isset($_GET['room_id']) || !is_numeric($_GET['room_id'])) {
     header("Location: admin_rooms.php");
     exit;
 }
 $room_id = intval($_GET['room_id']);
 
-// Handle POST update
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_room'])) {
     $room_type = $_POST['room_type'];
     $room_number = $_POST['room_number'];
@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_room'])) {
     exit;
 }
 
-// Fetch room data
+
 $stmt = $conn->prepare("SELECT * FROM rooms WHERE id = ?");
 $stmt->bind_param("i", $room_id);
 $stmt->execute();
@@ -63,23 +63,23 @@ require_once 'includes/header.php';
     margin-right: 10px;
   }
   button.save-btn {
-    background-color: #F7B223;
-    color: #081C3A;
+    background-color: 
+    color: 
   }
   button.cancel-btn {
-    background-color: #ccc;
-    color: #333;
+    background-color: 
+    color: 
   }
   button.cancel-btn:hover {
-    background-color: #bbb;
+    background-color: 
   }
   .calendar-card {
     margin-top: 40px;
-    background: #0C2A58;
+    background: 
     border-radius: 12px;
     box-shadow: 0 8px 16px rgba(0,0,0,0.3);
     padding: 20px;
-    color: #F7B223;
+    color: 
   }
   .calendar-card h3 {
     margin-top: 0;
@@ -94,8 +94,8 @@ require_once 'includes/header.php';
     display: inline-block;
     margin-bottom: 20px;
     padding: 10px 15px;
-    background-color: #F7B223;
-    color: #081C3A;
+    background-color: 
+    color: 
     text-decoration: none;
     font-weight: bold;
     border-radius: 6px;
@@ -130,12 +130,12 @@ require_once 'includes/header.php';
 
 <div class="calendar-card">
     <h3>Booking Calendar</h3>
-    <div id="calendar" style="max-width: 100%; height: 450px; background: #072046; border-radius: 10px;"></div>
+    <div id="calendar" style="max-width: 100%; height: 450px; background: 
 </div>
 
 <!-- FullCalendar CSS & JS -->
-<link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css' rel='stylesheet' />
-<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
+<link href='https:
+<script src='https:
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -150,11 +150,11 @@ document.addEventListener('DOMContentLoaded', function() {
         events: 'php/get_room_bookings.php?room_id=<?= $room_id ?>',
         eventDidMount: function(info) {
             if(info.event.extendedProps.status === 'available'){
-                info.el.style.backgroundColor = '#28a745'; // green
+                info.el.style.backgroundColor = '
             } else if(info.event.extendedProps.status === 'maintenance'){
-                info.el.style.backgroundColor = '#ffc107'; // yellow
+                info.el.style.backgroundColor = '
             } else {
-                info.el.style.backgroundColor = '#dc3545'; // red
+                info.el.style.backgroundColor = '
             }
         }
     });

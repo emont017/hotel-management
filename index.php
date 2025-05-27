@@ -1,24 +1,24 @@
 <?php
 session_start();
 $title = "Home";
-require_once 'includes/header.php';  // Your consistent header with FIU colors & nav
+require_once 'includes/header.php';  
 ?>
 
 <h1>Welcome to our Hotel!</h1>
 <p>Your comfort is our priority. Please log in below or book your stay without logging in.</p>
 
 <!-- Login form -->
-<div style="max-width: 400px; margin: 20px auto; padding: 20px; background-color: #081C3A; border-radius: 10px;">
+<div style="max-width: 400px; margin: 20px auto; padding: 20px; background-color: 
     <form action="php/login.php" method="POST" style="display: flex; flex-direction: column;">
-        <label for="username" style="color: #F7B223; font-weight: bold;">Username:</label>
+        <label for="username" style="color: 
         <input type="text" id="username" name="username" required style="margin-bottom: 15px; padding: 8px; border-radius: 5px; border:none;">
 
-        <label for="password" style="color: #F7B223; font-weight: bold;">Password:</label>
+        <label for="password" style="color: 
         <input type="password" id="password" name="password" required style="margin-bottom: 15px; padding: 8px; border-radius: 5px; border:none;">
 
         <button type="submit" style="
-            background-color: #F7B223;
-            color: #081C3A;
+            background-color: 
+            color: 
             font-weight: bold;
             padding: 10px;
             border: none;
@@ -41,8 +41,8 @@ require_once 'includes/header.php';  // Your consistent header with FIU colors &
 <!-- Public booking call to action -->
 <div style="text-align:center; margin: 40px 0;">
     <a href="bookings.php" style="
-        background-color: #F7B223;
-        color: #081C3A;
+        background-color: 
+        color: 
         padding: 15px 30px;
         font-weight: bold;
         text-decoration: none;
@@ -52,5 +52,5 @@ require_once 'includes/header.php';  // Your consistent header with FIU colors &
 </div>
 
 <?php
-require_once 'includes/footer.php';  // Close body/html, add footer consistent styling
+require_once 'includes/footer.php';  
 ?>

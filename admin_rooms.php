@@ -12,7 +12,7 @@ require_once 'php/db.php';
 $title = "Manage Rooms";
 require_once 'includes/header.php';
 
-// Fetch rooms
+
 $rooms = $conn->query("SELECT * FROM rooms ORDER BY room_number");
 ?>
 
@@ -20,13 +20,13 @@ $rooms = $conn->query("SELECT * FROM rooms ORDER BY room_number");
 
 <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
   <thead>
-    <tr style="background-color: #0D2B56; color: #F7B223;">
-      <th style="padding: 10px; border-bottom: 1px solid #F7B223;">Room #</th>
-      <th style="padding: 10px; border-bottom: 1px solid #F7B223;">Type</th>
-      <th style="padding: 10px; border-bottom: 1px solid #F7B223;">Price</th>
-      <th style="padding: 10px; border-bottom: 1px solid #F7B223;">Capacity</th>
-      <th style="padding: 10px; border-bottom: 1px solid #F7B223;">Availability</th>
-      <th style="padding: 10px; border-bottom: 1px solid #F7B223;">Manage</th>
+    <tr style="background-color: 
+      <th style="padding: 10px; border-bottom: 1px solid 
+      <th style="padding: 10px; border-bottom: 1px solid 
+      <th style="padding: 10px; border-bottom: 1px solid 
+      <th style="padding: 10px; border-bottom: 1px solid 
+      <th style="padding: 10px; border-bottom: 1px solid 
+      <th style="padding: 10px; border-bottom: 1px solid 
     </tr>
   </thead>
   <tbody>
@@ -41,8 +41,8 @@ $rooms = $conn->query("SELECT * FROM rooms ORDER BY room_number");
         </td>
         <td style="padding: 10px;">
           <a href="admin_room_detail.php?room_id=<?= $row['id'] ?>" class="button-link" style="
-            background-color: #F7B223;
-            color: #081C3A;
+            background-color: 
+            color: 
             padding: 6px 12px;
             border-radius: 6px;
             font-weight: bold;

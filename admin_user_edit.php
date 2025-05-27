@@ -19,7 +19,7 @@ $user_id = intval($_GET['user_id']);
 $error = '';
 $success = '';
 
-// Handle form submission
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $full_name = trim($_POST['full_name']);
     $email = trim($_POST['email']);
@@ -42,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Fetch current user info
+
 $stmt = $conn->prepare("SELECT username, full_name, email, phone FROM users WHERE id = ?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
@@ -58,8 +58,8 @@ require_once 'includes/header.php';
     display: inline-block;
     margin-bottom: 20px;
     padding: 10px 15px;
-    background-color: #F7B223;
-    color: #081C3A;
+    background-color: 
+    color: 
     text-decoration: none;
     font-weight: bold;
     border-radius: 6px;
@@ -87,8 +87,8 @@ require_once 'includes/header.php';
     <input type="text" name="phone" value="<?= htmlspecialchars($phone) ?>"><br><br>
 
     <button type="submit" style="
-        background-color: #F7B223;
-        color: #081C3A;
+        background-color: 
+        color: 
         padding: 10px 20px;
         font-weight: bold;
         border: none;

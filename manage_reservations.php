@@ -29,9 +29,9 @@ $result = $stmt->get_result();
 <?php if ($result->num_rows === 0): ?>
     <p>You have no reservations.</p>
 <?php else: ?>
-    <table style="width:100%; border-collapse: collapse; color: #F7B223;">
+    <table style="width:100%; border-collapse: collapse; color: 
         <thead>
-            <tr style="border-bottom: 2px solid #F7B223;">
+            <tr style="border-bottom: 2px solid 
                 <th>ID</th>
                 <th>Room Type</th>
                 <th>Check-in</th>
@@ -42,13 +42,13 @@ $result = $stmt->get_result();
         </thead>
         <tbody>
         <?php while ($row = $result->fetch_assoc()): ?>
-            <tr style="border-bottom: 1px solid #e5a91d;">
+            <tr style="border-bottom: 1px solid 
                 <td><?= htmlspecialchars($row['id']) ?></td>
                 <td><?= htmlspecialchars($row['room_type']) ?></td>
                 <td><?= htmlspecialchars($row['check_in']) ?></td>
                 <td><?= htmlspecialchars($row['check_out']) ?></td>
                 <td>$<?= number_format($row['total_price'], 2) ?></td>
-                <td><a href="reservation_detail.php?id=<?= $row['id'] ?>" style="color:#F7B223;">View Details</a></td>
+                <td><a href="reservation_detail.php?id=<?= $row['id'] ?>" style="color:
             </tr>
         <?php endwhile; ?>
         </tbody>
