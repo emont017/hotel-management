@@ -10,13 +10,11 @@ if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['admin', 'gues
 
 require_once 'php/db.php';
 
-
 if (!isset($_GET['room_id']) || !is_numeric($_GET['room_id'])) {
     header("Location: admin_rooms.php");
     exit;
 }
 $room_id = intval($_GET['room_id']);
-
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_room'])) {
     $room_type = $_POST['room_type'];
@@ -34,7 +32,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_room'])) {
     header("Location: admin_room_detail.php?room_id=$room_id");
     exit;
 }
-
 
 $stmt = $conn->prepare("SELECT * FROM rooms WHERE id = ?");
 $stmt->bind_param("i", $room_id);
@@ -62,25 +59,41 @@ require_once 'includes/header.php';
     border: none;
     margin-right: 10px;
   }
+
   button.save-btn {
-    background-color: 
-    color: 
+    background-color: #F7B223;
+    color: #081C3A;
   }
+
   button.cancel-btn {
-    background-color: 
-    color: 
+    background-color: #999;
+    color: #fff;
   }
+
   button.cancel-btn:hover {
-    background-color: 
+    background-color: #777;
   }
+
+  input, select {
+    width: 100%;
+    padding: 10px;
+    margin-top: 6px;
+    margin-bottom: 20px;
+    border-radius: 6px;
+    border: none;
+    font-size: 1rem;
+    color: #081C3A;
+  }
+
   .calendar-card {
     margin-top: 40px;
-    background: 
+    background: rgba(7, 28, 58, 0.85);
     border-radius: 12px;
     box-shadow: 0 8px 16px rgba(0,0,0,0.3);
     padding: 20px;
-    color: 
+    color: #fff;
   }
+
   .calendar-card h3 {
     margin-top: 0;
     margin-bottom: 15px;
@@ -94,8 +107,8 @@ require_once 'includes/header.php';
     display: inline-block;
     margin-bottom: 20px;
     padding: 10px 15px;
-    background-color: 
-    color: 
+    background-color: #F7B223;
+    color: #081C3A;
     text-decoration: none;
     font-weight: bold;
     border-radius: 6px;
@@ -103,26 +116,26 @@ require_once 'includes/header.php';
     ← Back to Manage Rooms
 </a>
 
-<h2>Manage Room <?= htmlspecialchars($room['room_number']) ?></h2>
+<h2 style="color: #F7B223;">Manage Room <?= htmlspecialchars($room['room_number']) ?></h2>
 
 <form method="POST" action="admin_room_detail.php?room_id=<?= $room_id ?>" style="max-width: 600px;">
-    <label>Room Number:</label><br>
-    <input type="text" name="room_number" value="<?= htmlspecialchars($room['room_number']) ?>" required><br><br>
+    <label>Room Number:</label>
+    <input type="text" name="room_number" value="<?= htmlspecialchars($room['room_number']) ?>" required>
 
-    <label>Room Type:</label><br>
-    <input type="text" name="room_type" value="<?= htmlspecialchars($room['room_type']) ?>" required><br><br>
+    <label>Room Type:</label>
+    <input type="text" name="room_type" value="<?= htmlspecialchars($room['room_type']) ?>" required>
 
-    <label>Price:</label><br>
-    <input type="number" step="0.01" name="price" value="<?= $room['price'] ?>" required><br><br>
+    <label>Price:</label>
+    <input type="number" step="0.01" name="price" value="<?= $room['price'] ?>" required>
 
-    <label>Capacity:</label><br>
-    <input type="number" name="capacity" value="<?= $room['capacity'] ?>" required><br><br>
+    <label>Capacity:</label>
+    <input type="number" name="capacity" value="<?= $room['capacity'] ?>" required>
 
-    <label>Availability:</label><br>
+    <label>Availability:</label>
     <select name="status" required>
         <option value="available" <?= $room['status'] === 'available' ? 'selected' : '' ?>>Available</option>
         <option value="maintenance" <?= $room['status'] === 'maintenance' ? 'selected' : '' ?>>Maintenance</option>
-    </select><br><br>
+    </select>
 
     <button type="submit" name="update_room" class="save-btn">Save Changes</button>
     <button type="button" class="cancel-btn" onclick="window.location.href='admin_rooms.php'">Cancel</button>
@@ -130,12 +143,12 @@ require_once 'includes/header.php';
 
 <div class="calendar-card">
     <h3>Booking Calendar</h3>
-    <div id="calendar" style="max-width: 100%; height: 450px; background: 
+    <div id="calendar" style="max-width: 100%; height: 450px;"></div>
 </div>
 
 <!-- FullCalendar CSS & JS -->
-<link href='https:
-<script src='https:
+<link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css' rel='stylesheet' />
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -143,18 +156,19 @@ document.addEventListener('DOMContentLoaded', function() {
     var calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
         headerToolbar: {
-          left: 'prev,next today',
-          center: 'title',
-          right: ''
+            left: 'prev,next today',
+            center: 'title',
+            right: ''
         },
         events: 'php/get_room_bookings.php?room_id=<?= $room_id ?>',
         eventDidMount: function(info) {
-            if(info.event.extendedProps.status === 'available'){
-                info.el.style.backgroundColor = '
-            } else if(info.event.extendedProps.status === 'maintenance'){
-                info.el.style.backgroundColor = '
+            const status = info.event.extendedProps.status;
+            if (status === 'available') {
+                info.el.style.backgroundColor = '#2ecc71'; // green
+            } else if (status === 'maintenance') {
+                info.el.style.backgroundColor = '#f39c12'; // yellow
             } else {
-                info.el.style.backgroundColor = '
+                info.el.style.backgroundColor = '#e74c3c'; // red
             }
         }
     });

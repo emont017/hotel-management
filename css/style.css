@@ -1,0 +1,109 @@
+
+/* General Reset */
+body, h1, h2, h3, p, a, ul, li, table, input, select, button {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Body Styling */
+body {
+    background-color: #f4f4f8;
+    color: #333;
+    line-height: 1.6;
+    padding: 20px;
+}
+
+/* Header/Footer */
+header, footer {
+    background-color: #071c3a;
+    color: #fff;
+    padding: 20px 0;
+    text-align: center;
+}
+
+footer {
+    margin-top: 40px;
+}
+
+/* Buttons */
+button, .button-link {
+    background-color: #f7b223;
+    color: #071c3a;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button:hover, .button-link:hover {
+    background-color: #e0a118;
+}
+
+/* Forms */
+form {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    margin-bottom: 40px;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="tel"],
+input[type="date"],
+select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+}
+
+/* Table Styling */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 40px;
+}
+
+thead {
+    background-color: #071c3a;
+    color: #fff;
+}
+
+th, td {
+    padding: 12px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+/* Section Headers */
+h1, h2 {
+    margin-bottom: 20px;
+    color: #071c3a;
+}
+
+/* Cards and Boxes */
+.card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    margin-bottom: 30px;
+}
+
+/* Links */
+a {
+    color: #f7b223;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}

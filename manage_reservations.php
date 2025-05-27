@@ -24,35 +24,56 @@ $stmt->execute();
 $result = $stmt->get_result();
 ?>
 
-<h1>Your Reservations</h1>
+<h2 style="text-align: center; margin-bottom: 30px;">📅 Your Reservations</h2>
 
 <?php if ($result->num_rows === 0): ?>
-    <p>You have no reservations.</p>
+    <p style="text-align: center;">You have no reservations.</p>
 <?php else: ?>
-    <table style="width:100%; border-collapse: collapse; color: 
-        <thead>
-            <tr style="border-bottom: 2px solid 
-                <th>ID</th>
-                <th>Room Type</th>
-                <th>Check-in</th>
-                <th>Check-out</th>
-                <th>Total Price</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-        <?php while ($row = $result->fetch_assoc()): ?>
-            <tr style="border-bottom: 1px solid 
-                <td><?= htmlspecialchars($row['id']) ?></td>
-                <td><?= htmlspecialchars($row['room_type']) ?></td>
-                <td><?= htmlspecialchars($row['check_in']) ?></td>
-                <td><?= htmlspecialchars($row['check_out']) ?></td>
-                <td>$<?= number_format($row['total_price'], 2) ?></td>
-                <td><a href="reservation_detail.php?id=<?= $row['id'] ?>" style="color:
-            </tr>
-        <?php endwhile; ?>
-        </tbody>
-    </table>
+    <div style="overflow-x: auto;">
+        <table style="
+            width: 100%;
+            border-collapse: collapse;
+            background-color: rgba(7, 28, 58, 0.8);
+            border-radius: 12px;
+            box-shadow: 0 0 15px rgba(247, 178, 35, 0.6);
+            margin-bottom: 40px;
+        ">
+            <thead>
+                <tr style="background-color: #F7B223; color: #081C3A;">
+                    <th style="padding: 12px;">ID</th>
+                    <th style="padding: 12px;">Room Type</th>
+                    <th style="padding: 12px;">Check-in</th>
+                    <th style="padding: 12px;">Check-out</th>
+                    <th style="padding: 12px;">Total Price</th>
+                    <th style="padding: 12px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php while ($row = $result->fetch_assoc()): ?>
+                    <tr style="border-top: 1px solid #ccc; text-align: center;">
+                        <td style="padding: 10px;"><?= htmlspecialchars($row['id']) ?></td>
+                        <td style="padding: 10px;"><?= htmlspecialchars($row['room_type']) ?></td>
+                        <td style="padding: 10px;"><?= htmlspecialchars($row['check_in']) ?></td>
+                        <td style="padding: 10px;"><?= htmlspecialchars($row['check_out']) ?></td>
+                        <td style="padding: 10px;">$<?= number_format($row['total_price'], 2) ?></td>
+                        <td style="padding: 10px;">
+                            <a href="reservation_detail.php?id=<?= $row['id'] ?>" style="
+                                background-color: #F7B223;
+                                color: #081C3A;
+                                padding: 6px 12px;
+                                border-radius: 8px;
+                                text-decoration: none;
+                                font-weight: bold;
+                                transition: background-color 0.3s ease;
+                            " onmouseover="this.style.backgroundColor='#e5a91d'" onmouseout="this.style.backgroundColor='#F7B223'">
+                                View
+                            </a>
+                        </td>
+                    </tr>
+                <?php endwhile; ?>
+            </tbody>
+        </table>
+    </div>
 <?php endif; ?>
 
 <?php

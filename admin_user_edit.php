@@ -19,7 +19,7 @@ $user_id = intval($_GET['user_id']);
 $error = '';
 $success = '';
 
-
+// Handle update
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $full_name = trim($_POST['full_name']);
     $email = trim($_POST['email']);
@@ -42,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-
+// Get user info
 $stmt = $conn->prepare("SELECT username, full_name, email, phone FROM users WHERE id = ?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
@@ -58,8 +58,8 @@ require_once 'includes/header.php';
     display: inline-block;
     margin-bottom: 20px;
     padding: 10px 15px;
-    background-color: 
-    color: 
+    background-color: #F7B223;
+    color: #081C3A;
     text-decoration: none;
     font-weight: bold;
     border-radius: 6px;
@@ -67,7 +67,7 @@ require_once 'includes/header.php';
     ← Back to Booking Details
 </a>
 
-<h2>Edit Guest Info for <?= htmlspecialchars($username) ?></h2>
+<h2 style="color: #F7B223;">✏️ Edit Guest Info for <?= htmlspecialchars($username) ?></h2>
 
 <?php if ($error): ?>
     <p style="color: red; font-weight: bold;"><?= htmlspecialchars($error) ?></p>
@@ -76,25 +76,49 @@ require_once 'includes/header.php';
     <p style="color: green; font-weight: bold;"><?= htmlspecialchars($success) ?></p>
 <?php endif; ?>
 
-<form method="POST" action="admin_user_edit.php?user_id=<?= $user_id ?>&booking_id=<?= $_GET['booking_id'] ?? '' ?>" style="max-width: 600px;">
+<form method="POST" action="admin_user_edit.php?user_id=<?= $user_id ?>&booking_id=<?= $_GET['booking_id'] ?? '' ?>" style="
+    max-width: 600px;
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
+">
     <label>Full Name:</label><br>
-    <input type="text" name="full_name" value="<?= htmlspecialchars($full_name) ?>" required><br><br>
+    <input type="text" name="full_name" value="<?= htmlspecialchars($full_name) ?>" required style="
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 15px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+    ">
 
     <label>Email:</label><br>
-    <input type="email" name="email" value="<?= htmlspecialchars($email) ?>" required><br><br>
+    <input type="email" name="email" value="<?= htmlspecialchars($email) ?>" required style="
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 15px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+    ">
 
     <label>Phone:</label><br>
-    <input type="text" name="phone" value="<?= htmlspecialchars($phone) ?>"><br><br>
+    <input type="text" name="phone" value="<?= htmlspecialchars($phone) ?>" style="
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 20px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+    ">
 
     <button type="submit" style="
-        background-color: 
-        color: 
+        background-color: #081C3A;
+        color: white;
         padding: 10px 20px;
         font-weight: bold;
         border: none;
         border-radius: 6px;
         cursor: pointer;
-    ">Save Changes</button>
+    ">💾 Save Changes</button>
 </form>
 
 <?php require_once 'includes/footer.php'; ?>

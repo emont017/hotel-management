@@ -7,10 +7,10 @@ if (session_status() === PHP_SESSION_NONE) session_start();
   <meta charset="UTF-8">
   <title><?= isset($title) ? htmlspecialchars($title) : "FIU Hotel Management"; ?></title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https:
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 
   <style>
-    
     * {
       box-sizing: border-box;
     }
@@ -18,42 +18,40 @@ if (session_status() === PHP_SESSION_NONE) session_start();
     body {
       margin: 0;
       font-family: 'Roboto', sans-serif;
-      background: linear-gradient(180deg, 
-      color: 
+      background: linear-gradient(to bottom right, #081C3A, #0E1E40);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
+      color: #ffffff;
     }
 
     header {
       padding: 40px 20px 20px;
       text-align: center;
-      background-color: 
+      background-color: #0E1E40;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
-      user-select: none;
     }
 
     header h1 {
       font-family: 'Orbitron', sans-serif;
       font-size: 2.8rem;
       margin: 0;
-      color: 
-      text-shadow: 2px 2px 8px 
+      color: #F7B223;
+      text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
     }
 
     nav {
-      background-color: 
+      background-color: #06172D;
       text-align: center;
       padding: 12px 0 18px;
       box-shadow: inset 0 -2px 5px rgba(0, 0, 0, 0.4);
-      user-select: none;
       font-weight: 700;
       font-size: 1.1rem;
       letter-spacing: 0.03em;
     }
 
     nav a {
-      color: 
+      color: #F7B223;
       text-decoration: none;
       margin: 0 20px;
       padding: 6px 12px;
@@ -63,8 +61,8 @@ if (session_status() === PHP_SESSION_NONE) session_start();
     }
 
     nav a:hover, nav a:focus {
-      background-color: 
-      color: 
+      background-color: #F7B223;
+      color: #081C3A;
       outline: none;
     }
 
@@ -72,13 +70,11 @@ if (session_status() === PHP_SESSION_NONE) session_start();
       flex-grow: 1;
       max-width: 1000px;
       margin: 30px auto 60px;
-      padding: 0 20px;
+      padding: 20px;
       background-color: rgba(7, 28, 58, 0.85);
       border-radius: 15px;
       box-shadow: 0 0 25px rgba(247, 178, 35, 0.8);
-      color: 
-      min-height: 400px;
-      user-select: text;
+      color: #ffffff;
     }
 
     @media (max-width: 600px) {
@@ -94,7 +90,6 @@ if (session_status() === PHP_SESSION_NONE) session_start();
       }
     }
   </style>
-
 </head>
 <body>
 

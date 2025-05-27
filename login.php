@@ -5,52 +5,60 @@ $title = "Login";
 require_once 'includes/header.php';
 ?>
 
-<h2 style="text-align:center; margin-top: 30px;">Login</h2>
+<h1 style="text-align: center; margin-top: 30px;">🔐 Login</h1>
 
 <?php
 if (isset($_GET['error'])) {
     if ($_GET['error'] === 'missing_fields') {
-        echo "<p style='color:red; text-align:center;'>Please enter both username and password.</p>";
+        echo "<p style='color:red; text-align:center; margin-top: 10px;'>Please enter both username and password.</p>";
     } elseif ($_GET['error'] === 'invalid') {
-        echo "<p style='color:red; text-align:center;'>Invalid username or password.</p>";
+        echo "<p style='color:red; text-align:center; margin-top: 10px;'>Invalid username or password.</p>";
     }
 }
 ?>
 
-<form action="php/login.php" method="POST" style="
+<div style="
     max-width: 500px;
     margin: 30px auto 60px;
     padding: 30px;
     background-color: rgba(7, 28, 58, 0.85);
-    border-radius: 12px;
-    box-shadow: 0 0 15px rgba(247, 178, 35, 0.7);
-    color: 
-    font-size: 1.1rem;
+    border-radius: 15px;
+    box-shadow: 0 0 25px rgba(247, 178, 35, 0.8);
+    color: #ffffff;
 ">
-    <label for="username" style="display:block; margin-bottom:8px;">Username:</label>
-    <input type="text" id="username" name="username" required
-        style="width: 100%; padding: 10px; border-radius: 8px; border: none; font-size: 1rem; margin-bottom: 20px;">
+    <form action="php/login.php" method="POST" style="display: flex; flex-direction: column; gap: 20px;">
+        <label for="username" style="font-weight: bold; color: #F7B223;">Username:</label>
+        <input type="text" id="username" name="username" required style="
+            padding: 10px;
+            border-radius: 8px;
+            border: none;
+            font-size: 1rem;
+            color: #081C3A;
+        ">
 
-    <label for="password" style="display:block; margin-bottom:8px;">Password:</label>
-    <input type="password" id="password" name="password" required
-        style="width: 100%; padding: 10px; border-radius: 8px; border: none; font-size: 1rem; margin-bottom: 30px;">
+        <label for="password" style="font-weight: bold; color: #F7B223;">Password:</label>
+        <input type="password" id="password" name="password" required style="
+            padding: 10px;
+            border-radius: 8px;
+            border: none;
+            font-size: 1rem;
+            color: #081C3A;
+        ">
 
-    <button type="submit" style="
-        width: 100%;
-        padding: 12px;
-        background-color: 
-        border: none;
-        border-radius: 12px;
-        font-weight: 700;
-        font-size: 1.3rem;
-        color: 
-        cursor: pointer;
-        transition: background-color 0.3s ease;
-    "
-    onmouseover="this.style.backgroundColor='
-    onmouseout="this.style.backgroundColor='
-        Login
-    </button>
-</form>
+        <button type="submit" style="
+            background-color: #F7B223;
+            color: #081C3A;
+            font-weight: bold;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        " onmouseover="this.style.backgroundColor='#e5a91d'" onmouseout="this.style.backgroundColor='#F7B223'">
+            Login
+        </button>
+    </form>
+</div>
 
 <?php require_once 'includes/footer.php'; ?>
