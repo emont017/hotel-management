@@ -38,7 +38,7 @@ $recent_bookings = $conn->query("
 <div style="display: flex; justify-content: space-around; flex-wrap: wrap; gap: 20px; margin-top: 30px;">
     <?php
     $cards = [
-        ['👥', 'Total Users', $total_users, 'users.php'],         // ✅ FIXED HERE
+        ['👥', 'Total Users', $total_users, 'users.php'],
         ['🛏️', 'Total Rooms', $total_rooms, 'admin_rooms.php'],
         ['📅', 'Total Bookings', $total_bookings, 'admin_bookings.php'],
         ['✅', 'Available Rooms', $available_rooms, 'admin_rooms.php'],
