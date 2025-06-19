@@ -1,10 +1,9 @@
 <?php
 session_start();
 ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['admin', 'manager'])) {
     header("Location: index.php");
     exit;
 }
@@ -13,72 +12,90 @@ $title = "Manage Users";
 require_once 'includes/header.php';
 require_once 'php/db.php';
 
-// Handle promote, demote, delete
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $action = $_POST['action'];
-    $target_id = intval($_POST['user_id']);
+// Handle Create User
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['create_user'])) {
+    $username = $_POST['username'];
+    $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
+    $role = $_POST['role'];
+    $full_name = $_POST['full_name'];
+    $email = $_POST['email'];
+    $phone = $_POST['phone'];
 
-    if ($target_id !== $_SESSION['user_id']) {
-        if ($action === 'promote') {
-            $stmt = $conn->prepare("UPDATE users SET role = 'admin' WHERE id = ?");
-        } elseif ($action === 'demote') {
-            $stmt = $conn->prepare("UPDATE users SET role = 'guest' WHERE id = ?");
-        } elseif ($action === 'delete') {
-            $stmt = $conn->prepare("DELETE FROM users WHERE id = ?");
-        }
-
-        if (isset($stmt)) {
-            $stmt->bind_param("i", $target_id);
-            $stmt->execute();
-            $stmt->close();
-        }
-    }
+    $stmt = $conn->prepare("INSERT INTO users (username, password, role, full_name, email, phone) VALUES (?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("ssssss", $username, $password, $role, $full_name, $email, $phone);
+    $stmt->execute();
+    $stmt->close();
+    header("Location: users.php");
+    exit;
 }
 
-// Fetch all users
-$sql = "SELECT id, username, role FROM users ORDER BY role DESC, username ASC";
-$result = $conn->query($sql);
+// Handle Delete User
+if (isset($_GET['delete'])) {
+    $id = $_GET['delete'];
+    $conn->query("DELETE FROM users WHERE id = $id");
+    header("Location: users.php");
+    exit;
+}
+
+$users = $conn->query("SELECT * FROM users");
 ?>
 
-<h2 style="text-align:center; margin-top: 30px;">Registered Users</h2>
+<h2 style="color: #F7B223;">👥 Manage Users</h2>
 
-<?php if ($result && $result->num_rows > 0): ?>
-    <table style="width: 100%; max-width: 900px; margin: 30px auto; border-collapse: collapse; background-color: rgba(255,255,255,0.05); border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.2);">
-        <thead>
-            <tr style="background-color: #F7B223; color: #081C3A;">
-                <th style="padding: 12px;">User ID</th>
-                <th style="padding: 12px;">Username</th>
-                <th style="padding: 12px;">Role</th>
-                <th style="padding: 12px;">Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php while ($row = $result->fetch_assoc()): ?>
-                <tr style="text-align: center; border-top: 1px solid #ccc;">
-                    <td style="padding: 12px;"><?= htmlspecialchars($row['id']) ?></td>
-                    <td style="padding: 12px;"><?= htmlspecialchars($row['username']) ?></td>
-                    <td style="padding: 12px; text-transform: capitalize;"><?= htmlspecialchars($row['role']) ?></td>
-                    <td style="padding: 12px;">
-                        <?php if ($row['id'] !== $_SESSION['user_id']): ?>
-                            <form method="POST" style="display:inline;">
-                                <input type="hidden" name="user_id" value="<?= $row['id'] ?>">
-                                <?php if ($row['role'] === 'guest'): ?>
-                                    <button type="submit" name="action" value="promote" style="margin-right: 5px; padding: 6px 12px; border-radius: 6px; background-color: #4CAF50; color: white; border: none;">Promote</button>
-                                <?php elseif ($row['role'] === 'admin'): ?>
-                                    <button type="submit" name="action" value="demote" style="margin-right: 5px; padding: 6px 12px; border-radius: 6px; background-color: #FF9800; color: white; border: none;">Demote</button>
-                                <?php endif; ?>
-                                <button type="submit" name="action" value="delete" onclick="return confirm('Are you sure you want to delete this user?');" style="padding: 6px 12px; border-radius: 6px; background-color: #f44336; color: white; border: none;">Delete</button>
-                            </form>
-                        <?php else: ?>
-                            <em>(You)</em>
-                        <?php endif; ?>
-                    </td>
-                </tr>
-            <?php endwhile; ?>
-        </tbody>
-    </table>
-<?php else: ?>
-    <p style="text-align:center;">No users found in the system.</p>
-<?php endif; ?>
+<!-- Create User Form -->
+<form method="post" style="margin-top: 30px; max-width: 600px;">
+    <h3 style="color: #fff;">➕ Create New User</h3>
+    <input type="text" name="username" placeholder="Username" required style="width: 100%; padding: 10px; margin: 8px 0;"><br>
+    <input type="password" name="password" placeholder="Password" required style="width: 100%; padding: 10px; margin: 8px 0;"><br>
+    
+    <select name="role" required style="width: 100%; padding: 10px; margin: 8px 0;">
+        <option value="">Select Role</option>
+        <option value="admin">Admin</option>
+        <option value="manager">Manager</option>
+        <option value="front_desk">Front Desk</option>
+        <option value="housekeeping">Housekeeping</option>
+        <option value="accountant">Accountant</option>
+        <option value="staff">Staff</option>
+        <option value="guest">Guest</option>
+    </select><br>
+
+    <input type="text" name="full_name" placeholder="Full Name" style="width: 100%; padding: 10px; margin: 8px 0;"><br>
+    <input type="email" name="email" placeholder="Email" style="width: 100%; padding: 10px; margin: 8px 0;"><br>
+    <input type="text" name="phone" placeholder="Phone" style="width: 100%; padding: 10px; margin: 8px 0;"><br>
+
+    <input type="submit" name="create_user" value="Create User" style="padding: 10px 20px; background-color: #F7B223; border: none; color: #fff; cursor: pointer;">
+</form>
+
+<!-- Users Table -->
+<h3 style="margin-top: 50px; color: #F7B223;">📋 All Users</h3>
+<table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+    <thead>
+        <tr style="background-color: #081E3F; color: white;">
+            <th style="padding: 12px; border: 1px solid #ddd;">ID</th>
+            <th style="padding: 12px; border: 1px solid #ddd;">Username</th>
+            <th style="padding: 12px; border: 1px solid #ddd;">Role</th>
+            <th style="padding: 12px; border: 1px solid #ddd;">Full Name</th>
+            <th style="padding: 12px; border: 1px solid #ddd;">Email</th>
+            <th style="padding: 12px; border: 1px solid #ddd;">Phone</th>
+            <th style="padding: 12px; border: 1px solid #ddd;">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <?php $i = 0; while ($row = $users->fetch_assoc()): ?>
+        <?php $bg = ($i++ % 2 === 0) ? "#f8f9fa" : "#ffffff"; ?>
+        <tr style="background-color: <?= $bg ?>; color: #081E3F;" onmouseover="this.style.backgroundColor='#e9ecef'" onmouseout="this.style.backgroundColor='<?= $bg ?>'">
+            <td style="padding: 10px; border: 1px solid #ddd;"><?= $row['id'] ?></td>
+            <td style="padding: 10px; border: 1px solid #ddd;"><?= htmlspecialchars($row['username']) ?></td>
+            <td style="padding: 10px; border: 1px solid #ddd;"><?= $row['role'] ?></td>
+            <td style="padding: 10px; border: 1px solid #ddd;"><?= htmlspecialchars($row['full_name']) ?></td>
+            <td style="padding: 10px; border: 1px solid #ddd;"><?= htmlspecialchars($row['email']) ?></td>
+            <td style="padding: 10px; border: 1px solid #ddd;"><?= htmlspecialchars($row['phone']) ?></td>
+            <td style="padding: 10px; border: 1px solid #ddd;">
+                <a href="?delete=<?= $row['id'] ?>" onclick="return confirm('Are you sure you want to delete this user?')" style="color: red;">Delete</a>
+            </td>
+        </tr>
+        <?php endwhile; ?>
+    </tbody>
+</table>
 
 <?php require_once 'includes/footer.php'; ?>
