@@ -3,7 +3,7 @@ session_start();
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['admin', 'guest'])) {
+if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['admin', 'manager'])) {
     header("Location: index.php");
     exit;
 }
@@ -17,12 +17,10 @@ $total_users = $conn->query("SELECT COUNT(*) FROM users")->fetch_row()[0];
 $total_rooms = $conn->query("SELECT COUNT(*) FROM rooms")->fetch_row()[0];
 $total_bookings = $conn->query("SELECT COUNT(*) FROM bookings")->fetch_row()[0];
 
-// Room status breakdown
 $available_rooms = $conn->query("SELECT COUNT(*) FROM rooms WHERE status = 'available'")->fetch_row()[0];
 $booked_rooms = $conn->query("SELECT COUNT(*) FROM rooms WHERE status = 'booked'")->fetch_row()[0];
 $maintenance_rooms = $conn->query("SELECT COUNT(*) FROM rooms WHERE status = 'maintenance'")->fetch_row()[0];
 
-// Recent bookings
 $recent_bookings = $conn->query("
     SELECT b.id, r.room_number, r.room_type, u.username, b.check_in, b.check_out
     FROM bookings b
@@ -31,6 +29,19 @@ $recent_bookings = $conn->query("
     ORDER BY b.created_at DESC
     LIMIT 5
 ");
+
+// Handle housekeeping status update
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['update_housekeeping'])) {
+    $room_id = (int) $_POST['room_id'];
+    $new_status = $_POST['housekeeping_status'];
+
+    $stmt = $conn->prepare("UPDATE rooms SET housekeeping_status = ? WHERE id = ?");
+    $stmt->bind_param("si", $new_status, $room_id);
+    $stmt->execute();
+    $stmt->close();
+}
+
+$housekeeping_rooms = $conn->query("SELECT id, room_number, room_type, housekeeping_status FROM rooms ORDER BY room_number ASC");
 ?>
 
 <h2 style="color: #F7B223;">📊 Hotel Management Dashboard</h2>
@@ -81,11 +92,8 @@ $recent_bookings = $conn->query("
             </tr>
         </thead>
         <tbody>
-            <?php
-            $i = 0;
-            while ($row = $recent_bookings->fetch_assoc()):
-                $bg = ($i++ % 2 === 0) ? "#f8f9fa" : "#ffffff";
-            ?>
+            <?php $i = 0; while ($row = $recent_bookings->fetch_assoc()): ?>
+                <?php $bg = ($i++ % 2 === 0) ? "#f8f9fa" : "#ffffff"; ?>
                 <tr style="background-color: <?= $bg ?>; color: #081E3F;" onmouseover="this.style.backgroundColor='#e9ecef'" onmouseout="this.style.backgroundColor='<?= $bg ?>'">
                     <td style="padding: 10px; border: 1px solid #ddd;"><?= $row['id'] ?></td>
                     <td style="padding: 10px; border: 1px solid #ddd;"><?= htmlspecialchars($row['username']) ?></td>
@@ -93,6 +101,42 @@ $recent_bookings = $conn->query("
                     <td style="padding: 10px; border: 1px solid #ddd;"><?= htmlspecialchars($row['room_type']) ?></td>
                     <td style="padding: 10px; border: 1px solid #ddd;"><?= htmlspecialchars($row['check_in']) ?></td>
                     <td style="padding: 10px; border: 1px solid #ddd;"><?= htmlspecialchars($row['check_out']) ?></td>
+                </tr>
+            <?php endwhile; ?>
+        </tbody>
+    </table>
+</div>
+
+<!-- Housekeeping Status Manager -->
+<div style="margin-top: 50px;">
+    <h3 style="color: #F7B223;">🧼 Manage Housekeeping Status</h3>
+    <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+        <thead>
+            <tr style="background-color: #081E3F; color: white;">
+                <th style="padding: 12px; border: 1px solid #ddd;">Room Number</th>
+                <th style="padding: 12px; border: 1px solid #ddd;">Type</th>
+                <th style="padding: 12px; border: 1px solid #ddd;">Current Status</th>
+                <th style="padding: 12px; border: 1px solid #ddd;">Update Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php $i = 0; while ($room = $housekeeping_rooms->fetch_assoc()): ?>
+                <?php $bg = ($i++ % 2 === 0) ? "#f8f9fa" : "#ffffff"; ?>
+                <tr style="background-color: <?= $bg ?>; color: #081E3F;" onmouseover="this.style.backgroundColor='#e9ecef'" onmouseout="this.style.backgroundColor='<?= $bg ?>'">
+                    <td style="padding: 10px; border: 1px solid #ddd;"><?= htmlspecialchars($room['room_number']) ?></td>
+                    <td style="padding: 10px; border: 1px solid #ddd;"><?= htmlspecialchars($room['room_type']) ?></td>
+                    <td style="padding: 10px; border: 1px solid #ddd; text-transform: capitalize;"><?= htmlspecialchars($room['housekeeping_status']) ?></td>
+                    <td style="padding: 10px; border: 1px solid #ddd;">
+                        <form method="POST" style="display: flex; gap: 10px; align-items: center;">
+                            <input type="hidden" name="room_id" value="<?= $room['id'] ?>">
+                            <select name="housekeeping_status" required>
+                                <option value="clean" <?= $room['housekeeping_status'] === 'clean' ? 'selected' : '' ?>>Clean</option>
+                                <option value="dirty" <?= $room['housekeeping_status'] === 'dirty' ? 'selected' : '' ?>>Dirty</option>
+                                <option value="maintenance" <?= $room['housekeeping_status'] === 'maintenance' ? 'selected' : '' ?>>Maintenance</option>
+                            </select>
+                            <button type="submit" name="update_housekeeping" style="padding: 6px 12px; background-color: #F7B223; border: none; color: white; cursor: pointer;">Update</button>
+                        </form>
+                    </td>
                 </tr>
             <?php endwhile; ?>
         </tbody>

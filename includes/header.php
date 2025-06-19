@@ -105,15 +105,24 @@ if (session_status() === PHP_SESSION_NONE) session_start();
   <?php if (isset($_SESSION['user_id'])): ?>
     <a href="bookings.php">Book a Room</a>
 
-    <?php if (in_array($_SESSION['role'], ['admin', 'guest'])): ?>
+    <?php if (in_array($_SESSION['role'], ['admin', 'manager'])): ?>
       <a href="admin_dashboard.php">Dashboard</a>
       <a href="admin_rooms.php">Manage Rooms</a>
       <a href="admin_bookings.php">Manage Bookings</a>
+      <a href="housekeeping.php">Housekeeping</a>
+      <a href="payments.php">Payments</a>
+      <a href="reports.php">Reports</a>
       <?php if ($_SESSION['role'] === 'admin'): ?>
         <a href="users.php">Manage Users</a>
       <?php endif; ?>
-    <?php elseif ($_SESSION['role'] === 'friend'): ?>
-      <a href="manage_reservations.php">Manage Reservations</a>
+    <?php elseif ($_SESSION['role'] === 'front_desk'): ?>
+      <a href="admin_bookings.php">Manage Bookings</a>
+      <a href="housekeeping.php">Housekeeping</a>
+    <?php elseif ($_SESSION['role'] === 'housekeeping'): ?>
+      <a href="housekeeping.php">Housekeeping</a>
+    <?php elseif ($_SESSION['role'] === 'accountant'): ?>
+      <a href="payments.php">Payments</a>
+      <a href="reports.php">Reports</a>
     <?php endif; ?>
 
     <a href="logout.php">Logout</a>
