@@ -109,6 +109,7 @@ if (session_status() === PHP_SESSION_NONE) session_start();
       <a href="admin_dashboard.php">Dashboard</a>
       <a href="admin_rooms.php">Manage Rooms</a>
       <a href="admin_bookings.php">Manage Bookings</a>
+      <a href="room_plan.php">Room Plan</a>
       <a href="housekeeping.php">Housekeeping</a>
       <a href="payments.php">Payments</a>
       <a href="reports.php">Reports</a>
