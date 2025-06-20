@@ -120,11 +120,12 @@ while($booking = $bookings_result->fetch_assoc()) {
         border-radius: 4px;
     }
 
-    /* Color Coding */
+    /* Color Coding - UPDATED */
     .status-checked-in { background-color: #e74c3c; } /* Red */
     .status-confirmed { background-color: #3498db; } /* Blue */
-    .status-clean { background-color: #2ecc71; } /* Green */
-    .status-dirty { background-color: #f1c40f; } /* Yellow */
+    .status-vacant-clean { background-color: #2ecc71; } /* Green */
+    .status-vacant-dirty { background-color: #f1c40f; } /* Yellow */
+    .status-occupied { background-color: #e74c3c; } /* Red */
     .status-maintenance { background-color: #95a5a6; background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.1) 10px, rgba(0,0,0,0.1) 20px); } /* Grey w/ stripes */
 
     .legend { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 20px; }
@@ -140,12 +141,13 @@ while($booking = $bookings_result->fetch_assoc()) {
     </div>
 </div>
 
-<!-- Legend -->
+<!-- Legend - UPDATED -->
 <ul class="legend">
     <li><span class="color-box status-checked-in"></span> Checked-In</li>
     <li><span class="color-box status-confirmed"></span> Confirmed</li>
-    <li><span class="color-box status-clean"></span> Vacant (Clean)</li>
-    <li><span class="color-box status-dirty"></span> Vacant (Dirty)</li>
+    <li><span class="color-box status-vacant-clean"></span> Vacant (Clean)</li>
+    <li><span class="color-box status-vacant-dirty"></span> Vacant (Dirty)</li>
+    <li><span class="color-box status-occupied"></span> Occupied</li>
     <li><span class="color-box status-maintenance"></span> Maintenance</li>
 </ul>
 
@@ -157,7 +159,6 @@ while($booking = $bookings_result->fetch_assoc()) {
                 <?php
                 $current_date_header = clone $start_date;
                 for ($i = 0; $i < $days_to_show; $i++) {
-                    // Using a line break for better formatting in tight spaces
                     echo '<th>' . $current_date_header->format('D') . '<br><small>' . $current_date_header->format('M j') . '</small></th>';
                     $current_date_header->modify('+1 day');
                 }
@@ -177,13 +178,10 @@ while($booking = $bookings_result->fetch_assoc()) {
                         if (isset($bookings_by_room[$room['id']])) {
                             foreach ($bookings_by_room[$room['id']] as $booking) {
                                 if ($cell_date_str >= $booking['check_in'] && $cell_date_str < $booking['check_out']) {
-                                    // This booking covers the current cell date.
-                                    // We only draw the block on the check-in day.
                                     if ($cell_date_str == $booking['check_in']) {
                                         $check_in_dt = new DateTime($booking['check_in']);
                                         $check_out_dt = new DateTime($booking['check_out']);
                                         $duration = $check_in_dt->diff($check_out_dt)->days;
-                                        // Ensure duration is at least 1 for same-day check-in/out scenarios
                                         $duration = $duration > 0 ? $duration : 1;
                                         $status_class = 'status-' . htmlspecialchars($booking['booking_status']);
 
@@ -192,7 +190,6 @@ while($booking = $bookings_result->fetch_assoc()) {
                                         echo htmlspecialchars($booking['full_name']);
                                         echo "</a></td>";
 
-                                        // Advance the loop counter by the duration of the booking
                                         $i += ($duration - 1);
                                         $current_date_cell->modify('+' . ($duration - 1) . ' days');
                                     }
@@ -203,8 +200,9 @@ while($booking = $bookings_result->fetch_assoc()) {
                         }
 
                         if (!$booking_found) {
-                             // Room is not booked, determine its status (clean, dirty, maintenance)
-                            $status_class = 'status-' . htmlspecialchars($room['housekeeping_status']);
+                            // Room is not booked, determine its status.
+                            // UPDATED: Replaced underscore with hyphen to match CSS classes
+                            $status_class = 'status-' . str_replace('_', '-', htmlspecialchars($room['housekeeping_status']));
                             if ($room['status'] === 'maintenance') {
                                 $status_class = 'status-maintenance';
                             }
