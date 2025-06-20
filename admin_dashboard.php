@@ -12,6 +12,40 @@ $title = "Admin Dashboard";
 require_once 'includes/header.php';
 require_once 'php/db.php';
 
+// Handle housekeeping status update
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['update_housekeeping'])) {
+    $room_id = (int) $_POST['room_id'];
+    $new_status = $_POST['housekeeping_status'];
+    $user_id = $_SESSION['user_id'];
+
+    // Start a transaction to ensure both operations succeed or fail together
+    $conn->begin_transaction();
+
+    try {
+        // 1. Update the rooms table to reflect the current status
+        $stmt1 = $conn->prepare("UPDATE rooms SET housekeeping_status = ? WHERE id = ?");
+        $stmt1->bind_param("si", $new_status, $room_id);
+        $stmt1->execute();
+        $stmt1->close();
+
+        // 2. Insert a new record into the housekeeping log table
+        $stmt2 = $conn->prepare("INSERT INTO housekeeping (room_id, status, updated_by) VALUES (?, ?, ?)");
+        $stmt2->bind_param("isi", $room_id, $new_status, $user_id);
+        $stmt2->execute();
+        $stmt2->close();
+        
+        // If both queries are successful, commit the transaction
+        $conn->commit();
+
+    } catch (mysqli_sql_exception $exception) {
+        // If any query fails, roll back the transaction
+        $conn->rollback();
+        // You can log the error or display a generic error message
+        // error_log("Failed to update housekeeping status: " . $exception->getMessage());
+    }
+}
+
+
 // Basic stats
 $total_users = $conn->query("SELECT COUNT(*) FROM users")->fetch_row()[0];
 $total_rooms = $conn->query("SELECT COUNT(*) FROM rooms")->fetch_row()[0];
@@ -30,17 +64,8 @@ $recent_bookings = $conn->query("
     LIMIT 5
 ");
 
-// Handle housekeeping status update
-if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['update_housekeeping'])) {
-    $room_id = (int) $_POST['room_id'];
-    $new_status = $_POST['housekeeping_status'];
 
-    $stmt = $conn->prepare("UPDATE rooms SET housekeeping_status = ? WHERE id = ?");
-    $stmt->bind_param("si", $new_status, $room_id);
-    $stmt->execute();
-    $stmt->close();
-}
-
+// This is the query that was causing the error. It will work after you update your DB schema.
 $housekeeping_rooms = $conn->query("SELECT id, room_number, room_type, housekeeping_status FROM rooms ORDER BY room_number ASC");
 ?>
 
@@ -120,7 +145,7 @@ $housekeeping_rooms = $conn->query("SELECT id, room_number, room_type, housekeep
             </tr>
         </thead>
         <tbody>
-            <?php $i = 0; while ($room = $housekeeping_rooms->fetch_assoc()): ?>
+            <?php if($housekeeping_rooms) : while ($room = $housekeeping_rooms->fetch_assoc()): ?>
                 <?php $bg = ($i++ % 2 === 0) ? "#f8f9fa" : "#ffffff"; ?>
                 <tr style="background-color: <?= $bg ?>; color: #081E3F;" onmouseover="this.style.backgroundColor='#e9ecef'" onmouseout="this.style.backgroundColor='<?= $bg ?>'">
                     <td style="padding: 10px; border: 1px solid #ddd;"><?= htmlspecialchars($room['room_number']) ?></td>
@@ -134,11 +159,11 @@ $housekeeping_rooms = $conn->query("SELECT id, room_number, room_type, housekeep
                                 <option value="dirty" <?= $room['housekeeping_status'] === 'dirty' ? 'selected' : '' ?>>Dirty</option>
                                 <option value="maintenance" <?= $room['housekeeping_status'] === 'maintenance' ? 'selected' : '' ?>>Maintenance</option>
                             </select>
-                            <button type="submit" name="update_housekeeping" style="padding: 6px 12px; background-color: #F7B223; border: none; color: white; cursor: pointer;">Update</button>
+                            <button type="submit" name="update_housekeeping" style="padding: 6px 12px; background-color: #F7B223; border: none; color: #081C3A; font-weight: bold; cursor: pointer;">Update</button>
                         </form>
                     </td>
                 </tr>
-            <?php endwhile; ?>
+            <?php endwhile; endif; ?>
         </tbody>
     </table>
 </div>

@@ -17,9 +17,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['create_user'])) {
     $username = $_POST['username'];
     $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
     $role = $_POST['role'];
-    $full_name = $_POST['full_name'];
-    $email = $_POST['email'];
-    $phone = $_POST['phone'];
+    $full_name = !empty($_POST['full_name']) ? $_POST['full_name'] : null;
+    $email = !empty($_POST['email']) ? $_POST['email'] : null;
+    $phone = !empty($_POST['phone']) ? $_POST['phone'] : null;
 
     $stmt = $conn->prepare("INSERT INTO users (username, password, role, full_name, email, phone) VALUES (?, ?, ?, ?, ?, ?)");
     $stmt->bind_param("ssssss", $username, $password, $role, $full_name, $email, $phone);
@@ -31,8 +31,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['create_user'])) {
 
 // Handle Delete User
 if (isset($_GET['delete'])) {
-    $id = $_GET['delete'];
-    $conn->query("DELETE FROM users WHERE id = $id");
+    $id = (int)$_GET['delete'];
+    $stmt = $conn->prepare("DELETE FROM users WHERE id = ?");
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    $stmt->close();
     header("Location: users.php");
     exit;
 }
@@ -63,7 +66,7 @@ $users = $conn->query("SELECT * FROM users");
     <input type="email" name="email" placeholder="Email" style="width: 100%; padding: 10px; margin: 8px 0;"><br>
     <input type="text" name="phone" placeholder="Phone" style="width: 100%; padding: 10px; margin: 8px 0;"><br>
 
-    <input type="submit" name="create_user" value="Create User" style="padding: 10px 20px; background-color: #F7B223; border: none; color: #fff; cursor: pointer;">
+    <input type="submit" name="create_user" value="Create User" style="padding: 10px 20px; background-color: #F7B223; border: none; color: #081C3A; font-weight: bold; cursor: pointer;">
 </form>
 
 <!-- Users Table -->
@@ -85,11 +88,11 @@ $users = $conn->query("SELECT * FROM users");
         <?php $bg = ($i++ % 2 === 0) ? "#f8f9fa" : "#ffffff"; ?>
         <tr style="background-color: <?= $bg ?>; color: #081E3F;" onmouseover="this.style.backgroundColor='#e9ecef'" onmouseout="this.style.backgroundColor='<?= $bg ?>'">
             <td style="padding: 10px; border: 1px solid #ddd;"><?= $row['id'] ?></td>
-            <td style="padding: 10px; border: 1px solid #ddd;"><?= htmlspecialchars($row['username']) ?></td>
-            <td style="padding: 10px; border: 1px solid #ddd;"><?= $row['role'] ?></td>
-            <td style="padding: 10px; border: 1px solid #ddd;"><?= htmlspecialchars($row['full_name']) ?></td>
-            <td style="padding: 10px; border: 1px solid #ddd;"><?= htmlspecialchars($row['email']) ?></td>
-            <td style="padding: 10px; border: 1px solid #ddd;"><?= htmlspecialchars($row['phone']) ?></td>
+            <td style="padding: 10px; border: 1px solid #ddd;"><?= htmlspecialchars($row['username'] ?? '') ?></td>
+            <td style="padding: 10px; border: 1px solid #ddd;"><?= htmlspecialchars($row['role'] ?? '') ?></td>
+            <td style="padding: 10px; border: 1px solid #ddd;"><?= htmlspecialchars($row['full_name'] ?? '') ?></td>
+            <td style="padding: 10px; border: 1px solid #ddd;"><?= htmlspecialchars($row['email'] ?? '') ?></td>
+            <td style="padding: 10px; border: 1px solid #ddd;"><?= htmlspecialchars($row['phone'] ?? '') ?></td>
             <td style="padding: 10px; border: 1px solid #ddd;">
                 <a href="?delete=<?= $row['id'] ?>" onclick="return confirm('Are you sure you want to delete this user?')" style="color: red;">Delete</a>
             </td>
