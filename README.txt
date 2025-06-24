@@ -81,9 +81,8 @@ The hotel management system homepage should now be live.
 
 Default Admin Login:
 
-Username: Test2
-
-Password: Test123
+Use the admin credentials provided by your system administrator. 
+For initial setup, create an admin account through the user management system.
 
 HOW TO SAVE AND PUSH YOUR WORK TO GITHUB
 

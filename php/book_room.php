@@ -3,6 +3,7 @@ session_start();
 $title = "Booking Confirmation";
 require_once '../includes/header.php';
 require_once 'db.php';
+require_once '../includes/email_functions.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header("Location: ../index.php");
@@ -110,6 +111,26 @@ if (!$stmt->execute()) {
     showError("Booking failed: " . $stmt->error);
 }
 
+// Send booking confirmation email to customer
+$booking_details = [
+    'confirmation_number' => $confirmation_number,
+    'room_type' => $room_type,
+    'checkin_date' => $checkin_date,
+    'checkout_date' => $checkout_date,
+    'total_price' => $total_price
+];
+
+$customer_details = [
+    'name' => $full_name,
+    'email' => $email,
+    'phone' => $phone ?: 'Not provided'
+];
+
+$email_sent = sendBookingConfirmation($email, $full_name, $booking_details);
+
+// Send booking notification to hotel management
+$hotel_notified = sendBookingNotificationToHotel($booking_details, $customer_details);
+
 $stmt->close();
 $conn->close();
 ?>
@@ -127,6 +148,17 @@ $conn->close();
     <div style="font-size: 4rem; color: green; margin-bottom: 20px;">✔️</div>
     <h2 style="color: #081C3A; font-family: 'Orbitron', sans-serif; font-size: 2.5rem;">Booking Confirmed!</h2>
     <p style="font-size: 1.1rem;"><strong>Confirmation Number:</strong> <?= htmlspecialchars($confirmation_number) ?></p>
+    <?php if ($email_sent): ?>
+        <p style="color: green; font-size: 1rem;">📧 Confirmation email sent to <?= htmlspecialchars($email) ?></p>
+        <p style="color: blue; font-size: 0.9rem;">✨ Check your inbox for the confirmation email!</p>
+    <?php else: ?>
+        <p style="color: orange; font-size: 1rem;">⚠️ Booking confirmed, but email could not be sent</p>
+        <p style="color: gray; font-size: 0.9rem;">Please contact us to confirm your booking details</p>
+    <?php endif; ?>
+    
+    <?php if ($hotel_notified): ?>
+        <p style="color: green; font-size: 0.9rem;">🏨 Hotel management has been notified</p>
+    <?php endif; ?>
     <div style="margin-top: 20px; font-size: 1.1rem; text-align: left;">
         <p><strong>Name:</strong> <?= htmlspecialchars($full_name) ?></p>
         <p><strong>Room:</strong> <?= htmlspecialchars($room_type) ?></p>

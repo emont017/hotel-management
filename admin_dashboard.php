@@ -120,9 +120,12 @@ $username = htmlspecialchars($_SESSION['username'] ?? 'User');
 <p>Here is your hotel's status for today, <?= date('l, F j, Y') ?>.</p>
 
 <!-- Quick Actions -->
-<div style="margin: 20px 0; display: flex; gap: 15px;">
+<div style="margin: 20px 0; display: flex; gap: 15px; flex-wrap: wrap;">
     <a href="room_plan.php" style="padding: 10px 20px; background-color: #F7B223; color: #081C3A; text-decoration: none; border-radius: 6px; font-weight: bold;">View Room Plan</a>
     <a href="bookings.php" style="padding: 10px 20px; background-color: #F7B223; color: #081C3A; text-decoration: none; border-radius: 6px; font-weight: bold;">Create New Booking</a>
+    <?php if ($_SESSION['role'] === 'admin'): ?>
+        <a href="admin_notifications.php" style="padding: 10px 20px; background-color: #dc3545; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">📧 Notifications & Alerts</a>
+    <?php endif; ?>
 </div>
 
 <!-- "At a Glance" Grid -->

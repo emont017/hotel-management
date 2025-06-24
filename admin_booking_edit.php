@@ -9,6 +9,7 @@ if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['admin', 'mana
 }
 
 require_once 'php/db.php';
+require_once 'includes/email_functions.php';
 
 if (!isset($_GET['booking_id']) || !is_numeric($_GET['booking_id'])) {
     header("Location: admin_bookings.php");
@@ -23,11 +24,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $check_out = $_POST['check_out'];
     $room_id = $_POST['room_id'];
     $status = $_POST['status'];
+    $old_status = $_POST['old_status'] ?? '';
 
     $stmt = $conn->prepare("UPDATE bookings SET check_in = ?, check_out = ?, room_id = ?, status = ? WHERE id = ?");
     $stmt->bind_param("ssisi", $check_in, $check_out, $room_id, $status, $booking_id);
     $stmt->execute();
     $stmt->close();
+
+    // Send cancellation email if status changed to cancelled
+    if ($status === 'cancelled' && $old_status !== 'cancelled') {
+        // Get booking and user details for email
+        $email_sql = "
+        SELECT 
+            b.confirmation_number,
+            b.check_in,
+            b.check_out,
+            u.full_name,
+            u.email,
+            r.room_type
+        FROM bookings b
+        JOIN users u ON b.user_id = u.id
+        JOIN rooms r ON b.room_id = r.id
+        WHERE b.id = ?
+        ";
+        
+        $email_stmt = $conn->prepare($email_sql);
+        $email_stmt->bind_param("i", $booking_id);
+        $email_stmt->execute();
+        $email_result = $email_stmt->get_result();
+        $booking_info = $email_result->fetch_assoc();
+        $email_stmt->close();
+        
+        if ($booking_info && $booking_info['email']) {
+            $cancellation_details = [
+                'confirmation_number' => $booking_info['confirmation_number'],
+                'room_type' => $booking_info['room_type'],
+                'checkin_date' => $booking_info['check_in'],
+                'checkout_date' => $booking_info['check_out']
+            ];
+            
+            sendCancellationEmail($booking_info['email'], $booking_info['full_name'], $cancellation_details);
+        }
+    }
 
     $success = "Booking updated successfully!";
 }
@@ -93,6 +131,8 @@ require_once 'includes/header.php';
 <?php endif; ?>
 
 <form method="POST" style="max-width: 600px; margin-top: 20px;">
+    <input type="hidden" name="old_status" value="<?= htmlspecialchars($booking['status']) ?>">
+    
     <label style="color: #F7B223; font-weight: bold;">Guest Name:</label>
     <input type="text" value="<?= htmlspecialchars($booking['full_name']) ?>" disabled style="width: 100%; padding: 10px; margin-bottom: 20px;">
 
