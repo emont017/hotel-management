@@ -4,7 +4,12 @@
  * Handles booking confirmations, cancellations, and reminders
  */
 
-require_once __DIR__ . '/../config/email_config.php';
+// Load local config if exists, otherwise use main config
+if (file_exists(__DIR__ . '/../config/email_config_local.php')) {
+    require_once __DIR__ . '/../config/email_config_local.php';
+} else {
+    require_once __DIR__ . '/../config/email_config.php';
+}
 require_once __DIR__ . '/../lib/phpmailer/PHPMailer.php';
 
 /**

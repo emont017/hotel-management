@@ -1,0 +1,19 @@
+# Sensitive configuration files
+config/email_config_local.php
+
+# Environment files
+.env
+.env.local
+
+# Temporary files
+temp/
+*.tmp
+*.log
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db 

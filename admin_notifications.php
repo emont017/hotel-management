@@ -217,7 +217,7 @@ require_once 'includes/header.php';
 </style>
 
 <div style="max-width: 1200px; margin: 0 auto; padding: 20px;">
-    <h1 style="color: #F7B223; text-align: center; margin-bottom: 30px;">📧 Notifications & Alerts Management</h1>
+    <h1 style="color: #F7B223; text-align: center; margin-bottom: 30px;">Notifications & Alerts Management</h1>
 
     <?php if ($message): ?>
         <div class="alert alert-<?= $message_type === 'success' ? 'success' : 'danger' ?>">
@@ -227,7 +227,7 @@ require_once 'includes/header.php';
 
     <!-- Room Inventory Status -->
     <div class="notification-section">
-        <h2 style="color: #F7B223; margin-bottom: 20px;">🏨 Current Room Inventory</h2>
+        <h2 style="color: #F7B223; margin-bottom: 20px;">Current Room Inventory</h2>
         
         <table class="inventory-table">
             <thead>
@@ -271,14 +271,14 @@ require_once 'includes/header.php';
             <label style="color: #F7B223; font-weight: bold;">Alert Threshold:</label>
             <input type="number" name="threshold" value="2" min="1" max="10" style="padding: 8px; margin: 0 10px;">
             <button type="submit" name="check_inventory" class="btn btn-danger">
-                ⚠️ Check Inventory & Send Alerts
+                Check Inventory & Send Alerts
             </button>
         </form>
     </div>
 
     <!-- Upcoming Check-ins -->
     <div class="notification-section">
-        <h2 style="color: #F7B223; margin-bottom: 20px;">📅 Upcoming Check-ins (Next 7 Days)</h2>
+        <h2 style="color: #F7B223; margin-bottom: 20px;">Upcoming Check-ins (Next 7 Days)</h2>
         
         <table class="inventory-table">
             <thead>
@@ -306,7 +306,7 @@ require_once 'includes/header.php';
 
     <!-- Automated Processes -->
     <div class="notification-section">
-        <h2 style="color: #F7B223; margin-bottom: 20px;">🤖 Automated Processes</h2>
+        <h2 style="color: #F7B223; margin-bottom: 20px;">Automated Processes</h2>
         
         <div style="margin-bottom: 20px;">
             <h3 style="color: #F7B223;">Daily Automation Status</h3>
@@ -314,10 +314,10 @@ require_once 'includes/header.php';
             
             <div style="background: #081C3A; padding: 15px; border-radius: 5px; margin: 10px 0;">
                 <ul style="color: #F7B223; margin: 0;">
-                    <li>📧 <strong>1-Day Reminders:</strong> Sent automatically to guests checking in tomorrow</li>
-                    <li>📅 <strong>3-Day Reminders:</strong> Sent automatically to guests checking in in 3 days</li>
-                    <li>⚠️ <strong>Inventory Alerts:</strong> Sent to admin when room availability is low</li>
-                    <li>🔄 <strong>Schedule:</strong> Runs daily at 9:00 AM automatically</li>
+                    <li><strong>1-Day Reminders:</strong> Sent automatically to guests checking in tomorrow</li>
+                    <li><strong>3-Day Reminders:</strong> Sent automatically to guests checking in in 3 days</li>
+                    <li><strong>Inventory Alerts:</strong> Sent to admin when room availability is low</li>
+                    <li><strong>Schedule:</strong> Runs daily at 9:00 AM automatically</li>
                 </ul>
             </div>
         </div>
@@ -327,33 +327,13 @@ require_once 'includes/header.php';
             <p style="color: #fff;">Manually trigger today's automated processes for testing or immediate execution.</p>
             <form method="POST" style="display: inline;">
                 <button type="submit" name="run_daily_automation" class="btn btn-primary">
-                    ⚡ Run Daily Automation Now
+                    Run Daily Automation Now
                 </button>
             </form>
         </div>
     </div>
 
-    <!-- Email Configuration -->
-    <div class="notification-section">
-        <h2 style="color: #F7B223; margin-bottom: 20px;">⚙️ Email Configuration</h2>
-        
-        <div style="color: #fff;">
-            <p><strong>Current Configuration:</strong></p>
-            <ul>
-                <li>✅ Gmail SMTP Server (smtp.gmail.com:587)</li>
-                <li>✅ TLS Encryption Enabled</li>
-                <li>✅ From Address: <?= FROM_EMAIL ?></li>
-                <li>✅ Admin Notifications: <?= ADMIN_EMAIL ?></li>
-                <li>✅ Automated Daily Processing</li>
-            </ul>
-            
-            <p><strong>System Status:</strong> Email notifications are fully operational and configured for production use.</p>
-            
-            <div style="background: #28a745; padding: 10px; border-radius: 5px; margin: 10px 0;">
-                <strong>✅ Email System Ready:</strong> All booking confirmations, reminders, and alerts are being sent automatically.
-            </div>
-        </div>
-    </div>
+
 
     <div style="text-align: center; margin-top: 30px;">
         <a href="admin_dashboard.php" class="btn btn-primary">← Back to Dashboard</a>
