@@ -31,14 +31,14 @@ a:hover { text-decoration: underline; }
     margin: 30px auto 60px;
     padding: 20px;
 }
+body.homepage {
+    display: flex;
+    flex-direction: column;
+}
 body.homepage .container {
     max-width: 100%;
     padding: 0;
     margin: 0;
-}
-body.homepage {
-    display: flex;
-    flex-direction: column;
 }
 
 /* --- HEADER & NAVIGATION --- */
@@ -46,23 +46,8 @@ body.homepage {
     background-color: #0E1E40;
     position: static;
     border-bottom: 3px solid #F7B223;
-    z-index: 1000; /* Ensure header is on top */
-}
-
-/* FIX 1: This entire rule block for the homepage header is removed 
-  to stop it from floating on top of the page content.
-*/
-/* body.homepage .main-header {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
     z-index: 1000;
-    background-color: transparent;
-    border-bottom: none;
-} 
-*/
-
+}
 .header-content {
     display: flex;
     justify-content: space-between;
@@ -72,7 +57,7 @@ body.homepage {
     margin: 0 auto;
 }
 .logo img {
-    height: 130px;
+    height: 140px;
     width: auto;
     display: block;
 }
@@ -105,7 +90,6 @@ nav a.active::after { transform: scaleX(1); transform-origin: bottom left; }
     position: relative;
     text-align: center;
     color: #fff;
-    /* FIX 2: Reduced top padding since the header now takes up its own space */
     padding: 60px 20px; 
     display: flex;
     flex-direction: column;
@@ -145,67 +129,46 @@ nav a.active::after { transform: scaleX(1); transform-origin: bottom left; }
     transform: translateY(-5px);
 }
 
-/* --- BUTTONS --- */
+/* --- BUTTONS, FORMS, TABLES (Consolidated) --- */
 .btn { display: inline-block; padding: 10px 20px; font-weight: bold; border-radius: 6px; text-decoration: none; cursor: pointer; border: none; transition: all 0.2s ease; }
 .btn:hover { transform: translateY(-2px); text-decoration: none; }
 .btn-sm { padding: 5px 10px; font-size: 0.875rem; }
 .btn-primary { background-color: #F7B223; color: #081C3A; }
 .btn-primary:hover { background-color: #e5a91d; }
-.btn-secondary { background-color: #6c757d; color: #fff; }
-.btn-secondary:hover { background-color: #5a6268; }
-.btn-danger { background-color: #dc3545; color: white; }
-.btn-danger:hover { background: #c82333; }
-.btn-link-style { color: #5dade2; background: none; border: none; padding: 0; font-weight: bold; }
-.btn-link-style:hover { color: #85c1e9; transform: none; }
-
-/* --- FORMS --- */
 .form-container { max-width: 600px; margin: 20px auto; padding: 2rem; background-color: #081C3A; border-radius: 12px; border: 1px solid #122C55; }
 .form-label { display: block; margin-bottom: 8px; font-weight: bold; color: #F7B223; }
 .form-input, .form-select, textarea.form-input { width: 100%; padding: 10px; margin-bottom: 1.25rem; border-radius: 8px; border: 1px solid #ccc; font-size: 1rem; color: #081C3A; background-color: #fff; font-family: 'Roboto', sans-serif; }
-.form-input[disabled], .form-input[readonly] { background-color: #e9ecef; cursor: not-allowed; }
-
-/* --- TABLES --- */
 .data-table { width: 100%; border-collapse: collapse; margin-top: 25px; color: #ffffff; background-color: transparent; }
 .data-table th { color: #F7B223; padding: 12px; text-align: left; border-bottom: 2px solid #F7B223; }
 .data-table td { padding: 10px 12px; border-bottom: 1px solid #122C55; vertical-align: middle; }
 .data-table tbody tr:hover { background-color: #122C55; }
-.details-table { width: 100%; max-width: 700px; margin-top: 20px; border-collapse: collapse; color: #ffffff; }
-.details-table th, .details-table td { text-align: left; padding: 12px; border-bottom: 1px solid #122C55; vertical-align: middle; }
-.details-table tr:last-child th, .details-table tr:last-child td { border-bottom: none; }
-.details-table th { width: 200px;  color: #F7B223; }
 
-/* --- DASHBOARD & WIDGETS --- */
+/* --- DASHBOARD WIDGETS --- */
 .card { background: #081C3A; padding: 20px; border-radius: 10px; border: 1px solid #122C55; }
 .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
 .kpi-card { background: #081C3A; padding: 20px; border-radius: 10px; border: 1px solid #122C55; display: flex; align-items: center; gap: 15px; }
 .kpi-card .icon { font-size: 2.5rem; color: #F7B223; }
 .kpi-card .info .value { font-size: 1.8rem; font-weight: bold; color: #fff; }
 .kpi-card .info .label { font-size: 0.9rem; color: #aaa; }
-.progress-bar { width: 100%; background-color: #122C55; border-radius: 5px; height: 25px; overflow: hidden; }
-.progress-fill { height: 100%; background-color: #F7B223; text-align: center; line-height: 25px; color: #081C3A; font-weight: bold; transition: width 0.5s ease-in-out; }
 
-/* --- HOUSEKEEPING & ROOM PLAN STYLES --- */
+/* --- HOUSEKEEPING PAGE --- */
 .hk-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 30px; }
 .status-section { background-color: #081C3A; padding: 20px; border-radius: 10px; border: 1px solid #122C55; }
-.status-section h3 { margin-top: 0; color: #F7B223; border-bottom: 2px solid #122C55; padding-bottom: 10px; margin-bottom: 20px;}
-.room-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 15px; }
+.status-section h3 { margin-top: 0; color: #F7B223; border-bottom: 2px solid #122C55; padding-bottom: 10px; margin-bottom: 20px; }
+.room-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 15px; }
 .room-card { background-color: #122C55; padding: 15px; border-radius: 8px; color: #fff; display: flex; flex-direction: column; gap: 15px; }
-.room-card .room-info { display: flex; justify-content: space-between; align-items: flex-start; }
-.room-card .room-number { font-size: 1.5rem; font-weight: bold; }
-.room-card .guest-name { font-size: 0.9rem; font-style: italic; color: #ccc; }
 .update-form { display: flex; gap: 10px; align-items: center; }
 .update-form select { flex-grow: 1; }
 .update-form button { white-space: nowrap; }
-.room-plan-container { overflow-x: auto; padding-bottom: 15px; border: 1px solid #122C55; border-radius: 8px; background-color: #081C3A; }
-.tape-chart { min-width: 900px; border-collapse: collapse; table-layout: fixed; }
-.tape-chart th, .tape-chart td { border: 1px solid #06172D; text-align: center; padding: 0; height: 40px; }
-.tape-chart th { color: #F7B223; font-size: 0.85rem; padding: 8px 4px; position: sticky; top: 0; z-index: 10; background-color: #0E1E40; }
-.booking-block { display: flex; align-items: center; justify-content: center; height: 100%; width: 100%; color: #fff; font-weight: bold; font-size: 0.8rem; padding: 0 5px; text-decoration: none; border-radius: 4px; }
-.status-checked-in, .status-occupied { background-color: #e74c3c; }
-.status-confirmed { background-color: #3498db; }
-.legend { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 20px; align-items: center; }
-.legend li { display: flex; align-items: center; gap: 8px; }
-.legend .color-box { width: 20px; height: 20px; border: 1px solid #fff; border-radius: 4px; }
+.filter-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #122C55; padding-bottom: 10px; }
+.filter-tabs .tab { padding: 8px 15px; cursor: pointer; border-radius: 6px; font-weight: bold; background-color: #122C55; border: 1px solid #122C55; transition: all 0.2s ease; }
+.filter-tabs .tab:hover { background-color: #2E4053; }
+.filter-tabs .tab.active { background-color: #F7B223; color: #081C3A; border-color: #F7B223; }
+.status-dot { height: 12px; width: 12px; border-radius: 50%; display: inline-block; margin-right: 8px; }
+.status-dot.clean { background-color: #2ecc71; }
+.status-dot.dirty { background-color: #f1c40f; }
+.status-dot.occupied { background-color: #e74c3c; }
+.status-dot.maintenance { background-color: #95a5a6; }
 
 /* --- FOOTER (Compact Version) --- */
 .main-footer { background-color: #06172D; color: #ccc; padding: 20px 30px; margin-top: auto; border-top: 3px solid #F7B223; text-align: center; }
