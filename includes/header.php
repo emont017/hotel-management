@@ -8,7 +8,11 @@ $current_page = basename($_SERVER['PHP_SELF']);
   <meta charset="UTF-8">
   <title><?= isset($title) ? htmlspecialchars($title) : "FIU Hotel Management"; ?></title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@700&family=Orbitron:wght@700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  
   <link rel="stylesheet" href="/assets/css/style.css"> 
 </head>
 <body class="<?= $current_page == 'index.php' ? 'homepage' : '' ?>">
@@ -16,7 +20,9 @@ $current_page = basename($_SERVER['PHP_SELF']);
 <header class="main-header <?= $current_page == 'index.php' ? 'homepage-header' : '' ?>">
     <div class="header-content">
         <div class="logo">
-            <a href="/index.php">FIU</a>
+            <a href="/index.php">
+                <img src="/assets/images/FIU-Panthers-Logo-2009.png" alt="FIU Logo">
+            </a>
         </div>
         <nav>
             <a href="/index.php" class="<?= $current_page == 'index.php' ? 'active' : '' ?>">Home</a>
