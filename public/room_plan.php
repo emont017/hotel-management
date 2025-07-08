@@ -49,6 +49,80 @@ while($booking = $bookings_result->fetch_assoc()) {
 }
 ?>
 
+<style>
+    .room-plan-container { 
+        overflow-x: auto; 
+        padding-bottom: 15px; 
+        border: 1px solid #122C55; 
+        border-radius: 8px; 
+        background-color: #081C3A;
+    }
+    .tape-chart { 
+        min-width: 900px; 
+        border-collapse: collapse; 
+        table-layout: fixed; 
+    }
+    .tape-chart th, .tape-chart td { 
+        border: 1px solid #06172D; 
+        text-align: center; 
+        padding: 0; 
+        height: 40px; 
+    }
+    .tape-chart th { 
+        color: #F7B223; 
+        font-size: 0.85rem; 
+        padding: 8px 4px; 
+        position: sticky; top: 0; 
+        z-index: 10;
+        background-color: #0E1E40;
+    }
+    .room-number-col { 
+        color: #F7B223; 
+        font-weight: bold; 
+        position: sticky; left: 0; 
+        z-index: 5; 
+        width: 100px; 
+        background-color: #0E1E40;
+    }
+    .date-cell { font-size: 0.75rem; }
+    .booking-block { 
+        display: flex; align-items: center; justify-content: center; 
+        height: 100%; width: 100%; 
+        color: #fff; font-weight: bold; font-size: 0.8rem; 
+        padding: 0 5px; box-sizing: border-box; overflow: hidden; 
+        text-decoration: none; border-radius: 4px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .status-checked-in, .status-occupied { background-color: #e74c3c; }
+    .status-confirmed { background-color: #3498db; }
+    .status-vacant-clean { background-color: #2ecc71; }
+    .status-vacant-dirty { background-color: #f1c40f; }
+    .status-maintenance { 
+        background-color: #95a5a6; 
+        background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.1) 10px, rgba(0,0,0,0.1) 20px); 
+    }
+    .legend { 
+        list-style: none; 
+        padding: 0; 
+        display: flex; 
+        flex-wrap: wrap; 
+        gap: 20px; 
+        margin-bottom: 20px;
+        align-items: center;
+    }
+    .legend li { 
+        display: flex; 
+        align-items: center; 
+        gap: 8px; 
+    }
+    .legend .color-box { 
+        width: 20px; 
+        height: 20px; 
+        border: 1px solid #fff;
+        border-radius: 4px;
+    }
+</style>
+
 <div class="mb-20" style="display: flex; justify-content: space-between; align-items: center;">
     <h2>🏨 Visual Room Plan</h2>
     <div style="display: flex; gap: 10px;">
