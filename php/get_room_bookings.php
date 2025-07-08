@@ -1,6 +1,6 @@
 <?php
 header('Content-Type: application/json');
-require_once 'db.php';
+require_once __DIR__ . '/../config/db.php';
 
 if (!isset($_GET['room_id']) || !is_numeric($_GET['room_id'])) {
     http_response_code(400);
@@ -22,7 +22,7 @@ while ($row = $result->fetch_assoc()) {
     $events[] = [
         'title' => 'Booked',
         'start' => $row['check_in'],
-        'end' => date('Y-m-d', strtotime($row['check_out'] . ' +1 day')),
+        'end' => $row['check_out'], // Corrected: FullCalendar's end date is exclusive
         'status' => 'booked'
     ];
 }

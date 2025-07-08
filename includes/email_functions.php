@@ -10,7 +10,7 @@ if (file_exists(__DIR__ . '/../config/email_config_local.php')) {
 } else {
     require_once __DIR__ . '/../config/email_config.php';
 }
-require_once __DIR__ . '/../lib/phpmailer/PHPMailer.php';
+require_once __DIR__ . '/../lib/PHPMailer.php';
 
 /**
  * Send email using SMTP

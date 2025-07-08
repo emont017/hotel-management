@@ -2,13 +2,12 @@
 session_start();
 header('Content-Type: application/json');
 
-// Ensure only logged-in users can access this
 if (!isset($_SESSION['user_id'])) {
     echo json_encode(['error' => 'Authentication required.']);
     exit;
 }
 
-require_once 'db.php';
+require_once __DIR__ . '/../config/db.php';
 
 $booking_id = (int)($_GET['booking_id'] ?? 0);
 

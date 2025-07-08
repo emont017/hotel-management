@@ -4,6 +4,8 @@ Before you begin, make sure you have the following software installed:
 
 XAMPP: You can download it from the official Apache Friends website (https://www.apachefriends.org/index.html).
 
+
+
 INSTALLATION AND SETUP
 
 Follow these steps carefully to set up the project.
@@ -18,9 +20,13 @@ Navigate to a folder where you want to save the project (like your Desktop or Do
 
 Clone the repository by running this command:
 
+
 git clone https://github.com/emont017/hotel-management.git
 
+
 This will create a new folder named hotel-management with all the project files inside.
+
+
 
 Step 2: Start Your Local Server with XAMPP
 
@@ -29,6 +35,7 @@ Open the XAMPP Control Panel.
 Click the "Start" button next to both Apache and MySQL.
 
 Both should turn green, indicating they are running correctly.
+
 
 Step 3: Set Up the Database with phpMyAdmin
 
@@ -58,6 +65,7 @@ Scroll to the bottom of the page and click the "Go" button.
 
 If it's successful, you will see a green message and your new tables will appear in the sidebar under hotel_management.
 
+
 Step 4: Move the Project into Your Web Server Folder
 
 Find the hotel-management project folder that you downloaded.
@@ -68,21 +76,52 @@ On Windows, this is usually C:\xampp\htdocs\
 
 On macOS, this is usually /Applications/XAMPP/xamppfiles/htdocs/
 
-RUNNING THE PROJECT
 
-Once you've completed the setup, you can view the project in your web browser.
+Step 5: Configure the Local Domain (http://hotel.local)
 
-Open your web browser.
 
-Go to the following address:
-http://localhost/hotel-management/
 
-The hotel management system homepage should now be live.
+Configure Apache
+
+1.  In the XAMPP Control Panel, *Stop* the Apache service if it is running.
+2.  Open the following file in a text editor: `C:\xampp\apache\conf\extra\httpd-vhosts.conf`
+3.  Add this code block to the very end of the file:
+
+    <VirtualHost *:80>
+        DocumentRoot "C:/xampp/htdocs/hotel-management/public"
+        ServerName hotel.local
+        <Directory "C:/xampp/htdocs/hotel-management/public">
+            AllowOverride All
+            Require all granted
+        </Directory>
+    </VirtualHost>
+
+
+4.  Save and close the file.
+
+
+Configure Windows `hosts` File
+
+1.  Open **Notepad as an Administrator** (search for Notepad in the Start Menu, right-click, and select "Run as administrator").
+2.  In Notepad, go to `File > Open` and navigate to this exact path: `C:\Windows\System32\drivers\etc\hosts`
+3.  Go to the last line of the file and add this new line:
+
+    127.0.0.1    hotel.local
+
+4.  Save and close the file.
+
+
+Restart Apache
+
+1.  Go back to the XAMPP Control Panel and *Start* the Apache service.
+2.  You can now access the entire project by navigating to http://hotel.local/
+
 
 Default Admin Login:
 
-Use the admin credentials provided by your system administrator. 
-For initial setup, create an admin account through the user management system.
+User: Test2
+Psswd: Test123
+
 
 HOW TO SAVE AND PUSH YOUR WORK TO GITHUB
 
@@ -115,3 +154,39 @@ Username: Enter your GitHub username.
 Password: PASTE your Personal Access Token here. Do not type your GitHub password.
 
 If you don't have a token, you can generate one in your GitHub Developer Settings (https://github.com/settings/tokens/new). Make sure to give it the "repo" scope.
+
+
+--Version 1.2 updates--
+
+
+Professional File Structure: Reorganized all files into a secure structure with a /public web root and dedicated folders for config, includes, and PHP logic.
+
+Local Domain Setup: Configured the Apache server and Windows hosts file to run the project on a professional local domain (http://hotel.local).
+
+Centralized Styling: Removed all inline styles and <style> blocks from PHP files and consolidated them into a single, managed style.css file.
+
+Consistent Theme: Established a consistent, readable color scheme based on FIU's blue and gold.
+
+Admin Dashboard Redesign: Revamped the admin dashboard into a modern, KPI-driven layout with cards for key metrics like ADR and RevPAR.
+
+Interactive Housekeeping Page: Transformed the housekeeping list into a powerful, interactive table with filter tabs and inline actions.
+
+Dynamic Booking Page: Upgraded the "Book a Stay" page into a multi-step process that dynamically checks for room availability.
+
+Compact Footer: Redesigned the footer to be more compact and professional.
+
+User Editing: Added a complete feature for admins to edit all user details, including their role and password.
+
+Dynamic Pricing: Implemented a room_rates table to allow for dynamic pricing based on dates, replacing the old static price system.
+
+Guest Billing Foundation: Added folios and folio_items tables to the database, creating the foundation for an enterprise-grade billing system.
+
+Fixed all PHP errors, warnings, and notices.
+
+Patched an SQL injection vulnerability and ensured all database queries are secure.
+
+Corrected all broken links and form submission errors by implementing a secure API endpoint pattern.
+
+Fixed the booking logic to correctly create a new guest profile for every public booking.
+
+Configured and fixed the email sending functionality.
