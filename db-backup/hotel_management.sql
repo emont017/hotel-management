@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 08, 2025 at 08:40 PM
+-- Generation Time: Jul 09, 2025 at 06:25 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -61,7 +61,7 @@ CREATE TABLE `bookings` (
 --
 
 INSERT INTO `bookings` (`id`, `user_id`, `room_id`, `check_in`, `check_out`, `total_price`, `status`, `confirmation_number`, `source`, `created_at`) VALUES
-(6, 3, 4, '2025-07-09', '2025-07-10', 120.00, 'confirmed', 'FIU-20250708-F237', 'Online', '2025-07-08 17:20:29'),
+(6, 3, 4, '2025-07-09', '2025-07-10', 120.00, 'checked-in', 'FIU-20250708-F237', 'Online', '2025-07-08 17:20:29'),
 (7, 3, 5, '2025-07-09', '2025-07-10', 180.00, 'confirmed', 'FIU-20250708-B66F', 'Online', '2025-07-08 17:24:30'),
 (8, 6, 6, '2025-07-09', '2025-07-10', 220.00, 'confirmed', 'FIU-20250708-5E44', 'Online', '2025-07-08 17:37:00'),
 (9, 7, 4, '2025-07-10', '2025-07-11', 120.00, 'confirmed', 'FIU-20250708-7F52', 'Online', '2025-07-08 17:39:48');
@@ -132,6 +132,22 @@ CREATE TABLE `housekeeping_logs` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `housekeeping_tasks`
+--
+
+CREATE TABLE `housekeeping_tasks` (
+  `id` int(11) NOT NULL,
+  `room_id` int(11) NOT NULL,
+  `assigned_to_user_id` int(11) NOT NULL,
+  `task_date` date NOT NULL,
+  `status` enum('pending','completed') NOT NULL DEFAULT 'pending',
+  `notes` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `payments`
 --
 
@@ -175,7 +191,7 @@ CREATE TABLE `rooms` (
   `capacity` int(11) DEFAULT 2,
   `image_path` varchar(255) DEFAULT NULL,
   `status` enum('available','booked','maintenance') DEFAULT 'available',
-  `housekeeping_status` enum('clean','dirty','maintenance') NOT NULL DEFAULT 'dirty'
+  `housekeeping_status` enum('clean','dirty','maintenance','occupied') NOT NULL DEFAULT 'dirty'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 --
@@ -183,7 +199,7 @@ CREATE TABLE `rooms` (
 --
 
 INSERT INTO `rooms` (`id`, `room_type`, `room_number`, `capacity`, `image_path`, `status`, `housekeeping_status`) VALUES
-(4, 'Double Room', '101', 2, 'img/rooms/double.jpg', 'available', 'clean'),
+(4, 'Double Room', '101', 2, 'img/rooms/double.jpg', 'available', 'occupied'),
 (5, 'Executive Suite', '201', 4, 'img/rooms/suite.jpg', 'available', 'clean'),
 (6, 'Suite with Balcony', '301', 4, 'img/rooms/balcony.jpg', 'available', 'clean');
 
@@ -292,6 +308,14 @@ ALTER TABLE `housekeeping_logs`
   ADD KEY `updated_by` (`updated_by`);
 
 --
+-- Indexes for table `housekeeping_tasks`
+--
+ALTER TABLE `housekeeping_tasks`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_hktasks_room` (`room_id`),
+  ADD KEY `fk_hktasks_user` (`assigned_to_user_id`);
+
+--
 -- Indexes for table `payments`
 --
 ALTER TABLE `payments`
@@ -368,6 +392,12 @@ ALTER TABLE `housekeeping_logs`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `housekeeping_tasks`
+--
+ALTER TABLE `housekeeping_tasks`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `payments`
 --
 ALTER TABLE `payments`
@@ -438,6 +468,13 @@ ALTER TABLE `folio_items`
 ALTER TABLE `housekeeping_logs`
   ADD CONSTRAINT `housekeeping_logs_ibfk_1` FOREIGN KEY (`room_id`) REFERENCES `rooms` (`id`),
   ADD CONSTRAINT `housekeeping_logs_ibfk_2` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`);
+
+--
+-- Constraints for table `housekeeping_tasks`
+--
+ALTER TABLE `housekeeping_tasks`
+  ADD CONSTRAINT `fk_hktasks_room` FOREIGN KEY (`room_id`) REFERENCES `rooms` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_hktasks_user` FOREIGN KEY (`assigned_to_user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `payments`
