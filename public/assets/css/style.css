@@ -107,7 +107,6 @@ nav a::after {
     transition: transform 0.25s ease-out;
 }
 nav a:hover, nav a.active { color: #B6862C; }
-nav a.active::after { transform: scaleX(1); transform-origin: bottom left; }
 
 /* --- HOMEPAGE HERO SECTION --- */
 #hero {

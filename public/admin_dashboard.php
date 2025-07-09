@@ -172,7 +172,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (result.data && result.data.length > 0) {
                         let headers = Object.keys(result.data[0]);
                         let originalHeaders = [...headers];
-
                         let displayHeaders = headers.map(h => {
                             if (h === 'booking_id') return 'Actions';
                             return h.replace(/_/g, ' ').toUpperCase();
@@ -227,8 +226,27 @@ document.addEventListener('DOMContentLoaded', function() {
                 type: 'line',
                 data: result.data,
                 options: { 
-                    scales: { y: { beginAtZero: true } },
-                    maintainAspectRatio: false
+                    scales: { 
+                        y: { 
+                            beginAtZero: true,
+                            ticks: { color: '#ccc' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        },
+                        x: {
+                            ticks: { color: '#ccc' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        }
+                    },
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#ccc' }
+                        },
+                        tooltip: {
+                            // THIS IS THE NEW SETTING
+                            displayColors: false
+                        }
+                    }
                 }
             });
         })

@@ -21,15 +21,16 @@ require_once __DIR__ . '/../includes/header.php';
                 <label for="checkout_date" class="form-label">Check-out Date</label>
                 <input type="date" id="checkout_date" name="checkout_date" class="form-input" required>
             </div>
-            <button id="check-availability-btn" class="btn btn-primary">Check Availability</button>
+            <div>
+                 <button id="check-availability-btn" class="btn btn-primary">Check Availability</button>
+            </div>
         </div>
     </div>
 
     <div id="booking-step-2" style="display: none;">
         <div class="card">
             <h3>Step 2: Choose Your Room</h3>
-            <div id="availability-results" class="mt-30">
-                </div>
+            <div id="availability-results" class="mt-30"></div>
             <div id="results-loader" style="display: none;" class="loader"></div>
             <p id="results-message"></p>
         </div>
@@ -60,8 +61,6 @@ require_once __DIR__ . '/../includes/header.php';
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // The JavaScript logic does not need to be changed.
-    // It remains the same as the previous version.
     const checkBtn = document.getElementById('check-availability-btn');
     const resultsDiv = document.getElementById('availability-results');
     const loader = document.getElementById('results-loader');
