@@ -4,19 +4,19 @@ Before you begin, make sure you have the following software installed:
 
 XAMPP: You can download it from the official Apache Friends website (https://www.apachefriends.org/index.html).
 
-
+--------------------------------------------------------------------------------
 
 INSTALLATION AND SETUP
 
 Follow these steps carefully to set up the project.
 
-Step 1: Download the Project Files from GitHub
+Step 1: Download the Project Files from GitHub. Open your computer's Terminal (on Mac) or Git Bash (on Windows).
 
-First, you need to get a copy of the project on your computer.
+Navigate to a folder:
+On Windows, C:\xampp\htdocs\
 
-Open your computer's Terminal (on Mac) or Git Bash (on Windows).
+On macOS, /Applications/XAMPP/xamppfiles/htdocs/
 
-Navigate to a folder where you want to save the project (like your Desktop or Documents).
 
 Clone the repository by running this command:
 
@@ -26,60 +26,12 @@ git clone https://github.com/emont017/hotel-management.git
 
 This will create a new folder named hotel-management with all the project files inside.
 
+--------------------------------------------------------------------------------
+
+Step 2: Configure the Local Domain- Instructions for Mac & Windows below:
 
 
-Step 2: Start Your Local Server with XAMPP
-
-Open the XAMPP Control Panel.
-
-Click the "Start" button next to both Apache and MySQL.
-
-Both should turn green, indicating they are running correctly.
-
-
-Step 3: Set Up the Database with phpMyAdmin
-
-This is the most important step. The website will not work without the database.
-
-Open phpMyAdmin: Open your web browser and go to this address: http://localhost/phpmyadmin
-
-Create the Database:
-
-On the left sidebar, click on "New".
-
-In the "Database name" field, type exactly hotel_management.
-
-Click the "Create" button.
-
-Import the Database Structure:
-
-In the left sidebar, click on the hotel_management database you just created.
-
-Click on the "Import" tab at the top of the page.
-
-Under the "File to import" section, click the "Choose File" button.
-
-Navigate to the project folder you downloaded from GitHub (hotel-management). Inside that folder, go into the db_backup folder and select the .sql file.
-
-Scroll to the bottom of the page and click the "Go" button.
-
-If it's successful, you will see a green message and your new tables will appear in the sidebar under hotel_management.
-
-
-Step 4: Move the Project into Your Web Server Folder
-
-Find the hotel-management project folder that you downloaded.
-
-Move this entire folder into the htdocs folder inside your XAMPP installation directory.
-
-On Windows, this is usually C:\xampp\htdocs\
-
-On macOS, this is usually /Applications/XAMPP/xamppfiles/htdocs/
-
-
-Step 5: Configure the Local Domain (http://hotel.local)- Instructions for Mac & Windows below:
-
-Configure Apache (Mac)
+Step 2.1: Configure Apache (Mac)
 
 1. In the XAMPP Control Panel, Stop the Apache service if it is running.
 2. Use Finder to go to your Applications folder, open XAMPP, and find the file at the following path:
@@ -99,7 +51,8 @@ Configure Apache (Mac)
 
 4. Save and close the file.
 
-Configure Mac Hosts file
+
+Step 2.2: Configure Mac Hosts file
 
 1. Open Terminal
 2. Open hosts file with the following command:
@@ -112,7 +65,8 @@ sudo nano /etc/hosts
 
 4. Save and exit.
 
-Configure Apache conf file
+
+Step 2.3: Configure Apache conf file
 
 1. Open the main Apache configuration file, httpd.conf:
 
@@ -128,18 +82,9 @@ Include etc/extra/httpd-vhosts.conf
 
 4. Save and close the httpd.conf file.
 
+********************************************************************************
 
-Restart Apache
-
-1. Go back to the XAMPP application.
-2. Restart the Apache server.
-3. You can now access the entire project by navigating to http://hotel.local/
-
-
---------------------------------------------------------------------------------
-
-
-Configure Apache (Windows)
+Step 2.1: Configure Apache (Windows)
 
 1.  In the XAMPP Control Panel, Stop the Apache service if it is running.
 2.  Open the following file in a text editor: C:\xampp\apache\conf\extra\httpd-vhosts.conf
@@ -158,7 +103,7 @@ Configure Apache (Windows)
 4.  Save and close the file.
 
 
-Configure Windows `hosts` File
+Step 2.2: Configure Windows `hosts` File
 
 1.  Open Notepad as an Administrator
 2.  In Notepad, go to File > Open and navigate to this exact path: 
@@ -171,40 +116,98 @@ C:\Windows\System32\drivers\etc\hosts
 
 4.  Save and close the file.
 
+--------------------------------------------------------------------------------
 
-Restart Apache
+Step 3: Start Your Local Server with XAMPP
 
-1.  Go back to the XAMPP Control Panel and Start the Apache service.
-2.  You can now access the entire project by navigating to http://hotel.local/
+Open the XAMPP Control Panel.
 
+Click the "Start" button next to both Apache and MySQL.
+
+Both should turn green, indicating they are running correctly.
+
+--------------------------------------------------------------------------------
+
+Step 4: Set Up the Database with phpMyAdmin
+
+***This is the most important step. The website will not work without the database.***
+
+Open your web browser and go to this address: http://localhost/phpmyadmin
+
+
+Step 4.1: Create the Database:
+
+On the left sidebar, click on "New".
+
+In the "Database name" field, type exactly hotel_management.
+
+Click the "Create" button.
+
+
+Step 4.2: Import the Database Structure:
+
+In the left sidebar, click on the hotel_management database you just created.
+
+Click on the "Import" tab at the top of the page.
+
+Under the "File to import" section, click the "Choose File" button.
+
+Navigate to the project folder you downloaded from GitHub (hotel-management). Inside that folder, go into the db_backup folder and select the .sql file.
+
+Scroll to the bottom of the page and click the "Go" button.
+
+If it's successful, you will see a green message and your new tables will appear in the sidebar under hotel_management.
+
+--------------------------------------------------------------------------------
+
+Step 5: Restart Apache
+
+1. Go back to the XAMPP application.
+2. Restart the Apache server.
+3. You can now access the entire project by navigating to: http://hotel.local/
+
+
+--------------------------------------------------------------------------------
 
 Default Admin Login:
 
 User: Test2
 Psswd: Test123
 
+--------------------------------------------------------------------------------
 
 HOW TO SAVE AND PUSH YOUR WORK TO GITHUB
 
 When you make changes to the code, you need to save them back to GitHub so the rest of the team can see them.
+
 
 Step 1: Add and Commit Your Changes
 
 After you've saved your changes in your code editor, open your Terminal or Git Bash.
 
 Navigate into the project folder:
-cd /path/to/your/htdocs/hotel-management
+On Windows, C:\xampp\htdocs\
 
-Add all the changed files to be saved:
+On macOS, /Applications/XAMPP/xamppfiles/htdocs/
+
+
+Step 2: Add all the changed files to be saved:
+
 git add .
 
-Commit (save) the changes with a short, descriptive message:
+
+Step 3: Commit (save) the changes with a descriptive message:
+
 git commit -m "Describe the change you made"
 
-Step 2: Push Your Changes to GitHub
+
+Step 4: Push Your Changes to GitHub
 
 Run the push command:
+
 git push
+
+********************************************************************************
 
 Authentication: GitHub no longer accepts your regular password here. You must use a Personal Access Token (PAT).
 
@@ -216,6 +219,7 @@ Password: PASTE your Personal Access Token here. Do not type your GitHub passwor
 
 If you don't have a token, you can generate one in your GitHub Developer Settings (https://github.com/settings/tokens/new). Make sure to give it the "repo" scope.
 
+--------------------------------------------------------------------------------
 
 --Version 1.2 updates--
 
