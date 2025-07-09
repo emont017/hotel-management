@@ -151,6 +151,7 @@ $departures_list = $departures_list_stmt->get_result();
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Modal Logic
     const modal = document.getElementById('details-modal');
     const modalTitle = document.getElementById('modal-title');
     const modalBody = document.getElementById('modal-body');
@@ -170,9 +171,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     let tableHTML = '<p>No data to display.</p>';
                     if (result.data && result.data.length > 0) {
                         let headers = Object.keys(result.data[0]);
-                        let originalHeaders = [...headers]; // Keep original keys for data access
+                        let originalHeaders = [...headers];
 
-                        // Create display-friendly headers
                         let displayHeaders = headers.map(h => {
                             if (h === 'booking_id') return 'Actions';
                             return h.replace(/_/g, ' ').toUpperCase();
@@ -213,6 +213,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
+    // Chart.js Logic
     const ctx = document.getElementById('revenueChart').getContext('2d');
     let revenueChart;
 

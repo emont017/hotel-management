@@ -186,9 +186,9 @@ Step 1: Add and Commit Your Changes
 After you've saved your changes in your code editor, open your Terminal or Git Bash.
 
 Navigate into the project folder:
-On Windows, C:\xampp\htdocs\
+On Windows, C:\xampp\htdocs\hotel-management
 
-On macOS, /Applications/XAMPP/xamppfiles/htdocs/
+On macOS, /Applications/XAMPP/xamppfiles/htdocs/hotel-management
 
 
 Step 2: Add all the changed files to be saved:
