@@ -77,14 +77,55 @@ On Windows, this is usually C:\xampp\htdocs\
 On macOS, this is usually /Applications/XAMPP/xamppfiles/htdocs/
 
 
-Step 5: Configure the Local Domain (http://hotel.local)
+Step 5: Configure the Local Domain (http://hotel.local)- Instructions for Mac & Windows below:
+
+Configure Apache (Mac)
+
+1. In the XAMPP Control Panel, Stop the Apache service if it is running.
+2. Use Finder to go to your Applications folder, open XAMPP, and find the file at the following path:
+
+/Applications/XAMPP/xamppfiles/etc/extra/httpd-vhosts.conf
+
+3. Add this code block to the very end of the file:
+
+<VirtualHost *:80>
+    DocumentRoot "/Applications/XAMPP/xamppfiles/htdocs/hotel-management/public"
+    ServerName hotel.local
+    <Directory "/Applications/XAMPP/xamppfiles/htdocs/hotel-management/public">
+        AllowOverride All
+        Require all granted
+    </Directory>
+</VirtualHost>
+
+4. Save and close the file.
+
+Configure Mac Hosts file
+
+1. Open Terminal
+2. Open hosts file with the following command:
+
+sudo nano /etc/hosts
+
+3. Add the following line at the bottom of the file:
+
+    127.0.0.1    hotel.local
+
+4. Save and exit.
+
+Restart Apache
+
+1. Go back to the XAMPP application.
+2. Restart the Apache server.
+3. You can now access the entire project by navigating to http://hotel.local/
 
 
+--------------------------------------------------------------------------------
 
-Configure Apache
 
-1.  In the XAMPP Control Panel, *Stop* the Apache service if it is running.
-2.  Open the following file in a text editor: `C:\xampp\apache\conf\extra\httpd-vhosts.conf`
+Configure Apache (Windows)
+
+1.  In the XAMPP Control Panel, Stop the Apache service if it is running.
+2.  Open the following file in a text editor: C:\xampp\apache\conf\extra\httpd-vhosts.conf
 3.  Add this code block to the very end of the file:
 
     <VirtualHost *:80>
@@ -102,8 +143,11 @@ Configure Apache
 
 Configure Windows `hosts` File
 
-1.  Open **Notepad as an Administrator** (search for Notepad in the Start Menu, right-click, and select "Run as administrator").
-2.  In Notepad, go to `File > Open` and navigate to this exact path: `C:\Windows\System32\drivers\etc\hosts`
+1.  Open Notepad as an Administrator
+2.  In Notepad, go to File > Open and navigate to this exact path: 
+
+C:\Windows\System32\drivers\etc\hosts
+
 3.  Go to the last line of the file and add this new line:
 
     127.0.0.1    hotel.local
@@ -113,7 +157,7 @@ Configure Windows `hosts` File
 
 Restart Apache
 
-1.  Go back to the XAMPP Control Panel and *Start* the Apache service.
+1.  Go back to the XAMPP Control Panel and Start the Apache service.
 2.  You can now access the entire project by navigating to http://hotel.local/
 
 
@@ -158,28 +202,29 @@ If you don't have a token, you can generate one in your GitHub Developer Setting
 
 --Version 1.2 updates--
 
+Review configuration setup information as the project was overhauled to run on a local domain.
 
 Professional File Structure: Reorganized all files into a secure structure with a /public web root and dedicated folders for config, includes, and PHP logic.
 
-Local Domain Setup: Configured the Apache server and Windows hosts file to run the project on a professional local domain (http://hotel.local).
+Local Domain Setup: Configured the Apache server and Windows hosts file to run the project on a  local domain (http://hotel.local).
 
-Centralized Styling: Removed all inline styles and <style> blocks from PHP files and consolidated them into a single, managed style.css file.
+Centralized Styling: Removed all inline styles and <style> blocks from PHP files and consolidated them into a single style.css file.
 
-Consistent Theme: Established a consistent, readable color scheme based on FIU's blue and gold.
+Consistent Theme: Established a consistent color scheme based on FIU's blue and gold.
 
-Admin Dashboard Redesign: Revamped the admin dashboard into a modern, KPI-driven layout with cards for key metrics like ADR and RevPAR.
+Admin Dashboard Redesign: Revamped the admin dashboard into a KPI-driven layout with cards for key metrics like ADR and RevPAR.
 
-Interactive Housekeeping Page: Transformed the housekeeping list into a powerful, interactive table with filter tabs and inline actions.
+Interactive Housekeeping Page: Transformed the housekeeping list into a interactive table with filter tabs and inline actions.
 
 Dynamic Booking Page: Upgraded the "Book a Stay" page into a multi-step process that dynamically checks for room availability.
 
-Compact Footer: Redesigned the footer to be more compact and professional.
+Compact Footer: Redesigned the footer to be more compact.
 
-User Editing: Added a complete feature for admins to edit all user details, including their role and password.
+User Editing: Added a feature for admins to edit all user details, including their role and password.
 
-Dynamic Pricing: Implemented a room_rates table to allow for dynamic pricing based on dates, replacing the old static price system.
+Dynamic Pricing: Implemented a room_rates table to allow for dynamic pricing based on dates, replacing the old price system.
 
-Guest Billing Foundation: Added folios and folio_items tables to the database, creating the foundation for an enterprise-grade billing system.
+Guest Billing Foundation: Added folios and folio_items tables to the database.
 
 Fixed all PHP errors, warnings, and notices.
 
