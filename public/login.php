@@ -1,5 +1,12 @@
 <?php
 session_start();
+
+// If a user is already logged in, redirect them to the welcome page
+if (isset($_SESSION['user_id'])) {
+    header("Location: welcome.php");
+    exit;
+}
+
 require_once __DIR__ . '/../config/db.php';
 
 $error = '';
@@ -30,7 +37,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 exit;
             }
         }
-        // If we get here, either user not found or password wrong
         $error = "Invalid username or password.";
     }
     $stmt->close();

@@ -139,7 +139,7 @@ Step 4.1: Create the Database:
 
 On the left sidebar, click on "New".
 
-In the "Database name" field, type exactly hotel_management.
+In the "Database name" field, type exactly: hotel_management
 
 Click the "Create" button.
 
@@ -227,7 +227,7 @@ Review configuration setup information as the project was overhauled to run on a
 
 Professional File Structure: Reorganized all files into a secure structure with a /public web root and dedicated folders for config, includes, and PHP logic.
 
-Local Domain Setup: Configured the Apache server and Windows hosts file to run the project on a  local domain (http://hotel.local).
+Local Domain Setup: Configured the Apache server and Windows hosts file to run the project on a local domain (http://hotel.local).
 
 Centralized Styling: Removed all inline styles and <style> blocks from PHP files and consolidated them into a single style.css file.
 
@@ -235,7 +235,7 @@ Consistent Theme: Established a consistent color scheme based on FIU's blue and 
 
 Admin Dashboard Redesign: Revamped the admin dashboard into a KPI-driven layout with cards for key metrics like ADR and RevPAR.
 
-Interactive Housekeeping Page: Transformed the housekeeping list into a interactive table with filter tabs and inline actions.
+Interactive Housekeeping Page: Transformed the housekeeping list into an interactive table with filter tabs and inline actions.
 
 Dynamic Booking Page: Upgraded the "Book a Stay" page into a multi-step process that dynamically checks for room availability.
 

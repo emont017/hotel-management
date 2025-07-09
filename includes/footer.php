@@ -11,7 +11,7 @@
 
         </div>
         <div class="footer-info">
-            <p><strong>The Capstone Team:</strong> Carmine Talarico, Jonathan Gonzalez, Edward Montes, Alberto Enrique Santalo Jr</p>
+            <p><strong>Development Team:</strong> Carmine Talarico, Jonathan Gonzalez, Edward Montes, Alberto Enrique Santalo Jr</p>
             <p class="copyright">&copy; <?php echo date("Y"); ?> FIU Hotel Management System | All Rights Reserved</p>
         </div>
     </div>

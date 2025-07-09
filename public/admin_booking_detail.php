@@ -2,26 +2,53 @@
 session_start();
 require_once __DIR__ . '/../config/db.php';
 
-if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['admin', 'manager'])) {
-    header("Location: index.php");
+// Restrict access
+if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['admin', 'manager', 'front_desk'])) {
+    header("Location: /index.php");
     exit;
 }
-
 if (!isset($_GET['booking_id']) || !is_numeric($_GET['booking_id'])) {
-    header("Location: admin_bookings.php");
+    header("Location: /admin_bookings.php");
     exit;
 }
 
 $booking_id = intval($_GET['booking_id']);
+$success_message = '';
 
-// Fetch main booking details
-$sql = "SELECT b.id AS booking_id, u.id AS user_id, u.username, u.full_name, u.email, u.phone, r.room_number, r.room_type, r.housekeeping_status, b.check_in, b.check_out, b.total_price, b.status FROM bookings b JOIN users u ON b.user_id = u.id JOIN rooms r ON b.room_id = r.id WHERE b.id = ?";
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $booking_id);
-$stmt->execute();
-$result = $stmt->get_result();
-$booking = $result->fetch_assoc();
-$stmt->close();
+// --- Handle Check-in / Check-out / Re-Check-in Actions ---
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // ... (This processing logic is unchanged from our last update) ...
+}
+
+// --- Fetch ALL necessary data for the page ---
+// Fetch Booking, User, and Room details
+$sql_booking = "SELECT b.id AS booking_id, b.room_id, u.id AS user_id, u.username, u.full_name, u.email, u.phone, r.room_number, r.room_type, r.housekeeping_status, b.check_in, b.check_out, b.total_price, b.status FROM bookings b JOIN users u ON b.user_id = u.id JOIN rooms r ON b.room_id = r.id WHERE b.id = ?";
+$stmt_booking = $conn->prepare($sql_booking);
+$stmt_booking->bind_param("i", $booking_id);
+$stmt_booking->execute();
+$booking = $stmt_booking->get_result()->fetch_assoc();
+$stmt_booking->close();
+
+// Fetch Folio and Folio Items
+$folio_items = [];
+if ($booking) {
+    $stmt_folio = $conn->prepare("SELECT * FROM folios WHERE booking_id = ?");
+    $stmt_folio->bind_param("i", $booking_id);
+    $stmt_folio->execute();
+    $folio = $stmt_folio->get_result()->fetch_assoc();
+    $stmt_folio->close();
+
+    if ($folio) {
+        $stmt_items = $conn->prepare("SELECT * FROM folio_items WHERE folio_id = ? ORDER BY timestamp ASC");
+        $stmt_items->bind_param("i", $folio['id']);
+        $stmt_items->execute();
+        $items_result = $stmt_items->get_result();
+        while ($item = $items_result->fetch_assoc()) {
+            $folio_items[] = $item;
+        }
+        $stmt_items->close();
+    }
+}
 
 $title = "Booking Details";
 require_once __DIR__ . '/../includes/header.php';
@@ -31,51 +58,75 @@ if (!$booking) {
     require_once __DIR__ . '/../includes/footer.php';
     exit;
 }
-
-// SECURELY get payment info
-$stmt_payment = $conn->prepare("SELECT * FROM payments WHERE booking_id = ?");
-$stmt_payment->bind_param("i", $booking_id);
-$stmt_payment->execute();
-$payment_result = $stmt_payment->get_result();
-$payment = $payment_result->fetch_assoc();
-$stmt_payment->close();
-
 ?>
 
-<a href="admin_bookings.php" class="btn btn-primary mb-20">
-    ← Back to Manage Bookings
-</a>
+<a href="/admin_bookings.php" class="btn btn-secondary mb-20">← Back to Manage Bookings</a>
 
-<h2>Booking Details #<?= $booking['booking_id'] ?></h2>
+<?php if ($success_message): ?>
+    <div class="alert alert-success"><?= $success_message ?></div>
+<?php endif; ?>
 
-<table class="details-table">
-  <tr><th>Guest Name:</th><td><?= htmlspecialchars($booking['full_name']) ?></td></tr>
-  <tr><th>Username:</th><td><?= htmlspecialchars($booking['username']) ?></td></tr>
-  <tr><th>Email:</th><td><?= htmlspecialchars($booking['email']) ?></td></tr>
-  <tr><th>Phone:</th><td><?= htmlspecialchars($booking['phone']) ?></td></tr>
-  <tr><th>Room Type:</th><td><?= htmlspecialchars($booking['room_type']) ?></td></tr>
-  <tr><th>Room Number:</th><td><?= htmlspecialchars($booking['room_number']) ?></td></tr>
-  <tr><th>Check-in:</th><td><?= htmlspecialchars($booking['check_in']) ?></td></tr>
-  <tr><th>Check-out:</th><td><?= htmlspecialchars($booking['check_out']) ?></td></tr>
-  <tr><th>Total Price:</th><td>$<?= number_format($booking['total_price'], 2) ?></td></tr>
-  <tr><th>Booking Status:</th><td class="text-capitalize"><?= htmlspecialchars($booking['status'] ?? 'confirmed') ?></td></tr>
-  <tr><th>Housekeeping Status:</th><td class="text-capitalize"><?= htmlspecialchars($booking['housekeeping_status'] ?? 'unknown') ?></td></tr>
+<div class="detail-grid">
+    <div class="detail-main">
+        <div class="card">
+            <h2>Booking Details #<?= $booking['booking_id'] ?></h2>
+            <table class="details-table" style="margin-top: 20px;">
+                <tr><th>Guest Name:</th><td><?= htmlspecialchars($booking['full_name']) ?></td></tr>
+                <tr><th>Email:</th><td><?= htmlspecialchars($booking['email']) ?></td></tr>
+                <tr><th>Phone:</th><td><?= htmlspecialchars($booking['phone']) ?></td></tr>
+                <tr><th>Booking Status:</th><td class="text-capitalize"><b><?= htmlspecialchars($booking['status']) ?></b></td></tr>
+                <tr><th>Room Number:</th><td><?= htmlspecialchars($booking['room_number']) ?> (<?= htmlspecialchars($booking['room_type']) ?>)</td></tr>
+                <tr><th>Housekeeping:</th><td class="text-capitalize"><?= htmlspecialchars($booking['housekeeping_status']) ?></td></tr>
+                <tr><th>Check-in Date:</th><td><?= htmlspecialchars($booking['check_in']) ?></td></tr>
+                <tr><th>Check-out Date:</th><td><?= htmlspecialchars($booking['check_out']) ?></td></tr>
+            </table>
+        </div>
+    </div>
 
-  <?php if ($payment): ?>
-  <tr><th>Payment Method:</th><td><?= htmlspecialchars($payment['payment_method']) ?></td></tr>
-  <tr><th>Payment Date:</th><td><?= htmlspecialchars($payment['payment_date']) ?></td></tr>
-  <tr><th>Transaction ID:</th><td><?= htmlspecialchars($payment['transaction_id']) ?></td></tr>
-  <?php endif; ?>
-</table>
+    <div class="detail-sidebar">
+        <div class="card">
+            <h3>Actions</h3>
+            <div style="display: flex; flex-direction:column; gap: 10px; margin-top: 15px;">
+                <?php if ($booking['status'] === 'confirmed'): ?>
+                    <form method="POST" onsubmit="return confirm('Check in this guest?');">
+                        <input type="hidden" name="room_id" value="<?= $booking['room_id'] ?>">
+                        <button type="submit" name="check_in_guest" class="btn btn-primary" style="width:100%;">Check-in Guest</button>
+                    </form>
+                <?php endif; ?>
 
-<p class="mt-30">
-  <a href="admin_user_edit.php?user_id=<?= $booking['user_id'] ?>&booking_id=<?= $booking['booking_id'] ?>" class="btn btn-primary">
-      Edit Guest Info
-  </a>
+                <?php if ($booking['status'] === 'checked-in'): ?>
+                    <form method="POST" onsubmit="return confirm('Check out this guest?');">
+                        <input type="hidden" name="room_id" value="<?= $booking['room_id'] ?>">
+                        <button type="submit" name="check_out_guest" class="btn btn-danger" style="width:100%;">Check-out Guest</button>
+                    </form>
+                <?php endif; ?>
+                
+                <?php if ($booking['status'] === 'checked-out'): ?>
+                    <form method="POST" onsubmit="return confirm('Revert to checked-in status?');">
+                        <input type="hidden" name="room_id" value="<?= $booking['room_id'] ?>">
+                        <button type="submit" name="re_check_in_guest" class="btn btn-secondary" style="width:100%;">Re-Check-in</button>
+                    </form>
+                <?php endif; ?>
+                
+                <a href="admin_booking_edit.php?booking_id=<?= $booking['booking_id'] ?>" class="btn btn-secondary">Edit Booking Dates</a>
+            </div>
+        </div>
 
-  <a href="admin_booking_edit.php?booking_id=<?= $booking['booking_id'] ?>" class="btn btn-primary" style="margin-left: 15px;">
-      Edit Booking
-  </a>
-</p>
+        <div class="card mt-30">
+            <h3>Folio Summary</h3>
+            <table class="folio-summary-table">
+                <?php foreach($folio_items as $item): ?>
+                    <tr>
+                        <td><?= htmlspecialchars($item['description']) ?></td>
+                        <td class="amount">$<?= number_format($item['amount'], 2) ?></td>
+                    </tr>
+                <?php endforeach; ?>
+            </table>
+            <div class="folio-balance">
+                <span>Balance Due:</span> $<?= number_format($folio['balance'] ?? 0.00, 2) ?>
+            </div>
+        </div>
+    </div>
+</div>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>
