@@ -112,6 +112,23 @@ sudo nano /etc/hosts
 
 4. Save and exit.
 
+Configure Apache conf file
+
+1. Open the main Apache configuration file, httpd.conf:
+
+/Applications/XAMPP/xamppfiles/etc/httpd.conf
+
+2. Find the following line in the file:
+
+#Include etc/extra/httpd-vhosts.conf
+
+3. Remove the # symbol from the beginning of that line. It should now look like this:
+
+Include etc/extra/httpd-vhosts.conf
+
+4. Save and close the httpd.conf file.
+
+
 Restart Apache
 
 1. Go back to the XAMPP application.
