@@ -94,12 +94,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['complete_task'])) {
             <tbody>
                 <?php foreach($all_rooms as $room): ?>
                     <?php
-                        // 3. Determine status with PHP for reliability
+                        // 3. Determine status with PHP for reliability based on ENUM values
                         $status_class = '';
                         $status_text = '';
                         $guest_name = null;
                         
-                        if ($room['status'] === 'maintenance') {
+                        // Use a specific hierarchy to determine the most accurate current status.
+                        if ($room['status'] === 'maintenance' || $room['housekeeping_status'] === 'maintenance') {
                             $status_class = 'maintenance';
                             $status_text = 'Maintenance';
                         } elseif (isset($active_bookings[$room['id']])) {
@@ -109,9 +110,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['complete_task'])) {
                         } elseif ($room['housekeeping_status'] === 'clean') {
                             $status_class = 'clean';
                             $status_text = 'Clean & Ready';
-                        } elseif ($room['housekeeping_status'] === 'dirty') {
+                        } elseif (in_array($room['housekeeping_status'], ['dirty', 'occupied'])) {
+                            // A room is dirty if explicitly 'dirty', or if 'occupied' without an active check-in (post-checkout).
                             $status_class = 'dirty';
-                            $status_text = 'Needs Cleaning';
+                            $status_text = 'Checked out / Dirty';
+                        } else {
+                            // Fallback for any other or null status, ensuring no blank statuses.
+                            $status_class = 'dirty';
+                            $status_text = 'Needs Attention';
                         }
                     ?>
                     <tr data-status="<?= $status_class ?>">
