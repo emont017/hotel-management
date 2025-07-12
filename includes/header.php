@@ -41,14 +41,9 @@ $current_page = basename($_SERVER['PHP_SELF']);
                     <a href="/housekeeping.php" class="<?= $current_page == 'housekeeping.php' ? 'active' : '' ?>">Housekeeping</a>
                     <a href="/payments.php" class="<?= $current_page == 'payments.php' ? 'active' : '' ?>">Payments</a>
                     <a href="/reports.php" class="<?= $current_page == 'reports.php' ? 'active' : '' ?>">Reports</a>
+                    <a href="/night_audit.php" class="<?= $current_page == 'night_audit.php' ? 'active' : '' ?>">Night Audit</a>
+					<a href="/users.php" class="<?= $current_page == 'users.php' ? 'active' : '' ?>">Staff</a>
                     
-                    <?php if ($role === 'admin'): ?>
-                        <a href="/night_audit.php" class="<?= $current_page == 'night_audit.php' ? 'active' : '' ?>">Night Audit</a>
-                    <?php endif; ?>
-
-                    <?php if ($role === 'admin'): ?>
-                        <a href="/users.php" class="<?= $current_page == 'users.php' ? 'active' : '' ?>">Staff</a>
-                    <?php endif; ?>
                 <?php elseif ($role === 'guest'): ?>
                     <a href="/manage_reservations.php" class="<?= $current_page == 'manage_reservations.php' ? 'active' : '' ?>">My Reservations</a>
                 <?php endif; ?>
