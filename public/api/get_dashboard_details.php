@@ -51,7 +51,7 @@ switch ($metric) {
             $result = $stmt->get_result()->fetch_assoc();
             $data[] = $result['daily_revenue'] ?? 0;
         }
-        $response['data'] = ['labels' => $labels, 'datasets' => [['label' => 'Daily Revenue', 'data' => $data, 'borderColor' => '#F7B223', 'backgroundColor' => 'rgba(247, 178, 35, 0.2)', 'fill' => true, 'tension' => 0.4]]];
+        $response['data'] = ['labels' => $labels, 'datasets' => [['label' => 'Daily Revenue', 'data' => $data, 'borderColor' => '#B6862C', 'backgroundColor' => 'rgba(247, 178, 35, 0.2)', 'fill' => true, 'tension' => 0.4]]];
         break;
 }
 
