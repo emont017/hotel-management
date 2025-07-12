@@ -42,6 +42,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
                     <a href="/payments.php" class="<?= $current_page == 'payments.php' ? 'active' : '' ?>">Payments</a>
                     <a href="/reports.php" class="<?= $current_page == 'reports.php' ? 'active' : '' ?>">Reports</a>
                     <a href="/night_audit.php" class="<?= $current_page == 'night_audit.php' ? 'active' : '' ?>">Night Audit</a>
+                    <a href="/audit_log_viewer.php" class="<?= $current_page == 'audit_log_viewer.php' ? 'active' : '' ?>">Audit Logs</a>
 					<a href="/users.php" class="<?= $current_page == 'users.php' ? 'active' : '' ?>">Staff</a>
                     
                 <?php elseif ($role === 'guest'): ?>

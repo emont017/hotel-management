@@ -42,10 +42,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['complete_task'])) {
 .filter-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #122C55; padding-bottom: 10px; }
 .filter-tabs .tab { padding: 8px 15px; cursor: pointer; border-radius: 6px; font-weight: bold; background-color: #122C55; border: 1px solid #122C55; transition: all 0.2s ease; }
 .filter-tabs .tab:hover { background-color: #2E4053; }
-.filter-tabs .tab.active { background-color: #F7B223; color: #081C3A; border-color: #F7B223; }
+.filter-tabs .tab.active { background-color: #B6862C; color: #081C3A; border-color: #F7B223; }
 .status-dot { height: 12px; width: 12px; border-radius: 50%; display: inline-block; margin-right: 8px; vertical-align: middle; }
 .status-dot.clean { background-color: #2ecc71; }
-.status-dot.dirty { background-color: #f1c40f; }
+.status-dot.dirty { background-color: #B6862C; }
 .status-dot.occupied { background-color: #e74c3c; }
 .status-dot.maintenance { background-color: #95a5a6; }
 </style>
