@@ -20,6 +20,8 @@ $is_audit_page = in_array($current_page, ['night_audit.php', 'audit_log_viewer.p
   <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@700&family=Orbitron:wght@700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
   
   <link rel="stylesheet" href="/assets/css/style.css"> 
+  
+  <link rel="icon" type="image/png" href="/assets/images/FIUFavicon.png">
 </head>
 <body class="<?= $current_page == 'index.php' ? 'homepage' : '' ?>">
 
@@ -54,7 +56,7 @@ $is_audit_page = in_array($current_page, ['night_audit.php', 'audit_log_viewer.p
                         <a href="/admin_bookings.php" class="dropdown-toggle <?= $is_booking_page ? 'active' : '' ?>">Bookings</a>
                         <div class="dropdown-menu">
                             <a href="/admin_bookings.php">Manage Bookings</a>
-                            <a href="/room_plan.php">Room Plan</a>
+                            <a href="/room_plan.php">Upcoming Stays</a>
                         </div>
                     </div>
                     
