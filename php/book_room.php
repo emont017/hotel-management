@@ -117,6 +117,12 @@ try {
         "New booking: {$confirmation_number}, Room: {$room_type}, Dates: {$checkin_date} to {$checkout_date}, Total: $" . number_format($total_price, 2));
 
     $conn->commit();
+    
+    // Automatically log in the newly created guest user so they can view their reservation
+    $_SESSION['user_id'] = $user_id;
+    $_SESSION['username'] = $username;
+    $_SESSION['role'] = $role;
+    $_SESSION['full_name'] = $full_name;
 
 } catch (Exception $e) {
     $conn->rollback();
@@ -154,7 +160,10 @@ require_once __DIR__ . '/../includes/header.php';
             <tr><th>Total Price:</th><td>$<?= number_format($total_price, 2) ?></td></tr>
         </table>
     </div>
-    <a href="/index.php" class="btn btn-primary mt-30">Return to Homepage</a>
+    <div style="display: flex; gap: 15px; justify-content: center; margin-top: 30px;">
+        <a href="/index.php" class="btn btn-primary">Return to Homepage</a>
+        <a href="/manage_reservations.php" class="btn btn-secondary">View My Reservations</a>
+    </div>
 </div>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>
