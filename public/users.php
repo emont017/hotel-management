@@ -9,7 +9,6 @@ if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['admin', 'mana
 }
 
 // --- CSRF Token Generation & Validation ---
-// Generate a token if one doesn't exist
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
@@ -20,7 +19,6 @@ $feedback_type = '';
 
 // --- Handle POST Actions (Create User) ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Verify CSRF token
     if (!isset($_POST['csrf_token']) || !hash_equals($csrf_token, $_POST['csrf_token'])) {
         die('CSRF token validation failed.');
     }
@@ -38,10 +36,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $conn->prepare("INSERT INTO users (username, password, role, full_name, email, phone) VALUES (?, ?, ?, ?, ?, ?)");
             $stmt->bind_param("ssssss", $username, $hashed_password, $role, $full_name, $email, $phone);
             if ($stmt->execute()) {
-                $feedback_message = "User '{$username}' created successfully!";
+                $feedback_message = "Staff member '{$username}' created successfully!";
                 $feedback_type = 'success';
             } else {
-                $feedback_message = "Error: Could not create user. The username or email might already exist.";
+                $feedback_message = "Error: Could not create staff member. The username or email might already exist.";
                 $feedback_type = 'danger';
             }
             $stmt->close();
@@ -52,9 +50,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// --- Handle GET Actions (Delete/Deactivate User) ---
+// --- Handle GET Actions (Deactivate User) ---
 if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['user_id'])) {
-    // Verify CSRF token from URL
     if (!isset($_GET['token']) || !hash_equals($csrf_token, $_GET['token'])) {
         die('CSRF token validation failed.');
     }
@@ -62,19 +59,17 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['user_
     $user_id_to_delete = (int)$_GET['user_id'];
     $current_user_id = (int)$_SESSION['user_id'];
 
-    // Prevent a user from deleting themselves
     if ($user_id_to_delete === $current_user_id) {
-        $feedback_message = "Error: You cannot delete your own account.";
+        $feedback_message = "Error: You cannot deactivate your own account.";
         $feedback_type = 'danger';
     } else {
-        // Soft delete the user by setting is_active to 0
         $stmt = $conn->prepare("UPDATE users SET is_active = 0 WHERE id = ?");
         $stmt->bind_param("i", $user_id_to_delete);
         if ($stmt->execute()) {
-            $feedback_message = "User deactivated successfully.";
+            $feedback_message = "Staff member deactivated successfully.";
             $feedback_type = 'success';
         } else {
-            $feedback_message = "Error: Could not deactivate user.";
+            $feedback_message = "Error: Could not deactivate staff member.";
             $feedback_type = 'danger';
         }
         $stmt->close();
@@ -82,9 +77,10 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['user_
 }
 
 
-// --- Data Fetching with Filtering ---
+// --- Data Fetching with Filtering (Guests Excluded) ---
 $filter_role = $_GET['filter_role'] ?? 'all';
-$sql = "SELECT id, username, role, full_name, email, phone FROM users WHERE is_active = 1";
+// UPDATED SQL: Added "AND role != 'guest'" to exclude guest accounts
+$sql = "SELECT id, username, role, full_name, email, phone FROM users WHERE is_active = 1 AND role != 'guest'";
 $params = [];
 $types = '';
 
@@ -119,7 +115,7 @@ require_once __DIR__ . '/../includes/header.php';
 
 <!-- User Creation Form -->
 <div class="form-container">
-    <h3>Create New User</h3>
+    <h3>Create New Staff Member</h3>
     <form method="post" action="users.php">
         <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>">
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
@@ -140,7 +136,7 @@ require_once __DIR__ . '/../includes/header.php';
                     <option value="front_desk">Front Desk</option>
                     <option value="housekeeping">Housekeeping</option>
                     <option value="accountant">Accountant</option>
-                    <option value="guest">Guest</option>
+                    <!-- "Guest" role removed from this staff creation form -->
                 </select>
             </div>
             <div>
@@ -156,24 +152,24 @@ require_once __DIR__ . '/../includes/header.php';
                 <input type="tel" name="phone" class="form-input">
             </div>
         </div>
-        <button type="submit" name="create_user" class="btn btn-primary mt-30">Create User</button>
+        <button type="submit" name="create_user" class="btn btn-primary mt-30">Create Staff Member</button>
     </form>
 </div>
 
 
 <!-- User List & Filtering -->
-<h3 class="mt-30">Active Users</h3>
+<h3 class="mt-30">Active Staff Members</h3>
 <div class="card">
     <form method="GET" action="users.php" class="mb-20">
         <label for="filter_role" class="form-label">Filter by Role:</label>
         <select name="filter_role" id="filter_role" class="form-select" onchange="this.form.submit()" style="width: 200px; display: inline-block;">
-            <option value="all" <?= $filter_role === 'all' ? 'selected' : '' ?>>All Roles</option>
+            <option value="all" <?= $filter_role === 'all' ? 'selected' : '' ?>>All Staff Roles</option>
             <option value="admin" <?= $filter_role === 'admin' ? 'selected' : '' ?>>Admin</option>
             <option value="manager" <?= $filter_role === 'manager' ? 'selected' : '' ?>>Manager</option>
             <option value="front_desk" <?= $filter_role === 'front_desk' ? 'selected' : '' ?>>Front Desk</option>
             <option value="housekeeping" <?= $filter_role === 'housekeeping' ? 'selected' : '' ?>>Housekeeping</option>
             <option value="accountant" <?= $filter_role === 'accountant' ? 'selected' : '' ?>>Accountant</option>
-            <option value="guest" <?= $filter_role === 'guest' ? 'selected' : '' ?>>Guest</option>
+            <!-- "Guest" role removed from filter -->
         </select>
     </form>
 
@@ -210,7 +206,7 @@ require_once __DIR__ . '/../includes/header.php';
                     <?php endwhile; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="7" class="text-center">No active users found matching the criteria.</td>
+                        <td colspan="7" class="text-center">No active staff members found matching the criteria.</td>
                     </tr>
                 <?php endif; ?>
             </tbody>

@@ -66,7 +66,7 @@ require_once __DIR__ . '/../includes/header.php';
 
     <!-- Left Column: Assign New Tasks -->
     <div class="card">
-        <h2>📝 Assign New Tasks</h2>
+        <h2>Assign New Tasks</h2>
         <p>Assign dirty rooms to available housekeepers for today.</p>
 
         <?php if ($feedback_message): ?>
@@ -104,7 +104,7 @@ require_once __DIR__ . '/../includes/header.php';
 
     <!-- Right Column: View Current Assignments -->
     <div class="card">
-        <h2>📋 Today's Assignments</h2>
+        <h2>Today's Assignments</h2>
         <p>A list of all cleaning tasks currently pending for today.</p>
         <div style="overflow-x: auto;">
             <table class="data-table">
