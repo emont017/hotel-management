@@ -12,7 +12,7 @@ $title = "Upcoming Stays";
 require_once __DIR__ . '/../includes/header.php';
 
 // --- Date and Navigation Logic ---
-$today = new DateTime();
+$today = new DateTime('now', new DateTimeZone('America/New_York'));
 $start_date_str = $_GET['start_date'] ?? $today->format('Y-m-d');
 $start_date = new DateTime($start_date_str);
 $days_to_show = 7;
