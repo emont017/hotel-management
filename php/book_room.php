@@ -37,27 +37,56 @@ try {
     }
 
     // =========================================================================
-    //  DEFINITIVE LOGIC CORRECTION
-    //  This block now ensures a NEW guest user is created for this booking,
-    //  regardless of who is currently logged in. This keeps public bookings
-    //  separate from staff accounts.
+    //  IMPROVED USER LOGIC
+    //  Check if user is already logged in as a guest, if so use that account.
+    //  Otherwise, check if a guest with this email already exists.
+    //  Only create a new account if neither condition is met.
     // =========================================================================
     
-    // Create a unique username and a random, secure password for the new guest.
-    $username = preg_replace("/[^a-z0-9]/i", "", strtolower($full_name)) . rand(100,999);
-    $hashed_password = password_hash(bin2hex(random_bytes(8)), PASSWORD_DEFAULT);
-    $role = 'guest';
+    // Check if user is already logged in as a guest
+    if (isset($_SESSION['user_id']) && isset($_SESSION['role']) && $_SESSION['role'] === 'guest') {
+        $user_id = $_SESSION['user_id'];
+        $username = $_SESSION['username'];
+        
+        // Update their info in case it changed
+        $stmt_update = $conn->prepare("UPDATE users SET full_name = ?, email = ?, phone = ? WHERE id = ?");
+        $stmt_update->bind_param("sssi", $full_name, $email, $phone, $user_id);
+        $stmt_update->execute();
+        $stmt_update->close();
+        
+    } else {
+        // Check if a guest user with this email already exists
+        $stmt_check = $conn->prepare("SELECT id, username FROM users WHERE email = ? AND role = 'guest'");
+        $stmt_check->bind_param("s", $email);
+        $stmt_check->execute();
+        $existing_result = $stmt_check->get_result();
+        
+        if ($existing_user = $existing_result->fetch_assoc()) {
+            // Use existing guest account
+            $user_id = $existing_user['id'];
+            $username = $existing_user['username'];
+            
+            // Update their info in case it changed
+            $stmt_update = $conn->prepare("UPDATE users SET full_name = ?, phone = ? WHERE id = ?");
+            $stmt_update->bind_param("ssi", $full_name, $phone, $user_id);
+            $stmt_update->execute();
+            $stmt_update->close();
+        } else {
+            // Create a new guest user
+            $username = preg_replace("/[^a-z0-9]/i", "", strtolower($full_name)) . rand(100,999);
+            $hashed_password = password_hash(bin2hex(random_bytes(8)), PASSWORD_DEFAULT);
+            $role = 'guest';
 
-    // Insert the new user into the database.
-    $stmt_user = $conn->prepare("INSERT INTO users (username, password, full_name, email, phone, role) VALUES (?, ?, ?, ?, ?, ?)");
-    $stmt_user->bind_param("ssssss", $username, $hashed_password, $full_name, $email, $phone, $role);
-    $stmt_user->execute();
+            $stmt_user = $conn->prepare("INSERT INTO users (username, password, full_name, email, phone, role) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmt_user->bind_param("ssssss", $username, $hashed_password, $full_name, $email, $phone, $role);
+            $stmt_user->execute();
+            $user_id = $stmt_user->insert_id;
+            $stmt_user->close();
+        }
+        $stmt_check->close();
+    }
     
-    // Get the ID of the user we just created.
-    $user_id = $stmt_user->insert_id; 
-    $stmt_user->close();
-    
-    // --- End of User Creation Logic ---
+    // --- End of User Logic ---
 
     // Find an available room
     $stmt_room = $conn->prepare("SELECT id FROM rooms WHERE room_type = ? AND status = 'available' AND id NOT IN (SELECT room_id FROM bookings WHERE status != 'cancelled' AND ? < check_out AND ? > check_in) LIMIT 1");
@@ -118,11 +147,13 @@ try {
 
     $conn->commit();
     
-    // Automatically log in the newly created guest user so they can view their reservation
-    $_SESSION['user_id'] = $user_id;
-    $_SESSION['username'] = $username;
-    $_SESSION['role'] = $role;
-    $_SESSION['full_name'] = $full_name;
+    // Automatically log in the guest user so they can view their reservation (if not already logged in)
+    if (!isset($_SESSION['user_id'])) {
+        $_SESSION['user_id'] = $user_id;
+        $_SESSION['username'] = $username;
+        $_SESSION['role'] = 'guest';
+        $_SESSION['full_name'] = $full_name;
+    }
 
 } catch (Exception $e) {
     $conn->rollback();
