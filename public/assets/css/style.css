@@ -106,7 +106,7 @@ nav a:hover, nav a.active { color: #B6862C; }
     position: relative;
     text-align: center;
     color: #fff;
-    padding: 60px 20px; 
+    padding: 60px 20px;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -231,7 +231,7 @@ nav a:hover, nav a.active { color: #B6862C; }
     position: absolute;
     background-color: #081E3F;
     width: max-content;
-    min-width: 100%; 
+    min-width: 100%;
     box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.4);
     z-index: 1001;
     border-radius: 0 0 8px 8px;
@@ -258,13 +258,65 @@ nav a:hover, nav a.active { color: #B6862C; }
 }
 
 /* --- FOOTER --- */
-.main-footer { background-color: #06172D; color: #ccc; padding: 20px 30px; margin-top: auto; border-top: 3px solid #B6862C; text-align: center; }
-.footer-content { max-width: 1200px; margin: 0 auto; }
-.footer-links { margin-bottom: 15px; }
-.footer-links a { color: #fff; font-weight: bold; margin: 0 15px; font-size: 0.9rem; }
-.footer-links a:hover { color: #B6862C; }
-.footer-info p { margin: 5px 0; font-size: 0.85rem; color: #B6862C; }
-.footer-info .copyright { font-size: 0.8rem; color: #888; }
+.main-footer {
+    background-color: #06172D;
+    color: #ccc;
+    padding: 20px 30px;
+    margin-top: auto;
+    border-top: 3px solid #B6862C;
+}
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+}
+.footer-logo img {
+    max-height: 70px;
+    width: auto;
+    display: block;
+}
+.footer-main-content {
+    text-align: center; 
+}
+.footer-links {
+    margin-bottom: 15px;
+}
+.footer-links a {
+    color: #fff;
+    font-weight: bold;
+    margin: 0 10px 0 0;
+    font-size: 0.9rem;
+}
+.footer-links a:hover {
+    color: #B6862C;
+}
+.footer-info p {
+    margin: 5px 0;
+    font-size: 0.85rem;
+    color: #B6862C;
+}
+.footer-info .copyright {
+    font-size: 0.8rem;
+    color: #888;
+}
+
+@media (max-width: 768px) {
+    .footer-content {
+        flex-direction: column;
+        gap: 20px;
+    }
+    .footer-main-content {
+        text-align: center;
+    }
+    .footer-links a {
+        margin: 0 10px;
+    }
+}
+
 
 /* --- UTILITIES --- */
 .mt-30 { margin-top: 30px; }

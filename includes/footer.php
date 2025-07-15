@@ -1,7 +1,14 @@
 </div>
 
 <footer class="main-footer">
-    <div class="footer-content">
+<div class="footer-content">
+    <div class="footer-logo">
+        <a href="/index.php">
+            <img src="/assets/images/FIULogoFooter.png" alt="FIU Footer Logo">
+        </a>
+    </div>
+
+    <div class="footer-main-content">
         <div class="footer-links">
             <?php if (isset($_SESSION['user_id'])): ?>
                 <?php $role = $_SESSION['role']; ?>
@@ -47,6 +54,7 @@
             <p class="copyright">&copy; <?php echo date("Y"); ?> FIU Hotel Management System | All Rights Reserved</p>
         </div>
     </div>
+</div>
 </footer>
 
 </body>
