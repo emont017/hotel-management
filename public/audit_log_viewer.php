@@ -38,6 +38,34 @@ if (!empty($_GET['date_to'])) {
     $filters['date_to'] = $_GET['date_to'];
 }
 
+// Handle clear logs action
+$feedback_message = '';
+$feedback_type = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['clear_logs'])) {
+    if (isset($_POST['confirm_clear']) && $_POST['confirm_clear'] === 'yes') {
+        try {
+            $result = $conn->query("DELETE FROM audit_logs");
+            if ($result) {
+                $feedback_message = "All audit logs have been cleared successfully.";
+                $feedback_type = 'success';
+                
+                // Log this action (after clearing, so it's the first entry)
+                log_system_event($conn, $_SESSION['user_id'], 'Audit Logs Cleared', "All audit logs cleared by " . $_SESSION['username']);
+            } else {
+                $feedback_message = "Error clearing audit logs.";
+                $feedback_type = 'danger';
+            }
+        } catch (Exception $e) {
+            $feedback_message = "Error: " . $e->getMessage();
+            $feedback_type = 'danger';
+        }
+    } else {
+        $feedback_message = "Please confirm that you want to clear all logs.";
+        $feedback_type = 'warning';
+    }
+}
+
 // Get logs and total count
 $logs = get_audit_logs($conn, $filters, $per_page, $offset);
 $total_logs = get_audit_logs_count($conn, $filters);
@@ -66,7 +94,18 @@ while ($table = $tables_query->fetch_assoc()) {
 ?>
 
 <div class="container">
-    <h2>System Audit Log History</h2>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2>System Audit Log History</h2>
+        <button type="button" onclick="showClearLogsModal()" class="btn btn-danger">
+            Clear All Logs
+        </button>
+    </div>
+    
+    <?php if ($feedback_message): ?>
+        <div class="alert alert-<?= $feedback_type ?>">
+            <?= htmlspecialchars($feedback_message) ?>
+        </div>
+    <?php endif; ?>
     
     <!-- Filters Form -->
     <div class="card mb-30">
@@ -207,6 +246,51 @@ while ($table = $tables_query->fetch_assoc()) {
     <?php endif; ?>
 </div>
 
+<!-- Clear Logs Modal -->
+<div id="clearLogsModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <h3>Clear All Audit Logs</h3>
+        <p><strong>Warning:</strong> This action will permanently delete ALL audit log entries and cannot be undone.</p>
+        <p>Are you absolutely sure you want to proceed?</p>
+        
+        <form method="POST" style="margin-top: 20px;">
+            <div style="margin-bottom: 15px;">
+                <label>
+                    <input type="checkbox" name="confirm_clear" value="yes" required>
+                    I understand this will delete all audit logs permanently
+                </label>
+            </div>
+            
+            <div style="display: flex; gap: 10px;">
+                <button type="submit" name="clear_logs" class="btn btn-danger">
+                    Yes, Clear All Logs
+                </button>
+                <button type="button" onclick="hideClearLogsModal()" class="btn btn-secondary">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function showClearLogsModal() {
+    document.getElementById('clearLogsModal').style.display = 'flex';
+}
+
+function hideClearLogsModal() {
+    document.getElementById('clearLogsModal').style.display = 'none';
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('clearLogsModal');
+    if (event.target === modal) {
+        hideClearLogsModal();
+    }
+}
+</script>
+
 <style>
 .audit-filters {
     display: flex;
@@ -277,6 +361,75 @@ while ($table = $tables_query->fetch_assoc()) {
     color: white;
     border-radius: 4px;
     font-weight: bold;
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: 8px;
+    max-width: 500px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    color: #333;
+}
+
+.modal-content h3 {
+    color: #dc3545;
+    margin-bottom: 15px;
+}
+
+.modal-content p {
+    margin-bottom: 10px;
+    text-align: left;
+    color: #333;
+}
+
+.modal-content label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-align: left;
+    font-size: 14px;
+    color: #333;
+}
+
+.alert {
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    border: 1px solid #ffeaa7;
+    color: #856404;
 }
 </style>
 
