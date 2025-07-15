@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/../includes/audit_functions.php';
 $title = "Housekeeping";
 
 // --- Security & Role Management ---
@@ -29,12 +30,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
                 $stmt_update->execute();
                 $stmt_update->close();
 
-                // Log the change
+                // Log the change in housekeeping_logs (existing logging)
                 $log_notes = "Status changed by " . $_SESSION['username'];
                 $stmt_log = $conn->prepare("INSERT INTO housekeeping_logs (room_id, status, updated_by, notes) VALUES (?, ?, ?, ?)");
                 $stmt_log->bind_param("isis", $room_id, $new_status, $user_id, $log_notes);
                 $stmt_log->execute();
                 $stmt_log->close();
+                
+                // Also log in audit_logs for centralized tracking
+                log_room_event($conn, $user_id, 'Room Status Changed', $room_id, 
+                    "Room status changed from previous to {$new_status} by " . $_SESSION['username']);
                 
                 $conn->commit();
                 $feedback_message = "Room status updated successfully!";

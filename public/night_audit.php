@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/../includes/audit_functions.php';
 
 // Security: Restrict access to admin/manager roles
 if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['admin', 'manager'])) {
@@ -16,9 +17,16 @@ unset($_SESSION['feedback_message'], $_SESSION['feedback_type']);
 
 // --- 1. Fetch Current State Data ---
 
-// Get the current business date from the new settings table
-$result = $conn->query("SELECT setting_value FROM settings WHERE setting_name = 'business_date'");
-$current_business_date = $result->fetch_assoc()['setting_value'];
+// Get the current business date from the settings table (with fallback)
+$result = $conn->query("SHOW TABLES LIKE 'settings'");
+if ($result->num_rows > 0) {
+    $result = $conn->query("SELECT setting_value FROM settings WHERE setting_name = 'business_date'");
+    $row = $result->fetch_assoc();
+    $current_business_date = $row ? $row['setting_value'] : date('Y-m-d');
+} else {
+    // Fallback to current date if settings table doesn't exist
+    $current_business_date = date('Y-m-d');
+}
 
 // Get the last audit run details from the audit log
 $last_audit_res = $conn->query("SELECT l.timestamp, u.full_name FROM audit_logs l JOIN users u ON l.user_id = u.id WHERE l.action = 'Night Audit' ORDER BY l.timestamp DESC LIMIT 1");
@@ -79,10 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['run_audit'])) {
         
         // Step D: Log the successful audit
         $log_details = "Audit for business date " . $current_business_date . " completed.";
-        $stmt_log = $conn->prepare("INSERT INTO audit_logs (user_id, action, details) VALUES (?, 'Night Audit', ?)");
-        $stmt_log->bind_param("is", $user_id, $log_details);
-        $stmt_log->execute();
-        $stmt_log->close();
+        log_system_event($conn, $user_id, 'Night Audit', $log_details);
 
         // If all steps succeeded, commit the transaction
         $conn->commit();

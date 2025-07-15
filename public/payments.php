@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/../includes/audit_functions.php';
 
 // Restrict access to authorized roles
 if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['admin', 'manager', 'accountant'])) {
@@ -28,6 +29,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['create_payment'])) {
         $stmt_insert->bind_param("idsssi", $booking_id, $amount, $payment_method, $transaction_id, $notes, $recorded_by);
         
         if ($stmt_insert->execute()) {
+            $payment_id = $stmt_insert->insert_id;
+            
+            // Log payment creation
+            log_payment_event($conn, $recorded_by, 'Payment Recorded', $payment_id, 
+                "Payment of $" . number_format($amount, 2) . " via {$payment_method} for booking #{$booking_id}");
+            
             $message = "Payment recorded successfully!";
         } else {
             $error = "Error recording payment: " . $stmt_insert->error;

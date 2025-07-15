@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/../includes/audit_functions.php';
 
 // --- Security Check: Restrict access to authorized roles ---
 if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['admin', 'manager'])) {
@@ -36,6 +37,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $conn->prepare("INSERT INTO users (username, password, role, full_name, email, phone) VALUES (?, ?, ?, ?, ?, ?)");
             $stmt->bind_param("ssssss", $username, $hashed_password, $role, $full_name, $email, $phone);
             if ($stmt->execute()) {
+                $new_user_id = $stmt->insert_id;
+                
+                // Log user creation
+                log_user_management_event($conn, $_SESSION['user_id'], 'User Created', $new_user_id, 
+                    "New {$role} user created: {$username} ({$full_name})");
+                
                 $feedback_message = "Staff member '{$username}' created successfully!";
                 $feedback_type = 'success';
             } else {

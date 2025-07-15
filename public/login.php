@@ -8,6 +8,7 @@ if (isset($_SESSION['user_id'])) {
 }
 
 require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/../includes/audit_functions.php';
 
 $error = '';
 
@@ -32,11 +33,21 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $_SESSION['user_id'] = $user_id;
                 $_SESSION['role'] = $user_role;
                 $_SESSION['username'] = $db_username;
+                
+                // Log successful login
+                log_auth_event($conn, $user_id, 'User Login', "Successful login from IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'));
     
                 header("Location: welcome.php");
                 exit;
             }
         }
+        
+        // Log failed login attempt
+        $attempt_user_id = $user_id ?? 0; // Use 0 if user not found
+        if ($attempt_user_id > 0) {
+            log_auth_event($conn, $attempt_user_id, 'Failed Login Attempt', "Invalid password from IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'));
+        }
+        
         $error = "Invalid username or password.";
     }
     $stmt->close();

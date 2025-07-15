@@ -3,6 +3,7 @@ session_start();
 
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../includes/email_functions.php';
+require_once __DIR__ . '/../includes/audit_functions.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header("Location: ../public/index.php");
@@ -110,6 +111,10 @@ try {
     $stmt_folio_item->bind_param("isd", $folio_id, $initial_charge_desc, $total_price);
     $stmt_folio_item->execute();
     $stmt_folio_item->close();
+
+    // Log the booking creation
+    log_booking_event($conn, $user_id, 'Booking Created', $booking_id, 
+        "New booking: {$confirmation_number}, Room: {$room_type}, Dates: {$checkin_date} to {$checkout_date}, Total: $" . number_format($total_price, 2));
 
     $conn->commit();
 
