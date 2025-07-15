@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 09, 2025 at 06:25 PM
+-- Generation Time: Jul 15, 2025 at 05:06 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -56,16 +56,6 @@ CREATE TABLE `bookings` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
---
--- Dumping data for table `bookings`
---
-
-INSERT INTO `bookings` (`id`, `user_id`, `room_id`, `check_in`, `check_out`, `total_price`, `status`, `confirmation_number`, `source`, `created_at`) VALUES
-(6, 3, 4, '2025-07-09', '2025-07-10', 120.00, 'checked-in', 'FIU-20250708-F237', 'Online', '2025-07-08 17:20:29'),
-(7, 3, 5, '2025-07-09', '2025-07-10', 180.00, 'confirmed', 'FIU-20250708-B66F', 'Online', '2025-07-08 17:24:30'),
-(8, 6, 6, '2025-07-09', '2025-07-10', 220.00, 'confirmed', 'FIU-20250708-5E44', 'Online', '2025-07-08 17:37:00'),
-(9, 7, 4, '2025-07-10', '2025-07-11', 120.00, 'confirmed', 'FIU-20250708-7F52', 'Online', '2025-07-08 17:39:48');
-
 -- --------------------------------------------------------
 
 --
@@ -81,16 +71,6 @@ CREATE TABLE `folios` (
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
---
--- Dumping data for table `folios`
---
-
-INSERT INTO `folios` (`id`, `booking_id`, `status`, `balance`, `created_at`, `updated_at`) VALUES
-(1, 6, 'open', 120.00, '2025-07-08 17:20:29', '2025-07-08 17:20:29'),
-(2, 7, 'open', 180.00, '2025-07-08 17:24:30', '2025-07-08 17:24:30'),
-(3, 8, 'open', 220.00, '2025-07-08 17:37:00', '2025-07-08 17:37:00'),
-(4, 9, 'open', 120.00, '2025-07-08 17:39:48', '2025-07-08 17:39:48');
-
 -- --------------------------------------------------------
 
 --
@@ -105,16 +85,6 @@ CREATE TABLE `folio_items` (
   `timestamp` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
---
--- Dumping data for table `folio_items`
---
-
-INSERT INTO `folio_items` (`id`, `folio_id`, `description`, `amount`, `timestamp`) VALUES
-(1, 1, 'Room & Tax Charge (1 nights)', 120.00, '2025-07-08 17:20:29'),
-(2, 2, 'Room & Tax Charge (1 nights)', 180.00, '2025-07-08 17:24:30'),
-(3, 3, 'Room & Tax Charge (1 nights)', 220.00, '2025-07-08 17:37:00'),
-(4, 4, 'Room & Tax Charge (1 nights)', 120.00, '2025-07-08 17:39:48');
-
 -- --------------------------------------------------------
 
 --
@@ -126,8 +96,22 @@ CREATE TABLE `housekeeping_logs` (
   `room_id` int(11) NOT NULL,
   `status` enum('clean','dirty','maintenance') NOT NULL,
   `updated_by` int(11) DEFAULT NULL,
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `notes` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+
+--
+-- Dumping data for table `housekeeping_logs`
+--
+
+INSERT INTO `housekeeping_logs` (`id`, `room_id`, `status`, `updated_by`, `updated_at`, `notes`) VALUES
+(1, 3, 'clean', 3, '2025-07-15 13:30:52', 'Status changed by Test2'),
+(2, 9, 'clean', 3, '2025-07-15 13:30:57', 'Status changed by Test2'),
+(3, 10, 'clean', 3, '2025-07-15 13:31:01', 'Status changed by Test2'),
+(4, 1, 'dirty', 3, '2025-07-15 13:40:26', 'Status changed by Test2'),
+(5, 1, 'clean', 3, '2025-07-15 13:48:34', 'Status changed by Test2'),
+(6, 1, 'dirty', 3, '2025-07-15 13:48:47', 'Status changed by Test2'),
+(7, 1, 'clean', 3, '2025-07-15 13:50:24', 'Status changed by Test2');
 
 -- --------------------------------------------------------
 
@@ -144,6 +128,13 @@ CREATE TABLE `housekeeping_tasks` (
   `notes` text DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+
+--
+-- Dumping data for table `housekeeping_tasks`
+--
+
+INSERT INTO `housekeeping_tasks` (`id`, `room_id`, `assigned_to_user_id`, `task_date`, `status`, `notes`, `created_at`) VALUES
+(1, 1, 9, '2025-07-15', 'pending', NULL, '2025-07-15 13:40:30');
 
 -- --------------------------------------------------------
 
@@ -199,9 +190,21 @@ CREATE TABLE `rooms` (
 --
 
 INSERT INTO `rooms` (`id`, `room_type`, `room_number`, `capacity`, `image_path`, `status`, `housekeeping_status`) VALUES
-(4, 'Double Room', '101', 2, 'img/rooms/double.jpg', 'available', 'occupied'),
-(5, 'Executive Suite', '201', 4, 'img/rooms/suite.jpg', 'available', 'clean'),
-(6, 'Suite with Balcony', '301', 4, 'img/rooms/balcony.jpg', 'available', 'clean');
+(1, 'Double Room', '101', 2, 'assets/images/room_double.jpg', 'available', 'clean'),
+(2, 'Double Room', '102', 2, 'assets/images/room_double.jpg', 'available', 'clean'),
+(3, 'Double Room', '103', 2, 'assets/images/room_double.jpg', 'available', 'clean'),
+(4, 'Double Room', '104', 2, 'assets/images/room_double.jpg', 'available', 'clean'),
+(5, 'Double Room', '105', 2, 'assets/images/room_double.jpg', 'available', 'clean'),
+(6, 'Executive Suite', '201', 4, 'assets/images/room_executive.jpg', 'available', 'clean'),
+(7, 'Executive Suite', '202', 4, 'assets/images/room_executive.jpg', 'available', 'clean'),
+(8, 'Executive Suite', '203', 4, 'assets/images/room_executive.jpg', 'available', 'clean'),
+(9, 'Executive Suite', '204', 4, 'assets/images/room_executive.jpg', 'available', 'clean'),
+(10, 'Executive Suite', '205', 4, 'assets/images/room_executive.jpg', 'available', 'clean'),
+(11, 'Suite with Balcony', '301', 4, 'assets/images/room_balcony.jpg', 'available', 'clean'),
+(12, 'Suite with Balcony', '302', 4, 'assets/images/room_balcony.jpg', 'available', 'clean'),
+(13, 'Suite with Balcony', '303', 4, 'assets/images/room_balcony.jpg', 'available', 'clean'),
+(14, 'Suite with Balcony', '304', 4, 'assets/images/room_balcony.jpg', 'available', 'clean'),
+(15, 'Suite with Balcony', '305', 4, 'assets/images/room_balcony.jpg', 'available', 'clean');
 
 -- --------------------------------------------------------
 
@@ -244,6 +247,25 @@ CREATE TABLE `salaries` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `settings`
+--
+
+CREATE TABLE `settings` (
+  `id` int(11) NOT NULL,
+  `setting_name` varchar(100) NOT NULL,
+  `setting_value` varchar(255) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `settings`
+--
+
+INSERT INTO `settings` (`id`, `setting_name`, `setting_value`) VALUES
+(1, 'business_date', '2025-07-14');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `users`
 --
 
@@ -251,20 +273,24 @@ CREATE TABLE `users` (
   `id` int(11) NOT NULL,
   `username` varchar(50) NOT NULL,
   `password` varchar(255) NOT NULL,
-  `role` enum('admin','guest','friend') NOT NULL DEFAULT 'friend',
+  `role` enum('admin','manager','front_desk','housekeeping','accountant','guest','friend') NOT NULL DEFAULT 'guest',
   `full_name` varchar(100) DEFAULT NULL,
   `email` varchar(100) DEFAULT NULL,
-  `phone` varchar(20) DEFAULT NULL
+  `phone` varchar(20) DEFAULT NULL,
+  `is_active` tinyint(1) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 --
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `username`, `password`, `role`, `full_name`, `email`, `phone`) VALUES
-(3, 'Test2', '$2y$10$uRNDFZIxAPnD0isgrnYtEu38o1/s1GB6RINfk9or7ef0kKb6vGGli', 'admin', NULL, NULL, NULL),
-(6, 'ed611', '$2y$10$fBB96sDq1LOOtLcgXQOf3..86Oo71LpO3v/SPIWdDZIkgGytOAM1.', 'guest', 'ed', 'test118911651751715782223@gmail.com', '3053950000'),
-(7, 'ed589', '$2y$10$hi2WhwxAnv353lOPA5ZRbOf5XOUVvkN3HUQIVnA7stB.sPEhyu3pO', 'guest', 'ed', 'test118911651751715782223@gmail.com', '3053950000');
+INSERT INTO `users` (`id`, `username`, `password`, `role`, `full_name`, `email`, `phone`, `is_active`) VALUES
+(3, 'Test2', '$2y$10$uRNDFZIxAPnD0isgrnYtEu38o1/s1GB6RINfk9or7ef0kKb6vGGli', 'admin', NULL, NULL, NULL, 1),
+(6, 'ed611', '$2y$10$fBB96sDq1LOOtLcgXQOf3..86Oo71LpO3v/SPIWdDZIkgGytOAM1.', 'guest', 'ed', 'test118911651751715782223@gmail.com', '3053950000', 1),
+(7, 'ed589', '$2y$10$hi2WhwxAnv353lOPA5ZRbOf5XOUVvkN3HUQIVnA7stB.sPEhyu3pO', 'guest', 'ed', 'test118911651751715782223@gmail.com', '3053950000', 1),
+(8, 'ed271', '$2y$10$E48MpvmCoh3VXTbbZqEIZO/j7Jvvwo1yFYvd8Ot3zLBoOoVSE9w/C', 'guest', 'Ed', 'test118911651751715782223@gmail.com', '3053950000', 1),
+(9, 'Housekeeper1', '$2y$10$7hyZKat.edBNHQzW75yAiuWoUQi7uNI/FGCPzm93/bI3OP1bGiLni', 'housekeeping', 'Housekeeper One', '', 'N/A', 1),
+(10, 'Accountant1', '$2y$10$Z7C9.10uIcENRxK67VSJLOw8thUs7chpxZmA4r2VbNi8KhjhEKzYy', 'accountant', 'Accountant1', '', '', 1);
 
 --
 -- Indexes for dumped tables
@@ -351,6 +377,13 @@ ALTER TABLE `salaries`
   ADD KEY `user_id` (`user_id`);
 
 --
+-- Indexes for table `settings`
+--
+ALTER TABLE `settings`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `setting_name` (`setting_name`);
+
+--
 -- Indexes for table `users`
 --
 ALTER TABLE `users`
@@ -365,37 +398,37 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `audit_logs`
 --
 ALTER TABLE `audit_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `bookings`
 --
 ALTER TABLE `bookings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `folios`
 --
 ALTER TABLE `folios`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `folio_items`
 --
 ALTER TABLE `folio_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `housekeeping_logs`
 --
 ALTER TABLE `housekeeping_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `housekeeping_tasks`
 --
 ALTER TABLE `housekeeping_tasks`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `payments`
@@ -413,7 +446,7 @@ ALTER TABLE `reports`
 -- AUTO_INCREMENT for table `rooms`
 --
 ALTER TABLE `rooms`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `room_rates`
@@ -428,10 +461,16 @@ ALTER TABLE `salaries`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `settings`
+--
+ALTER TABLE `settings`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- Constraints for dumped tables
