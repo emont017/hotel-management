@@ -1,191 +1,163 @@
 <?php
 session_start();
 require_once __DIR__ . '/../config/db.php';
-$title = "Night Audit";
-require_once __DIR__ . '/../includes/header.php';
 
-$current_business_date = '2025-07-14'; // Placeholder
-$last_audit_date = '2025-07-13 23:45'; // Placeholder
-$last_audit_by = 'Manager Name'; // Placeholder
-$pending_departures = 3; // Placeholder
-$potential_no_shows = 1; // Placeholder
-$message = ''; // Placeholder for status messages
-$message_type = 'info'; // Placeholder
+// Security: Restrict access to admin/manager roles
+if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['admin', 'manager'])) {
+    header("Location: /index.php");
+    exit;
+}
+
+$title = "Night Audit";
+$user_id = $_SESSION['user_id'];
+$feedback_message = $_SESSION['feedback_message'] ?? '';
+$feedback_type = $_SESSION['feedback_type'] ?? '';
+unset($_SESSION['feedback_message'], $_SESSION['feedback_type']);
+
+// --- 1. Fetch Current State Data ---
+
+// Get the current business date from the new settings table
+$result = $conn->query("SELECT setting_value FROM settings WHERE setting_name = 'business_date'");
+$current_business_date = $result->fetch_assoc()['setting_value'];
+
+// Get the last audit run details from the audit log
+$last_audit_res = $conn->query("SELECT l.timestamp, u.full_name FROM audit_logs l JOIN users u ON l.user_id = u.id WHERE l.action = 'Night Audit' ORDER BY l.timestamp DESC LIMIT 1");
+$last_audit = $last_audit_res->fetch_assoc();
+$last_audit_date = $last_audit['timestamp'] ?? 'N/A';
+$last_audit_by = $last_audit['full_name'] ?? 'N/A';
+
+// Get pre-audit checklist numbers
+$stmt_departures = $conn->prepare("SELECT COUNT(*) as count FROM bookings WHERE check_out = ? AND status = 'checked-in'");
+$stmt_departures->bind_param("s", $current_business_date);
+$stmt_departures->execute();
+$pending_departures = $stmt_departures->get_result()->fetch_assoc()['count'];
+$stmt_departures->close();
+
+$stmt_noshows = $conn->prepare("SELECT COUNT(*) as count FROM bookings WHERE check_in = ? AND status = 'confirmed'");
+$stmt_noshows->bind_param("s", $current_business_date);
+$stmt_noshows->execute();
+$potential_no_shows = $stmt_noshows->get_result()->fetch_assoc()['count'];
+$stmt_noshows->close();
+
+
+// --- 2. Handle the "Run Audit" POST Request ---
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['run_audit'])) {
+    $conn->begin_transaction();
+    try {
+        // Step A: Process No-Shows
+        $stmt_process_noshows = $conn->prepare("UPDATE bookings SET status = 'cancelled' WHERE check_in = ? AND status = 'confirmed'");
+        $stmt_process_noshows->bind_param("s", $current_business_date);
+        $stmt_process_noshows->execute();
+        $stmt_process_noshows->close();
+
+        // Step B: Post Room & Tax Charges for all currently checked-in guests
+        $stayover_sql = "SELECT b.id as booking_id, f.id as folio_id, rr.price FROM bookings b JOIN folios f ON b.id = f.booking_id JOIN rooms r ON b.room_id = r.id JOIN room_rates rr ON r.room_type = rr.room_type WHERE b.status = 'checked-in' AND ? BETWEEN rr.date_start AND rr.date_end";
+        $stmt_stayovers = $conn->prepare($stayover_sql);
+        $stmt_stayovers->bind_param("s", $current_business_date);
+        $stmt_stayovers->execute();
+        $stayovers_result = $stmt_stayovers->get_result();
+
+        $stmt_post_charge = $conn->prepare("INSERT INTO folio_items (folio_id, description, amount) VALUES (?, ?, ?)");
+        $stmt_update_balance = $conn->prepare("UPDATE folios SET balance = balance + ? WHERE id = ?");
+        
+        while ($guest = $stayovers_result->fetch_assoc()) {
+            $charge_desc = "Room & Tax: " . $current_business_date;
+            $stmt_post_charge->bind_param("isd", $guest['folio_id'], $charge_desc, $guest['price']);
+            $stmt_post_charge->execute();
+
+            $stmt_update_balance->bind_param("di", $guest['price'], $guest['folio_id']);
+            $stmt_update_balance->execute();
+        }
+        $stmt_post_charge->close();
+        $stmt_update_balance->close();
+        $stmt_stayovers->close();
+
+        // Step C: Advance the business date by one day
+        $stmt_advance_date = $conn->prepare("UPDATE settings SET setting_value = DATE_ADD(setting_value, INTERVAL 1 DAY) WHERE setting_name = 'business_date'");
+        $stmt_advance_date->execute();
+        $stmt_advance_date->close();
+        
+        // Step D: Log the successful audit
+        $log_details = "Audit for business date " . $current_business_date . " completed.";
+        $stmt_log = $conn->prepare("INSERT INTO audit_logs (user_id, action, details) VALUES (?, 'Night Audit', ?)");
+        $stmt_log->bind_param("is", $user_id, $log_details);
+        $stmt_log->execute();
+        $stmt_log->close();
+
+        // If all steps succeeded, commit the transaction
+        $conn->commit();
+        $_SESSION['feedback_message'] = "Night Audit for " . date("F j, Y", strtotime($current_business_date)) . " completed successfully!";
+        $_SESSION['feedback_type'] = 'success';
+
+    } catch (Exception $e) {
+        // If any step fails, roll back all changes
+        $conn->rollback();
+        $_SESSION['feedback_message'] = "Error running Night Audit: " . $e->getMessage();
+        $_SESSION['feedback_type'] = 'danger';
+    }
+
+    header("Location: night_audit.php");
+    exit;
+}
+
+require_once __DIR__ . '/../includes/header.php';
 ?>
 
-<style>
-    /* Styles for the Night Audit page layout */
-    .night-audit-container {
-        max-width: 800px;
-        margin: 20px auto;
-        padding: 20px;
-        background-color: #f8f9fa;
-        border: 1px solid #dee2e6;
-        border-radius: 8px;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-    }
-    .audit-header {
-        text-align: center;
-        margin-bottom: 25px;
-        border-bottom: 1px solid #ccc;
-        padding-bottom: 15px;
-    }
-    .audit-header h2 {
-        color: #081C3A; /* Dark Blue from theme */
-        font-family: 'Orbitron', sans-serif;
-    }
-    .audit-header p {
-        font-size: 1.1rem;
-        color: #555;
-    }
-    .audit-status-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 20px;
-        margin-bottom: 30px;
-        text-align: center;
-    }
-    .status-card {
-        background: #ffffff;
-        padding: 20px;
-        border-radius: 8px;
-        border: 1px solid #e0e0e0;
-    }
-    .status-card h4 {
-        margin-top: 0;
-        color: #122C55; /* Medium Blue from theme */
-        font-size: 1rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-    .status-card p {
-        font-size: 1.5rem;
-        font-weight: bold;
-        color: #081C3A;
-        margin-bottom: 0;
-        font-family: 'Roboto', sans-serif;
-    }
-    .audit-checklist {
-        margin-bottom: 30px;
-        padding: 20px;
-        background-color: #ffffff;
-        border: 1px solid #e0e0e0;
-        border-radius: 8px;
-    }
-    .audit-checklist h3 {
-        margin-top: 0;
-        color: #122C55;
-        border-bottom: 1px solid #eee;
-        padding-bottom: 10px;
-        margin-bottom: 15px;
-    }
-    .audit-checklist ul {
-        list-style-type: none;
-        padding-left: 0;
-    }
-    .audit-checklist li {
-        padding: 10px;
-        border-bottom: 1px solid #f2f2f2;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    .audit-checklist li:last-child {
-        border-bottom: none;
-    }
-    .audit-checklist strong {
-        font-size: 1.1rem;
-        color: #081C3A;
-    }
-    .audit-actions {
-        text-align: center;
-        padding: 25px;
-        background: #fff3cd; /* Light yellow warning background */
-        border: 1px solid #ffeeba;
-        border-radius: 8px;
-    }
-    .audit-actions p {
-        font-weight: bold;
-        margin-top: 0;
-        color: #856404; /* Dark yellow text */
-        font-size: 1.1rem;
-    }
-    .audit-actions .btn-run-audit {
-        background-color: #dc3545; /* Red for critical action */
-        color: white;
-        padding: 12px 30px;
-        border: none;
-        border-radius: 5px;
-        font-size: 1.2rem;
-        font-weight: bold;
-        cursor: pointer;
-        transition: background-color 0.2s ease-in-out;
-        text-transform: uppercase;
-    }
-    .audit-actions .btn-run-audit:hover, .audit-actions .btn-run-audit:focus {
-        background-color: #c82333; /* Darker red on hover */
-    }
-    .flash-message {
-        padding: 15px;
-        margin-bottom: 20px;
-        border-radius: 5px;
-        color: #fff;
-        text-align: center;
-        font-weight: bold;
-    }
-    .flash-message.success { background-color: #28a745; }
-    .flash-message.error { background-color: #dc3545; }
-</style>
+<div class="card" style="max-width: 800px; margin: 30px auto;">
+    <h2 class="text-center">Night Audit</h2>
+    <p class="text-center" style="font-size: 1.1rem; max-width: 600px; margin: 10px auto 30px;">
+        Finalize the day's business and advance the hotel to the next calendar day.
+    </p>
 
-<div class="night-audit-container">
-    <div class="audit-header">
-        <h2>Night Audit</h2>
-        <p>Finalize the day's business and advance the hotel to the next calendar day.</p>
-    </div>
-
-    <?php if ($message): ?>
-        <div class="flash-message <?= htmlspecialchars($message_type) ?>">
-            <?= htmlspecialchars($message) ?>
+    <?php if ($feedback_message): ?>
+        <div class="alert alert-<?= htmlspecialchars($feedback_type) ?>">
+            <?= htmlspecialchars($feedback_message) ?>
         </div>
     <?php endif; ?>
 
-    <div class="audit-status-grid">
-        <div class="status-card">
-            <h4>Current Business Date</h4>
-            <p><?= date("F j, Y", strtotime($current_business_date)) ?></p>
+    <div style="display: flex; justify-content: space-around; text-align: center; margin-bottom: 30px; background-color: #081C3A; padding: 20px; border-radius: 8px;">
+        <div>
+            <h4 style="color:#B6862C; margin-bottom: 5px;">Current Business Date</h4>
+            <p style="color: #fff; font-size: 1.5rem; font-weight: bold; margin:0;"><?= date("F j, Y", strtotime($current_business_date)) ?></p>
         </div>
-        <div class="status-card">
-            <h4>Last Audit Run</h4>
-            <p><?= date("M j, Y H:i", strtotime($last_audit_date)) ?></p>
+        <div>
+            <h4 style="color:#B6862C; margin-bottom: 5px;">Last Audit Run</h4>
+            <p style="color: #fff; font-size: 1.5rem; font-weight: bold; margin:0;"><?= ($last_audit_date !== 'N/A') ? date("M j, Y H:i", strtotime($last_audit_date)) : 'N/A' ?></p>
         </div>
-        <div class="status-card">
-            <h4>Last Audit By</h4>
-            <p><?= htmlspecialchars($last_audit_by) ?></p>
+        <div>
+            <h4 style="color:#B6862C; margin-bottom: 5px;">Last Audit By</h4>
+            <p style="color: #fff; font-size: 1.5rem; font-weight: bold; margin:0;"><?= htmlspecialchars($last_audit_by) ?></p>
         </div>
     </div>
+    
+    <h3>Pre-Audit Checklist for <?= date("F j, Y", strtotime($current_business_date)) ?></h3>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Item to Verify</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Pending Departures to Process</td>
+                <td><strong><?= $pending_departures ?></strong></td>
+            </tr>
+            <tr>
+                <td>Potential No-Shows to Process</td>
+                <td><strong><?= $potential_no_shows ?></strong></td>
+            </tr>
+             <tr>
+                <td>Reconcile Daily Payments</td>
+                <td><strong style="color: <?= ($pending_departures == 0 && $potential_no_shows == 0) ? '#2ecc71' : '#B6862C' ?>;"><?= ($pending_departures == 0 && $potential_no_shows == 0) ? 'Ready' : 'Pending' ?></strong></td>
+            </tr>
+        </tbody>
+    </table>
 
-    <div class="audit-checklist">
-        <h3>Pre-Audit Checklist for <?= date("F j, Y", strtotime($current_business_date)) ?></h3>
-        <ul>
-            <li>
-                <span>Pending Departures to Process</span>
-                <strong><?= $pending_departures ?></strong>
-            </li>
-            <li>
-                <span>Potential No-Shows to Process</span>
-                <strong><?= $potential_no_shows ?></strong>
-            </li>
-             <li>
-                <span>Reconcile Daily Payments</span>
-                <strong>Pending</strong>
-            </li>
-        </ul>
-    </div>
-
-    <div class="audit-actions">
-        <p>This process is IRREVERSIBLE. Confirm all daily tasks are complete.</p>
+    <div class="mt-30" style="text-align: center; padding: 25px; background: #2E4053; border: 1px solid #B6862C; border-radius: 8px;">
+        <p style="font-weight: bold; margin-top: 0; color: #B6862C; font-size: 1.1rem;">This process is IRREVERSIBLE. Confirm all daily tasks are complete.</p>
         <form method="POST" onsubmit="return confirm('This action cannot be undone. Are you absolutely sure you want to run the Night Audit?');">
-            <button type="submit" name="run_audit" class="btn-run-audit">Run Night Audit</button>
+            <button type="submit" name="run_audit" class="btn btn-danger" style="font-size: 1.2rem; padding: 12px 30px;">RUN NIGHT AUDIT</button>
         </form>
     </div>
 </div>

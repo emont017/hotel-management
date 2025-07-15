@@ -61,7 +61,7 @@ $top_rooms_result = $top_rooms_stmt->get_result();
 $top_rooms_stmt->close();
 ?>
 
-<h2>📊 Hotel Reports</h2>
+<h2>Hotel Reports</h2>
 
 <form method="get" class="card mb-20">
     <div style="display:flex; align-items:flex-end; gap:20px; flex-wrap:wrap;">

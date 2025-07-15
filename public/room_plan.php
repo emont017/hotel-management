@@ -67,7 +67,7 @@ $bookings_stmt->close();
 </style>
 
 <div class="mb-20" style="display: flex; justify-content: space-between; align-items: center;">
-    <h2>🏨 Visual Room Plan</h2>
+    <h2>Visual Room Plan</h2>
     <div style="display: flex; gap: 10px;">
         <a href="?start_date=<?= $prev_date->format('Y-m-d') ?>" class="btn btn-primary">&larr; Previous</a>
         <a href="?start_date=<?= $next_date->format('Y-m-d') ?>" class="btn btn-primary">Next &rarr;</a>

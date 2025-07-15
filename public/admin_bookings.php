@@ -13,7 +13,7 @@ $sql = "SELECT b.id AS booking_id, u.username, r.room_number, r.room_type, r.hou
 $result = $conn->query($sql);
 ?>
 
-<h2>📅 Manage Bookings</h2>
+<h2>Manage Bookings</h2>
 
 <table class="data-table">
     <thead>

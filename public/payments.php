@@ -59,13 +59,13 @@ $stmt_fetch->execute();
 $payments_result = $stmt_fetch->get_result();
 ?>
 
-<h2>💰 Manage Payments</h2>
+<h2>Manage Payments</h2>
 
 <?php if ($message): ?><p class="alert alert-success"><?= htmlspecialchars($message) ?></p><?php endif; ?>
 <?php if ($error): ?><p class="alert alert-danger"><?= htmlspecialchars($error) ?></p><?php endif; ?>
 
 <form id="payment-form" method="post" action="payments.php" class="card mt-30 mb-20">
-    <h3>➕ Record New Payment</h3>
+    <h3>Record New Payment</h3>
     <div style="display: flex; gap: 15px; align-items: flex-end; margin-bottom: 15px;">
         <div style="flex-grow: 1;">
             <label for="booking_id" class="form-label">Booking ID:</label>
@@ -103,7 +103,7 @@ $payments_result = $stmt_fetch->get_result();
     <input type="submit" name="create_payment" value="Record Payment" class="btn btn-primary" style="font-size: 1.1rem;">
 </form>
 
-<h3>📋 Payment History</h3>
+<h3>Payment History</h3>
 <form method="get" action="payments.php" class="mb-20">
     <input type="text" name="search" placeholder="Search by Booking ID or Guest Name..." value="<?= htmlspecialchars($search_query) ?>" class="form-input" style="width: 300px; display: inline-block;">
     <button type="submit" class="btn btn-primary">Search</button>
