@@ -172,7 +172,21 @@ Step 5: Restart Apache
 Default Admin Login:
 
 User: Test2
-Psswd: Test123
+Password: Test123
+
+***********************************
+
+Default Housekeeper Login:
+
+User: Housekeeper1
+Password: Test123
+
+***********************************
+
+Default Accounting Login:
+
+User: Accountant1
+Password: Test123
 
 --------------------------------------------------------------------------------
 

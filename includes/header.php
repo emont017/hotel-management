@@ -2,16 +2,10 @@
 if (session_status() === PHP_SESSION_NONE) session_start();
 $current_page = basename($_SERVER['PHP_SELF']);
 
-// Check if the current page is any of the hotel info-related pages
 $is_hotel_info_page = in_array($current_page, ['hotel.php', 'rooms.php', 'bookings.php']);
-
-// Check if the current page is any of the housekeeping-related pages
+$is_booking_page = in_array($current_page, ['admin_bookings.php', 'room_plan.php']);
 $is_housekeeping_page = in_array($current_page, ['housekeeping.php', 'housekeeping_tasks.php', 'admin_housekeeping_assign.php']);
-
-// Check if the current page is any of the accounting-related pages
 $is_accounting_page = in_array($current_page, ['payments.php', 'reports.php']);
-
-// Check if the current page is any of the audit-related pages
 $is_audit_page = in_array($current_page, ['night_audit.php', 'audit_log_viewer.php']);
 ?>
 <!DOCTYPE html>
@@ -52,12 +46,18 @@ $is_audit_page = in_array($current_page, ['night_audit.php', 'audit_log_viewer.p
             <?php if (isset($_SESSION['user_id'])): ?>
                 <?php $role = $_SESSION['role']; ?>
 
-                <?php if (in_array($role, ['admin', 'manager'])): ?>
+                <?php // --- Admin & Manager View ---
+                if (in_array($role, ['admin', 'manager'])): ?>
                     <a href="/admin_dashboard.php" class="<?= $current_page == 'admin_dashboard.php' ? 'active' : '' ?>">Dashboard</a>
-                    <a href="/room_plan.php" class="<?= $current_page == 'room_plan.php' ? 'active' : '' ?>">Room Plan</a>
-                    <a href="/admin_bookings.php" class="<?= $current_page == 'admin_bookings.php' ? 'active' : '' ?>">Bookings</a>
                     
-                    <!-- Housekeeping Dropdown -->
+                    <div class="nav-item dropdown">
+                        <a href="/admin_bookings.php" class="dropdown-toggle <?= $is_booking_page ? 'active' : '' ?>">Bookings</a>
+                        <div class="dropdown-menu">
+                            <a href="/admin_bookings.php">Manage Bookings</a>
+                            <a href="/room_plan.php">Room Plan</a>
+                        </div>
+                    </div>
+                    
                     <div class="nav-item dropdown">
                         <a href="/housekeeping.php" class="dropdown-toggle <?= $is_housekeeping_page ? 'active' : '' ?>">Housekeeping</a>
                         <div class="dropdown-menu">
@@ -67,7 +67,6 @@ $is_audit_page = in_array($current_page, ['night_audit.php', 'audit_log_viewer.p
                         </div>
                     </div>
                     
-                    <!-- Accounting Dropdown -->
                     <div class="nav-item dropdown">
                         <a href="/payments.php" class="dropdown-toggle <?= $is_accounting_page ? 'active' : '' ?>">Accounting</a>
                         <div class="dropdown-menu">
@@ -76,7 +75,6 @@ $is_audit_page = in_array($current_page, ['night_audit.php', 'audit_log_viewer.p
                         </div>
                     </div>
 
-                    <!-- Night Audit Dropdown -->
                     <div class="nav-item dropdown">
                         <a href="/night_audit.php" class="dropdown-toggle <?= $is_audit_page ? 'active' : '' ?>">Night Audit</a>
                         <div class="dropdown-menu">
@@ -86,13 +84,36 @@ $is_audit_page = in_array($current_page, ['night_audit.php', 'audit_log_viewer.p
                     </div>
 
 					<a href="/users.php" class="<?= $current_page == 'users.php' ? 'active' : '' ?>">Staff</a>
-                    
-                <?php elseif ($role === 'guest'): ?>
+
+                <?php // --- Accountant View ---
+                elseif ($role === 'accountant'): ?>
+
+                    <div class="nav-item dropdown">
+                        <a href="/payments.php" class="dropdown-toggle <?= $is_accounting_page ? 'active' : '' ?>">Accounting</a>
+                        <div class="dropdown-menu">
+                            <a href="/payments.php">Payments</a>
+                            <a href="/reports.php">Reports</a>
+                        </div>
+                    </div>
+
+                <?php // --- Housekeeping View ---
+                elseif ($role === 'housekeeping'): ?>
+                    <div class="nav-item dropdown">
+                        <a href="/housekeeping.php" class="dropdown-toggle <?= $is_housekeeping_page ? 'active' : '' ?>">Housekeeping</a>
+                        <div class="dropdown-menu">
+                            <a href="/housekeeping.php">Master List</a>
+                            <a href="/housekeeping_tasks.php">My Tasks</a>
+                        </div>
+                    </div>
+
+                <?php // --- Guest View ---
+                elseif ($role === 'guest'): ?>
                     <a href="/manage_reservations.php" class="<?= $current_page == 'manage_reservations.php' ? 'active' : '' ?>">My Reservations</a>
                 <?php endif; ?>
 
                 <a href="/api/logout.php">Logout</a>
-            <?php else: ?>
+
+            <?php else: // --- Not Logged In --- ?>
                 <a href="/login.php" class="<?= $current_page == 'login.php' ? 'active' : '' ?>">Login</a>
                 <a href="/register.php" class="<?= $current_page == 'register.php' ? 'active' : '' ?>">Register</a>
             <?php endif; ?>

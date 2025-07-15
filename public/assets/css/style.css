@@ -85,13 +85,11 @@ body.homepage {
     width: auto;
     display: block;
 }
-
-/* CORRECTED/NEW STYLES FOR NAVIGATION */
 nav {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: 0 15px; /* Spacing between nav items */
+    gap: 0 15px;
 }
 nav a {
   color: #fff;
@@ -232,7 +230,8 @@ nav a:hover, nav a.active { color: #B6862C; }
     display: none;
     position: absolute;
     background-color: #081E3F;
-    min-width: 160px;
+    width: max-content;
+    min-width: 100%; 
     box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.4);
     z-index: 1001;
     border-radius: 0 0 8px 8px;
