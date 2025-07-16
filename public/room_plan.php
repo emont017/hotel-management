@@ -11,7 +11,7 @@ if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['admin', 'mana
 $title = "Upcoming Stays";
 require_once __DIR__ . '/../includes/header.php';
 
-// --- Date and Navigation Logic ---
+// Date and Navigation Logic
 $today = new DateTime('now', new DateTimeZone('America/New_York'));
 $start_date_str = $_GET['start_date'] ?? $today->format('Y-m-d');
 $start_date = new DateTime($start_date_str);
@@ -24,7 +24,7 @@ $prev_date->modify('-7 days');
 $next_date = clone $start_date;
 $next_date->modify('+7 days');
 
-// --- Data Fetching Logic ---
+// Data Fetching Logic
 $rooms_query = $conn->query("SELECT * FROM rooms ORDER BY room_number ASC");
 $rooms = [];
 if ($rooms_query) {

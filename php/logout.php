@@ -1,7 +1,13 @@
 <?php
 session_start();
 
+require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/../includes/audit_functions.php';
 
+// Log logout before clearing session
+if (isset($_SESSION['user_id'])) {
+    log_auth_event($conn, $_SESSION['user_id'], 'User Logout', "User logged out");
+}
 
 // Clear all session variables
 $_SESSION = [];

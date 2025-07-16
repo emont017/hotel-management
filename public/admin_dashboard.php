@@ -10,11 +10,11 @@ if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['admin', 'mana
 $title = "Hotel Dashboard";
 require_once __DIR__ . '/../includes/header.php';
 
-// --- ENHANCED Dashboard Data Fetching ---
+// ENHANCED Dashboard Data Fetching
 $today = date('Y-m-d');
 $username = htmlspecialchars($_SESSION['username'] ?? 'User');
 
-// --- Core Metrics ---
+// Core Metrics
 $stmt_arrivals = $conn->prepare("SELECT COUNT(id) as count FROM bookings WHERE check_in = ? AND status = 'confirmed'");
 $stmt_arrivals->bind_param("s", $today);
 $stmt_arrivals->execute();
@@ -33,7 +33,7 @@ $rooms_occupied = $rooms_occupied_query->fetch_assoc()['count'] ?? 0;
 $total_rooms_query = $conn->query("SELECT COUNT(id) as count FROM rooms WHERE status != 'maintenance'");
 $total_rooms = $total_rooms_query->fetch_assoc()['count'] ?? 1;
 
-// --- Financial KPIs ---
+// Financial KPIs
 $revenue_today_query = $conn->query("SELECT SUM(b.total_price / GREATEST(1, DATEDIFF(b.check_out, b.check_in))) as revenue FROM bookings b WHERE b.status = 'checked-in'");
 $revenue_today = $revenue_today_query->fetch_assoc()['revenue'] ?? 0;
 
@@ -41,7 +41,7 @@ $adr = ($rooms_occupied > 0) ? $revenue_today / $rooms_occupied : 0;
 $revpar = ($total_rooms > 0) ? $revenue_today / $total_rooms : 0;
 $occupancy_rate = ($total_rooms > 0) ? ($rooms_occupied / $total_rooms) * 100 : 0;
 
-// --- Action Lists ---
+// Action Lists
 $arrivals_list_stmt = $conn->prepare("SELECT b.id as booking_id, u.full_name, r.room_number FROM bookings b JOIN users u ON b.user_id = u.id JOIN rooms r ON b.room_id = r.id WHERE b.check_in = ? AND b.status = 'confirmed' ORDER BY u.full_name ASC");
 $arrivals_list_stmt->bind_param("s", $today);
 $arrivals_list_stmt->execute();

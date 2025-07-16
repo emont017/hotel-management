@@ -3,7 +3,7 @@ session_start();
 require_once __DIR__ . '/../config/db.php';
 $title = "Housekeeping Tasks";
 
-// --- Security & Role Management ---
+// Security & Role Management
 if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['admin', 'manager'])) {
     header("Location: /index.php");
     exit;
@@ -12,7 +12,7 @@ $user_id = (int)$_SESSION['user_id'];
 $feedback_message = '';
 $feedback_type = '';
 
-// --- Handle Status Update Form Submission ---
+// Handle Status Update Form Submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
     $room_id = (int)$_POST['room_id'];
     $new_status = $_POST['new_status'];
@@ -56,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
     }
 }
 
-// --- Data Fetching ---
+// Data Fetching
 $sql = "
     SELECT 
         u.full_name as housekeeper_name,

@@ -4,7 +4,7 @@ require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../includes/audit_functions.php';
 $title = "Housekeeping";
 
-// --- Security & Role Management ---
+// Security & Role Management
 if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['admin', 'manager', 'housekeeping'])) {
     header("Location: /index.php");
     exit;
@@ -14,7 +14,7 @@ $user_id = (int)$_SESSION['user_id'];
 $feedback_message = '';
 $feedback_type = '';
 
-// --- Handle Status Update Form Submission (for Admins/Managers) ---
+// Handle Status Update Form Submission (for Admins/Managers)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
     if (in_array($user_role, ['admin', 'manager'])) {
         $room_id = (int)$_POST['room_id'];
@@ -56,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
     }
 }
 
-// --- Handle Task Completion (for Housekeepers) ---
+// Handle Task Completion (for Housekeepers)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['complete_task'])) {
     $task_id = (int)$_POST['task_id'];
     $room_id = (int)$_POST['room_id'];

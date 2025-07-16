@@ -13,7 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 function showError($message) {
     $title = "Booking Error";
     require_once __DIR__ . '/../includes/header.php';
-    echo "<div class='container text-center'><p class='alert alert-danger'>❌ $message</p>";
+    echo "<div class='container text-center'><p class='alert alert-danger'>Error: $message</p>";
     echo "<a href='/bookings.php' class='btn btn-primary'>Go Back to Booking</a></div>";
     require_once __DIR__ . '/../includes/footer.php';
     exit;
@@ -177,9 +177,9 @@ require_once __DIR__ . '/../includes/header.php';
     <p><strong>Confirmation Number:</strong> <?= htmlspecialchars($confirmation_number) ?></p>
     
     <?php if ($email_sent): ?>
-        <p class="alert alert-success">📧 Confirmation email sent to <?= htmlspecialchars($email) ?>.</p>
+        <p class="alert alert-success">Confirmation email sent to <?= htmlspecialchars($email) ?>.</p>
     <?php else: ?>
-        <p class="alert alert-danger">⚠️ Booking confirmed, but the confirmation email could not be sent.</p>
+        <p class="alert alert-danger">Warning: Booking confirmed, but the confirmation email could not be sent.</p>
     <?php endif; ?>
 
     <div class="details-table" style="text-align: left; margin-top: 20px; border: none;">

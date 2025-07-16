@@ -19,7 +19,7 @@ if ($conn->connect_error) {
     
     // Show a generic, user-friendly error message
     die("<p style='font-family: sans-serif; color: #800; text-align:center; margin-top:50px;'>
-        ❌ We are currently experiencing technical difficulties. Please try again later.
+        Error: We are currently experiencing technical difficulties. Please try again later.
         </p>");
 }
 ?>

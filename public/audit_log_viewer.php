@@ -227,7 +227,7 @@ while ($table = $tables_query->fetch_assoc()) {
         <div class="pagination-container mt-30">
             <div class="pagination">
                 <?php if ($page > 1): ?>
-                    <a href="?<?= http_build_query(array_merge($_GET, ['page' => $page - 1])) ?>" class="pagination-link">← Previous</a>
+                    <a href="?<?= http_build_query(array_merge($_GET, ['page' => $page - 1])) ?>" class="pagination-link">Previous</a>
                 <?php endif; ?>
                 
                 <?php for ($i = max(1, $page - 2); $i <= min($total_pages, $page + 2); $i++): ?>
@@ -239,7 +239,7 @@ while ($table = $tables_query->fetch_assoc()) {
                 <?php endfor; ?>
                 
                 <?php if ($page < $total_pages): ?>
-                    <a href="?<?= http_build_query(array_merge($_GET, ['page' => $page + 1])) ?>" class="pagination-link">Next →</a>
+                    <a href="?<?= http_build_query(array_merge($_GET, ['page' => $page + 1])) ?>" class="pagination-link">Next</a>
                 <?php endif; ?>
             </div>
         </div>

@@ -15,7 +15,7 @@ $feedback_message = $_SESSION['feedback_message'] ?? '';
 $feedback_type = $_SESSION['feedback_type'] ?? '';
 unset($_SESSION['feedback_message'], $_SESSION['feedback_type']);
 
-// --- 1. Fetch Current State Data ---
+// 1. Fetch Current State Data
 
 // Get the current business date from the settings table (with fallback)
 $result = $conn->query("SHOW TABLES LIKE 'settings'");
@@ -48,7 +48,7 @@ $potential_no_shows = $stmt_noshows->get_result()->fetch_assoc()['count'];
 $stmt_noshows->close();
 
 
-// --- 2. Handle the "Run Audit" POST Request ---
+// 2. Handle the "Run Audit" POST Request
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['run_audit'])) {
     $conn->begin_transaction();
     try {

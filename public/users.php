@@ -3,13 +3,13 @@ session_start();
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../includes/audit_functions.php';
 
-// --- Security Check: Restrict access to authorized roles ---
+// Security Check: Restrict access to authorized roles
 if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['admin', 'manager'])) {
     header("Location: /index.php");
     exit;
 }
 
-// --- CSRF Token Generation & Validation ---
+// CSRF Token Generation & Validation
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
@@ -18,7 +18,7 @@ $csrf_token = $_SESSION['csrf_token'];
 $feedback_message = '';
 $feedback_type = '';
 
-// --- Handle POST Actions (Create User) ---
+// Handle POST Actions (Create User)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!isset($_POST['csrf_token']) || !hash_equals($csrf_token, $_POST['csrf_token'])) {
         die('CSRF token validation failed.');

@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/../includes/audit_functions.php';
 
 // Restrict access
 if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['admin', 'manager', 'front_desk'])) {
@@ -15,12 +16,127 @@ if (!isset($_GET['booking_id']) || !is_numeric($_GET['booking_id'])) {
 $booking_id = intval($_GET['booking_id']);
 $success_message = '';
 
-// --- Handle Check-in / Check-out / Re-Check-in Actions ---
+// Handle Check-in / Check-out / Re-Check-in Actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // ... (This processing logic is unchanged from our last update) ...
+    $admin_user_id = $_SESSION['user_id'];
+    $admin_username = $_SESSION['username'];
+    
+    if (isset($_POST['check_in_guest'])) {
+        $room_id = (int)$_POST['room_id'];
+        
+        $conn->begin_transaction();
+        try {
+            // Update booking status to checked-in
+            $stmt = $conn->prepare("UPDATE bookings SET status = 'checked-in' WHERE id = ?");
+            $stmt->bind_param("i", $booking_id);
+            $stmt->execute();
+            $stmt->close();
+            
+            // Set room housekeeping status to occupied
+            $stmt = $conn->prepare("UPDATE rooms SET housekeeping_status = 'occupied' WHERE id = ?");
+            $stmt->bind_param("i", $room_id);
+            $stmt->execute();
+            $stmt->close();
+            
+            // Log the check-in action
+            log_booking_event($conn, $admin_user_id, 'Guest Checked In', $booking_id, 
+                "Guest checked in by admin: {$admin_username}");
+            
+            $conn->commit();
+            $success_message = "Guest successfully checked in!";
+            
+        } catch (Exception $e) {
+            $conn->rollback();
+            $success_message = "Error checking in guest: " . $e->getMessage();
+        }
+        
+        // Refresh page to show updated status
+        header("Location: admin_booking_detail.php?booking_id={$booking_id}");
+        exit;
+    }
+    
+    if (isset($_POST['check_out_guest'])) {
+        $room_id = (int)$_POST['room_id'];
+        
+        $conn->begin_transaction();
+        try {
+            // Update booking status to checked-out
+            $stmt = $conn->prepare("UPDATE bookings SET status = 'checked-out' WHERE id = ?");
+            $stmt->bind_param("i", $booking_id);
+            $stmt->execute();
+            $stmt->close();
+            
+            // Set room housekeeping status to dirty (needs cleaning)
+            $stmt = $conn->prepare("UPDATE rooms SET housekeeping_status = 'dirty' WHERE id = ?");
+            $stmt->bind_param("i", $room_id);
+            $stmt->execute();
+            $stmt->close();
+            
+            // Close the folio
+            $stmt = $conn->prepare("UPDATE folios SET status = 'closed' WHERE booking_id = ?");
+            $stmt->bind_param("i", $booking_id);
+            $stmt->execute();
+            $stmt->close();
+            
+            // Log the check-out action
+            log_booking_event($conn, $admin_user_id, 'Guest Checked Out', $booking_id, 
+                "Guest checked out by admin: {$admin_username}");
+            
+            $conn->commit();
+            $success_message = "Guest successfully checked out!";
+            
+        } catch (Exception $e) {
+            $conn->rollback();
+            $success_message = "Error checking out guest: " . $e->getMessage();
+        }
+        
+        // Refresh page to show updated status
+        header("Location: admin_booking_detail.php?booking_id={$booking_id}");
+        exit;
+    }
+    
+    if (isset($_POST['re_check_in_guest'])) {
+        $room_id = (int)$_POST['room_id'];
+        
+        $conn->begin_transaction();
+        try {
+            // Update booking status back to checked-in
+            $stmt = $conn->prepare("UPDATE bookings SET status = 'checked-in' WHERE id = ?");
+            $stmt->bind_param("i", $booking_id);
+            $stmt->execute();
+            $stmt->close();
+            
+            // Set room housekeeping status to occupied
+            $stmt = $conn->prepare("UPDATE rooms SET housekeeping_status = 'occupied' WHERE id = ?");
+            $stmt->bind_param("i", $room_id);
+            $stmt->execute();
+            $stmt->close();
+            
+            // Reopen the folio
+            $stmt = $conn->prepare("UPDATE folios SET status = 'open' WHERE booking_id = ?");
+            $stmt->bind_param("i", $booking_id);
+            $stmt->execute();
+            $stmt->close();
+            
+            // Log the re-check-in action
+            log_booking_event($conn, $admin_user_id, 'Guest Re-Checked In', $booking_id, 
+                "Guest re-checked in by admin: {$admin_username}");
+            
+            $conn->commit();
+            $success_message = "Guest successfully re-checked in!";
+            
+        } catch (Exception $e) {
+            $conn->rollback();
+            $success_message = "Error re-checking in guest: " . $e->getMessage();
+        }
+        
+        // Refresh page to show updated status
+        header("Location: admin_booking_detail.php?booking_id={$booking_id}");
+        exit;
+    }
 }
 
-// --- Fetch ALL necessary data for the page ---
+// Fetch ALL necessary data for the page
 // Fetch Booking, User, and Room details
 $sql_booking = "SELECT b.id AS booking_id, b.room_id, u.id AS user_id, u.username, u.full_name, u.email, u.phone, r.room_number, r.room_type, r.housekeeping_status, b.check_in, b.check_out, b.total_price, b.status FROM bookings b JOIN users u ON b.user_id = u.id JOIN rooms r ON b.room_id = r.id WHERE b.id = ?";
 $stmt_booking = $conn->prepare($sql_booking);
@@ -60,7 +176,7 @@ if (!$booking) {
 }
 ?>
 
-<a href="/admin_bookings.php" class="btn btn-secondary mb-20">← Back to Manage Bookings</a>
+<a href="/admin_bookings.php" class="btn btn-secondary mb-20">Back to Manage Bookings</a>
 
 <?php if ($success_message): ?>
     <div class="alert alert-success"><?= $success_message ?></div>
