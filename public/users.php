@@ -64,9 +64,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $update_stmt->close();
                 }
             } else {
-                // Create new user
+                // Create new user - explicitly set is_active to 1
                 $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-                $stmt = $conn->prepare("INSERT INTO users (username, password, role, full_name, email, phone) VALUES (?, ?, ?, ?, ?, ?)");
+                $stmt = $conn->prepare("INSERT INTO users (username, password, role, full_name, email, phone, is_active) VALUES (?, ?, ?, ?, ?, ?, 1)");
                 $stmt->bind_param("ssssss", $username, $hashed_password, $role, $full_name, $email, $phone);
                 
                 if ($stmt->execute()) {
@@ -79,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $feedback_message = "Staff member '{$username}' created successfully!";
                     $feedback_type = 'success';
                 } else {
-                    $feedback_message = "Error: Could not create staff member. There may be a database constraint issue.";
+                    $feedback_message = "Error: Could not create staff member.";
                     $feedback_type = 'danger';
                 }
                 $stmt->close();
@@ -254,6 +254,8 @@ require_once __DIR__ . '/../includes/header.php';
         </table>
     </div>
 </div>
+
+
 
 <?php
 $stmt_users->close();
