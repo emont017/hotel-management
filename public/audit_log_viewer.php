@@ -91,97 +91,154 @@ $target_tables = [];
 while ($table = $tables_query->fetch_assoc()) {
     $target_tables[] = $table['target_table'];
 }
+
+// Get quick stats for dashboard cards
+$today = date('Y-m-d');
+$yesterday = date('Y-m-d', strtotime('-1 day'));
+
+$stats_today = $conn->query("SELECT COUNT(*) as count FROM audit_logs WHERE DATE(timestamp) = '$today'")->fetch_assoc()['count'] ?? 0;
+$stats_yesterday = $conn->query("SELECT COUNT(*) as count FROM audit_logs WHERE DATE(timestamp) = '$yesterday'")->fetch_assoc()['count'] ?? 0;
+$stats_total_users = $conn->query("SELECT COUNT(DISTINCT user_id) as count FROM audit_logs WHERE user_id IS NOT NULL")->fetch_assoc()['count'] ?? 0;
+$stats_unique_actions = $conn->query("SELECT COUNT(DISTINCT action) as count FROM audit_logs")->fetch_assoc()['count'] ?? 0;
 ?>
 
-<div class="container">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h2>System Audit Log History</h2>
+<div class="dashboard-header">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+        <div>
+            <h1>System Audit Log History</h1>
+            <p>Comprehensive security and activity monitoring for your hotel management system.</p>
+        </div>
         <button type="button" onclick="showClearLogsModal()" class="btn btn-danger">
             Clear All Logs
         </button>
     </div>
-    
-    <?php if ($feedback_message): ?>
-        <div class="alert alert-<?= $feedback_type ?>">
-            <?= htmlspecialchars($feedback_message) ?>
+</div>
+
+<?php if ($feedback_message): ?>
+    <div class="alert alert-<?= $feedback_type ?>" style="margin-bottom: 30px;">
+        <?= htmlspecialchars($feedback_message) ?>
+    </div>
+<?php endif; ?>
+
+<!-- Quick Statistics -->
+<div class="kpi-grid" style="margin-bottom: 30px;">
+    <div class="kpi-card">
+        <div class="info">
+            <div class="value"><?= number_format($total_logs) ?></div>
+            <div class="label">Total Log Entries</div>
         </div>
-    <?php endif; ?>
-    
-    <!-- Filters Form -->
-    <div class="card mb-30">
-        <h3>Filter Logs</h3>
-        <form method="GET" class="audit-filters">
-            <div class="filter-row">
-                <div class="filter-group">
-                    <label for="user_id">User:</label>
-                    <select name="user_id" id="user_id" class="form-select">
-                        <option value="">All Users</option>
-                        <?php foreach ($users as $user): ?>
-                            <option value="<?= $user['id'] ?>" <?= (isset($filters['user_id']) && $filters['user_id'] == $user['id']) ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($user['full_name'] ?? $user['username']) ?> (<?= $user['role'] ?>)
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                
-                <div class="filter-group">
-                    <label for="action">Action:</label>
-                    <select name="action" id="action" class="form-select">
-                        <option value="">All Actions</option>
-                        <?php foreach ($actions as $action): ?>
-                            <option value="<?= htmlspecialchars($action) ?>" <?= (isset($filters['action']) && $filters['action'] == $action) ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($action) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                
-                <div class="filter-group">
-                    <label for="target_table">Table:</label>
-                    <select name="target_table" id="target_table" class="form-select">
-                        <option value="">All Tables</option>
-                        <?php foreach ($target_tables as $table): ?>
-                            <option value="<?= htmlspecialchars($table) ?>" <?= (isset($filters['target_table']) && $filters['target_table'] == $table) ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($table) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
+    </div>
+    <div class="kpi-card">
+        <div class="info">
+            <div class="value"><?= number_format($stats_today) ?></div>
+            <div class="label">Events Today</div>
+        </div>
+    </div>
+    <div class="kpi-card">
+        <div class="info">
+            <div class="value"><?= number_format($stats_total_users) ?></div>
+            <div class="label">Active Users</div>
+        </div>
+    </div>
+    <div class="kpi-card">
+        <div class="info">
+            <div class="value"><?= number_format($stats_unique_actions) ?></div>
+            <div class="label">Event Types</div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters Form -->
+<div class="card" style="margin-bottom: 30px;">
+    <h3 style="margin-bottom: 20px;">Filter Audit Logs</h3>
+    <form method="GET" class="audit-filters">
+        <div class="filter-row">
+            <div class="filter-group">
+                <label for="user_id" class="form-label">User:</label>
+                <select name="user_id" id="user_id" class="form-select">
+                    <option value="">All Users</option>
+                    <?php foreach ($users as $user): ?>
+                        <option value="<?= $user['id'] ?>" <?= (isset($filters['user_id']) && $filters['user_id'] == $user['id']) ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($user['full_name'] ?? $user['username']) ?> (<?= $user['role'] ?>)
+                        </option>
+                    <?php endforeach; ?>
+                </select>
             </div>
             
-            <div class="filter-row">
-                <div class="filter-group">
-                    <label for="date_from">From Date:</label>
-                    <input type="date" name="date_from" id="date_from" class="form-input" value="<?= $_GET['date_from'] ?? '' ?>">
-                </div>
-                
-                <div class="filter-group">
-                    <label for="date_to">To Date:</label>
-                    <input type="date" name="date_to" id="date_to" class="form-input" value="<?= $_GET['date_to'] ?? '' ?>">
-                </div>
-                
-                <div class="filter-group">
-                    <button type="submit" class="btn btn-primary">Apply Filters</button>
-                    <a href="audit_log_viewer.php" class="btn btn-secondary">Clear Filters</a>
+            <div class="filter-group">
+                <label for="action" class="form-label">Action:</label>
+                <select name="action" id="action" class="form-select">
+                    <option value="">All Actions</option>
+                    <?php foreach ($actions as $action): ?>
+                        <option value="<?= htmlspecialchars($action) ?>" <?= (isset($filters['action']) && $filters['action'] == $action) ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($action) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="target_table" class="form-label">Table:</label>
+                <select name="target_table" id="target_table" class="form-select">
+                    <option value="">All Tables</option>
+                    <?php foreach ($target_tables as $table): ?>
+                        <option value="<?= htmlspecialchars($table) ?>" <?= (isset($filters['target_table']) && $filters['target_table'] == $table) ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($table) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+        </div>
+        
+        <div class="filter-row">
+            <div class="filter-group">
+                <label for="date_from" class="form-label">From Date:</label>
+                <input type="date" name="date_from" id="date_from" class="form-input" value="<?= $_GET['date_from'] ?? '' ?>">
+            </div>
+            
+            <div class="filter-group">
+                <label for="date_to" class="form-label">To Date:</label>
+                <input type="date" name="date_to" id="date_to" class="form-input" value="<?= $_GET['date_to'] ?? '' ?>">
+            </div>
+            
+            <div class="filter-group">
+                <label class="form-label">&nbsp;</label>
+                <div style="display: flex; gap: 10px; margin-bottom: 1.25rem;">
+                    <button type="submit" class="btn btn-primary" style="padding: 8px 20px;">Apply Filters</button>
+                    <a href="audit_log_viewer.php" class="btn btn-secondary" style="padding: 8px 20px;">Clear Filters</a>
                 </div>
             </div>
-        </form>
-    </div>
+        </div>
+    </form>
+</div>
 
-    <!-- Results Summary -->
-    <div class="results-summary mb-20">
-        <p>Showing <?= count($logs) ?> of <?= number_format($total_logs) ?> total audit entries</p>
-        <?php if ($total_pages > 1): ?>
-            <p>Page <?= $page ?> of <?= $total_pages ?></p>
+<!-- Results Summary -->
+<div class="card" style="margin-bottom: 20px;">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h4 style="margin: 0; color: #B6862C;">Search Results</h4>
+            <p style="margin: 5px 0 0 0; color: #ccc;">
+                Showing <?= count($logs) ?> of <?= number_format($total_logs) ?> total audit entries
+                <?php if ($total_pages > 1): ?>
+                    (Page <?= $page ?> of <?= $total_pages ?>)
+                <?php endif; ?>
+            </p>
+        </div>
+        <?php if (count($logs) > 0): ?>
+            <div style="color: #B6862C; font-size: 0.9rem;">
+                <?= number_format(count($logs)) ?> records displayed
+            </div>
         <?php endif; ?>
     </div>
+</div>
 
-    <!-- Audit Logs Table -->
+<!-- Audit Logs Table -->
+<div class="card">
     <div style="overflow-x: auto;">
         <table class="data-table">
             <thead>
                 <tr>
-                    <th>Log ID</th>
+                    <th>ID</th>
                     <th>Date & Time</th>
                     <th>User</th>
                     <th>Role</th>
@@ -193,27 +250,32 @@ while ($table = $tables_query->fetch_assoc()) {
             <tbody>
                 <?php if (empty($logs)): ?>
                     <tr>
-                        <td colspan="7" style="text-align: center;">No audit logs found matching your criteria.</td>
+                        <td colspan="7" style="text-align: center; padding: 40px; color: #aaa;">
+                            No audit logs found matching your criteria.
+                            <?php if (!empty($filters)): ?>
+                                <br><a href="audit_log_viewer.php" style="color: #B6862C;">Clear filters to see all logs</a>
+                            <?php endif; ?>
+                        </td>
                     </tr>
                 <?php else: ?>
                     <?php foreach ($logs as $log): ?>
                         <tr>
-                            <td><?= htmlspecialchars($log['id']) ?></td>
+                            <td><span style="font-family: monospace; color: #B6862C;">#<?= htmlspecialchars($log['id']) ?></span></td>
                             <td><?= date("M j, Y g:i A", strtotime($log['timestamp'])) ?></td>
                             <td><?= htmlspecialchars($log['user_name'] ?? $log['username']) ?></td>
-                            <td class="text-capitalize"><?= htmlspecialchars($log['role']) ?></td>
-                            <td><?= htmlspecialchars($log['action']) ?></td>
+                            <td><span class="role-badge role-<?= strtolower($log['role']) ?>"><?= htmlspecialchars($log['role']) ?></span></td>
+                            <td><span class="action-badge"><?= htmlspecialchars($log['action']) ?></span></td>
                             <td>
                                 <?php if ($log['target_table'] && $log['target_id']): ?>
-                                    <?= htmlspecialchars($log['target_table']) ?> #<?= $log['target_id'] ?>
+                                    <span style="color: #B6862C;"><?= htmlspecialchars($log['target_table']) ?></span> #<?= $log['target_id'] ?>
                                 <?php elseif ($log['target_table']): ?>
-                                    <?= htmlspecialchars($log['target_table']) ?>
+                                    <span style="color: #B6862C;"><?= htmlspecialchars($log['target_table']) ?></span>
                                 <?php else: ?>
-                                    <em>System</em>
+                                    <em style="color: #888;">System</em>
                                 <?php endif; ?>
                             </td>
                             <td class="details-cell" title="<?= htmlspecialchars($log['details']) ?>">
-                                <?= htmlspecialchars(strlen($log['details']) > 50 ? substr($log['details'], 0, 50) . '...' : $log['details']) ?>
+                                <?= htmlspecialchars(strlen($log['details']) > 60 ? substr($log['details'], 0, 60) . '...' : $log['details']) ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -221,47 +283,52 @@ while ($table = $tables_query->fetch_assoc()) {
             </tbody>
         </table>
     </div>
-
-    <!-- Pagination -->
-    <?php if ($total_pages > 1): ?>
-        <div class="pagination-container mt-30">
-            <div class="pagination">
-                <?php if ($page > 1): ?>
-                    <a href="?<?= http_build_query(array_merge($_GET, ['page' => $page - 1])) ?>" class="pagination-link">Previous</a>
-                <?php endif; ?>
-                
-                <?php for ($i = max(1, $page - 2); $i <= min($total_pages, $page + 2); $i++): ?>
-                    <?php if ($i == $page): ?>
-                        <span class="pagination-current"><?= $i ?></span>
-                    <?php else: ?>
-                        <a href="?<?= http_build_query(array_merge($_GET, ['page' => $i])) ?>" class="pagination-link"><?= $i ?></a>
-                    <?php endif; ?>
-                <?php endfor; ?>
-                
-                <?php if ($page < $total_pages): ?>
-                    <a href="?<?= http_build_query(array_merge($_GET, ['page' => $page + 1])) ?>" class="pagination-link">Next</a>
-                <?php endif; ?>
-            </div>
-        </div>
-    <?php endif; ?>
 </div>
 
+<!-- Pagination -->
+<?php if ($total_pages > 1): ?>
+    <div class="pagination-container mt-30">
+        <div class="pagination">
+            <?php if ($page > 1): ?>
+                <a href="?<?= http_build_query(array_merge($_GET, ['page' => $page - 1])) ?>" class="pagination-link">« Previous</a>
+            <?php endif; ?>
+            
+            <?php for ($i = max(1, $page - 2); $i <= min($total_pages, $page + 2); $i++): ?>
+                <?php if ($i == $page): ?>
+                    <span class="pagination-current"><?= $i ?></span>
+                <?php else: ?>
+                    <a href="?<?= http_build_query(array_merge($_GET, ['page' => $i])) ?>" class="pagination-link"><?= $i ?></a>
+                <?php endif; ?>
+            <?php endfor; ?>
+            
+            <?php if ($page < $total_pages): ?>
+                <a href="?<?= http_build_query(array_merge($_GET, ['page' => $page + 1])) ?>" class="pagination-link">Next »</a>
+            <?php endif; ?>
+        </div>
+        <div style="text-align: center; margin-top: 10px; color: #aaa; font-size: 0.9rem;">
+            Showing page <?= $page ?> of <?= $total_pages ?> (<?= number_format($total_logs) ?> total entries)
+        </div>
+    </div>
+<?php endif; ?>
+
 <!-- Clear Logs Modal -->
-<div id="clearLogsModal" class="modal" style="display: none;">
+<div id="clearLogsModal" class="modal">
     <div class="modal-content">
-        <h3>Clear All Audit Logs</h3>
+        <span class="modal-close" onclick="hideClearLogsModal()">&times;</span>
+        <h3 style="color: #dc3545; margin-bottom: 20px;">Clear All Audit Logs</h3>
         <p><strong>Warning:</strong> This action will permanently delete ALL audit log entries and cannot be undone.</p>
-        <p>Are you absolutely sure you want to proceed?</p>
+        <p>This will remove all historical records of system activity, user actions, and security events.</p>
+        <p style="color: #dc3545;"><strong>Are you absolutely sure you want to proceed?</strong></p>
         
-        <form method="POST" style="margin-top: 20px;">
-            <div style="margin-bottom: 15px;">
-                <label>
-                    <input type="checkbox" name="confirm_clear" value="yes" required>
-                    I understand this will delete all audit logs permanently
+        <form method="POST" style="margin-top: 30px;">
+            <div style="margin-bottom: 20px; text-align: left;">
+                <label style="display: flex; align-items: center; gap: 10px; color: #333;">
+                    <input type="checkbox" name="confirm_clear" value="yes" required style="transform: scale(1.2);">
+                    I understand this will delete all audit logs permanently and cannot be undone
                 </label>
             </div>
             
-            <div style="display: flex; gap: 10px;">
+            <div style="display: flex; gap: 15px; justify-content: center;">
                 <button type="submit" name="clear_logs" class="btn btn-danger">
                     Yes, Clear All Logs
                 </button>
@@ -272,6 +339,152 @@ while ($table = $tables_query->fetch_assoc()) {
         </form>
     </div>
 </div>
+
+<style>
+.audit-filters {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.filter-row {
+    display: flex;
+    gap: 20px;
+    align-items: end;
+    flex-wrap: wrap;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    min-width: 180px;
+    flex: 1;
+}
+
+.details-cell {
+    max-width: 300px;
+    word-wrap: break-word;
+    cursor: help;
+    font-family: monospace;
+    font-size: 0.9rem;
+}
+
+.pagination-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.pagination {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.pagination-link {
+    padding: 10px 15px;
+    background: #122C55;
+    border: 1px solid #B6862C;
+    text-decoration: none;
+    color: #fff;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    font-weight: bold;
+}
+
+.pagination-link:hover {
+    background: #B6862C;
+    color: #081C3A;
+    transform: translateY(-1px);
+}
+
+.pagination-current {
+    padding: 10px 15px;
+    background: #B6862C;
+    color: #081C3A;
+    border-radius: 6px;
+    font-weight: bold;
+    border: 1px solid #B6862C;
+}
+
+.role-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.role-admin {
+    background-color: #dc3545;
+    color: white;
+}
+
+.role-manager {
+    background-color: #B6862C;
+    color: #081C3A;
+}
+
+.role-front_desk {
+    background-color: #28a745;
+    color: white;
+}
+
+.role-housekeeping {
+    background-color: #17a2b8;
+    color: white;
+}
+
+.role-guest {
+    background-color: #6c757d;
+    color: white;
+}
+
+.action-badge {
+    padding: 4px 8px;
+    background-color: #122C55;
+    border: 1px solid #B6862C;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: #B6862C;
+}
+
+.alert {
+    padding: 15px 20px;
+    border-radius: 8px;
+    border-left: 4px solid;
+}
+
+.alert-success {
+    background-color: #122C55;
+    border-left-color: #28a745;
+    color: #fff;
+}
+
+.alert-danger {
+    background-color: #122C55;
+    border-left-color: #dc3545;
+    color: #fff;
+}
+
+.alert-warning {
+    background-color: #122C55;
+    border-left-color: #ffc107;
+    color: #fff;
+}
+
+.dashboard-header h1 {
+    margin-bottom: 5px;
+}
+
+.dashboard-header p {
+    color: #aaa;
+    margin: 0;
+}
+</style>
 
 <script>
 function showClearLogsModal() {
@@ -290,147 +503,5 @@ window.onclick = function(event) {
     }
 }
 </script>
-
-<style>
-.audit-filters {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.filter-row {
-    display: flex;
-    gap: 15px;
-    align-items: end;
-    flex-wrap: wrap;
-}
-
-.filter-group {
-    display: flex;
-    flex-direction: column;
-    min-width: 150px;
-}
-
-.filter-group label {
-    font-weight: bold;
-    margin-bottom: 5px;
-    color: #333;
-}
-
-.results-summary {
-    padding: 10px;
-    background: #f8f9fa;
-    border-radius: 5px;
-    color: #666;
-}
-
-.details-cell {
-    max-width: 300px;
-    word-wrap: break-word;
-    cursor: help;
-}
-
-.pagination-container {
-    display: flex;
-    justify-content: center;
-}
-
-.pagination {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-}
-
-.pagination-link {
-    padding: 8px 12px;
-    background: #f8f9fa;
-    border: 1px solid #ddd;
-    text-decoration: none;
-    color: #333;
-    border-radius: 4px;
-    transition: background-color 0.2s;
-}
-
-.pagination-link:hover {
-    background: #e9ecef;
-}
-
-.pagination-current {
-    padding: 8px 12px;
-    background: #081C3A;
-    color: white;
-    border-radius: 4px;
-    font-weight: bold;
-}
-
-/* Modal Styles */
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.5);
-    align-items: center;
-    justify-content: center;
-}
-
-.modal-content {
-    background: white;
-    padding: 30px;
-    border-radius: 8px;
-    max-width: 500px;
-    width: 90%;
-    text-align: center;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    color: #333;
-}
-
-.modal-content h3 {
-    color: #dc3545;
-    margin-bottom: 15px;
-}
-
-.modal-content p {
-    margin-bottom: 10px;
-    text-align: left;
-    color: #333;
-}
-
-.modal-content label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    text-align: left;
-    font-size: 14px;
-    color: #333;
-}
-
-.alert {
-    padding: 15px;
-    border-radius: 5px;
-    margin-bottom: 20px;
-}
-
-.alert-success {
-    background-color: #d4edda;
-    border: 1px solid #c3e6cb;
-    color: #155724;
-}
-
-.alert-danger {
-    background-color: #f8d7da;
-    border: 1px solid #f5c6cb;
-    color: #721c24;
-}
-
-.alert-warning {
-    background-color: #fff3cd;
-    border: 1px solid #ffeaa7;
-    color: #856404;
-}
-</style>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

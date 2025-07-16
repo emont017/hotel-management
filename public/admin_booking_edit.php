@@ -88,7 +88,7 @@ $title = "Edit Booking";
      Back to Booking Details
 </a>
 
-<h2>✏️ Edit Booking #<?= $booking['booking_id'] ?></h2>
+<h2>Edit Booking #<?= $booking['booking_id'] ?></h2>
 
 <?php if (isset($success)): ?>
     <p class="alert alert-success"><?= $success ?></p>
