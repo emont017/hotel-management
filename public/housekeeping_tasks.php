@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/../includes/audit_functions.php';
 $title = "Housekeeping Tasks";
 
 // Security & Role Management
@@ -21,6 +22,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
     if ($room_id > 0 && in_array($new_status, $allowed_statuses)) {
         $conn->begin_transaction();
         try {
+            // Get current room data before update for audit logging
+            $room_data_query = $conn->prepare("SELECT room_number, housekeeping_status FROM rooms WHERE id = ?");
+            $room_data_query->bind_param("i", $room_id);
+            $room_data_query->execute();
+            $room_result = $room_data_query->get_result();
+            $room_data = $room_result->fetch_assoc();
+            $previous_status = $room_data['housekeeping_status'];
+            $room_number = $room_data['room_number'];
+            $room_data_query->close();
+            
             // Update room status
             $stmt_update = $conn->prepare("UPDATE rooms SET housekeeping_status = ? WHERE id = ?");
             $stmt_update->bind_param("si", $new_status, $room_id);
@@ -31,8 +42,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
             if ($new_status === 'clean') {
                 $stmt_complete = $conn->prepare("UPDATE housekeeping_tasks SET status = 'completed' WHERE room_id = ? AND status = 'pending' AND task_date = CURDATE()");
                 $stmt_complete->bind_param("i", $room_id);
-                $stmt_complete->execute();
+                $completed_tasks = $stmt_complete->execute();
+                $affected_rows = $stmt_complete->affected_rows;
                 $stmt_complete->close();
+                
+                // Log task completion if tasks were actually completed
+                if ($affected_rows > 0) {
+                    $task_details = "Housekeeping task completed for Room {$room_number} - marked as clean by " . $_SESSION['username'];
+                    log_audit_event($conn, $user_id, "Housekeeping Task Completed", "housekeeping_tasks", $room_id, $task_details);
+                }
             }
 
             // Log the change
@@ -43,6 +61,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
             $stmt_log->close();
             
             $conn->commit();
+            
+            // Add audit logging for the status change
+            $audit_details = "Room {$room_number} housekeeping status changed from '{$previous_status}' to '{$new_status}' by " . $_SESSION['username'];
+            log_room_event($conn, $user_id, "Housekeeping Status Update", $room_id, $audit_details);
+            
             $feedback_message = "Room status updated successfully!";
             $feedback_type = 'success';
         } catch (Exception $e) {
