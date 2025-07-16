@@ -12,17 +12,17 @@ require_once __DIR__ . '/../includes/header.php';
 
     <div class="card">
         <h3>Step 1: Select Your Dates</h3>
-        <div id="date-selection" class="date-selection-form">
-            <div>
+        <div id="date-selection" class="date-selection-form" style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 200px;">
                 <label for="checkin_date" class="form-label">Check-in Date</label>
                 <input type="date" id="checkin_date" name="checkin_date" class="form-input" required>
             </div>
-            <div>
+            <div style="flex: 1; min-width: 200px;">
                 <label for="checkout_date" class="form-label">Check-out Date</label>
                 <input type="date" id="checkout_date" name="checkout_date" class="form-input" required>
             </div>
-            <div>
-                 <button id="check-availability-btn" class="btn btn-primary">Check Availability</button>
+            <div style="flex: 0 0 auto; align-self: flex-end;">
+                <button id="check-availability-btn" class="btn btn-primary" style="height: 40px; padding: 0 20px; transform: translateY(-22px);">Check Availability</button>
             </div>
         </div>
     </div>
