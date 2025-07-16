@@ -125,7 +125,15 @@ $bookings_stmt->close();
                                 $duration = max(1, $duration);
                                 $status_class = 'status-' . htmlspecialchars($booking_for_this_day['booking_status']);
                                 
-                                echo "<td colspan='{$duration}' class='date-cell'><a href='/admin_booking_detail.php?booking_id={$booking_for_this_day['booking_id']}' class='booking-block {$status_class}'>" . htmlspecialchars($booking_for_this_day['full_name']) . "</a></td>";
+                                
+echo "<td colspan='{$duration}' class='date-cell'>
+  <div class='booking-block {$status_class}' 
+       data-booking-id='{$booking_for_this_day['booking_id']}' 
+       data-room-id='{$room['id']}' 
+       draggable='true'>
+    " . htmlspecialchars($booking_for_this_day['full_name']) . "
+  </div>
+</td>";
                                 
                                 $i += $duration - 1;
                             }
@@ -137,7 +145,11 @@ $bookings_stmt->close();
                                 $status_class = 'status-maintenance';
                             }
                              
-                            echo "<td class='date-cell'><div class='booking-block {$status_class}' style='opacity: 0.5;'></div></td>";
+                            echo "<td class='date-cell droppable' 
+             data-date='{$cell_date_str}' 
+             data-room-id='{$room['id']}'>
+        <div class='booking-block {$status_class}' style='opacity: 0.5;'></div>
+      </td>";
                         }
                     }
                     ?>
@@ -146,5 +158,63 @@ $bookings_stmt->close();
         </tbody>
     </table>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const bookings = document.querySelectorAll('.booking-block[draggable="true"]');
+    const droppableCells = document.querySelectorAll('.droppable');
+
+    bookings.forEach(booking => {
+        booking.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData('text/plain', JSON.stringify({
+                bookingId: booking.getAttribute('data-booking-id'),
+                oldRoomId: booking.getAttribute('data-room-id')
+            }));
+        });
+    });
+
+    droppableCells.forEach(cell => {
+        cell.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            cell.style.outline = '2px dashed #B6862C';
+        });
+
+        cell.addEventListener('dragleave', () => {
+            cell.style.outline = '';
+        });
+
+        cell.addEventListener('drop', (e) => {
+            e.preventDefault();
+            cell.style.outline = '';
+
+            const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+            const newRoomId = cell.getAttribute('data-room-id');
+            const newDate = cell.getAttribute('data-date');
+
+            if (confirm("Move booking to this room and date?")) {
+                fetch('/api/move_booking.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        bookingId: data.bookingId,
+                        newRoomId: newRoomId,
+                        newStartDate: newDate
+                    })
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        location.reload(); // Refresh to see update
+                    } else {
+                        alert('Move failed: ' + result.message);
+                    }
+                })
+                .catch(err => {
+                    alert('Error: ' + err.message);
+                });
+            }
+        });
+    });
+});
+</script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>
