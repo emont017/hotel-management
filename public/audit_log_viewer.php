@@ -234,7 +234,7 @@ $stats_unique_actions = $conn->query("SELECT COUNT(DISTINCT action) as count FRO
 
 <!-- Audit Logs Table -->
 <div class="card">
-    <div style="overflow-x: auto;">
+    <div class="table-container">
         <table class="data-table">
             <thead>
                 <tr>
@@ -367,6 +367,50 @@ $stats_unique_actions = $conn->query("SELECT COUNT(DISTINCT action) as count FRO
     cursor: help;
     font-family: monospace;
     font-size: 0.9rem;
+}
+
+.table-container {
+    max-height: 600px;
+    overflow-x: auto;
+    overflow-y: auto;
+    border-radius: 8px;
+}
+
+.table-container table {
+    position: relative;
+}
+
+.table-container thead th {
+    position: sticky;
+    top: 0;
+    background-color: #122C55;
+    z-index: 10;
+    border-bottom: 2px solid #B6862C;
+}
+
+/* Custom Scrollbar Styling */
+.table-container::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.table-container::-webkit-scrollbar-track {
+    background: #081C3A;
+    border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+    background: #B6862C;
+    border-radius: 4px;
+    border: 2px solid #081C3A;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+    background: #D4A340;
+}
+
+.table-container::-webkit-scrollbar-corner {
+    background: #081C3A;
 }
 
 .pagination-container {
