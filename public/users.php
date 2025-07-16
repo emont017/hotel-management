@@ -33,23 +33,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $phone = trim($_POST['phone']);
 
         if(!empty($username) && !empty($password) && !empty($role)) {
-            $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-            $stmt = $conn->prepare("INSERT INTO users (username, password, role, full_name, email, phone) VALUES (?, ?, ?, ?, ?, ?)");
-            $stmt->bind_param("ssssss", $username, $hashed_password, $role, $full_name, $email, $phone);
-            if ($stmt->execute()) {
-                $new_user_id = $stmt->insert_id;
-                
-                // Log user creation
-                log_user_management_event($conn, $_SESSION['user_id'], 'User Created', $new_user_id, 
-                    "New {$role} user created: {$username} ({$full_name})");
-                
-                $feedback_message = "Staff member '{$username}' created successfully!";
-                $feedback_type = 'success';
+            // Check if username already exists (including deactivated users)
+            $check_stmt = $conn->prepare("SELECT id, is_active FROM users WHERE username = ?");
+            $check_stmt->bind_param("s", $username);
+            $check_stmt->execute();
+            $existing_user = $check_stmt->get_result()->fetch_assoc();
+            $check_stmt->close();
+
+            if ($existing_user) {
+                if ($existing_user['is_active'] == 1) {
+                    $feedback_message = "Error: Username '{$username}' is already taken by an active user.";
+                    $feedback_type = 'danger';
+                } else {
+                    // Reactivate the deactivated user with new details
+                    $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+                    $update_stmt = $conn->prepare("UPDATE users SET password = ?, role = ?, full_name = ?, email = ?, phone = ?, is_active = 1 WHERE id = ?");
+                    $update_stmt->bind_param("sssssi", $hashed_password, $role, $full_name, $email, $phone, $existing_user['id']);
+                    
+                    if ($update_stmt->execute()) {
+                        // Log user reactivation
+                        log_user_management_event($conn, $_SESSION['user_id'], 'User Reactivated', $existing_user['id'], 
+                            "Deactivated user reactivated with new details: {$username} ({$full_name}) - Role: {$role}");
+                        
+                        $feedback_message = "Staff member '{$username}' has been reactivated with updated details!";
+                        $feedback_type = 'success';
+                    } else {
+                        $feedback_message = "Error: Could not reactivate staff member.";
+                        $feedback_type = 'danger';
+                    }
+                    $update_stmt->close();
+                }
             } else {
-                $feedback_message = "Error: Could not create staff member. The username or email might already exist.";
-                $feedback_type = 'danger';
+                // Create new user
+                $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+                $stmt = $conn->prepare("INSERT INTO users (username, password, role, full_name, email, phone) VALUES (?, ?, ?, ?, ?, ?)");
+                $stmt->bind_param("ssssss", $username, $hashed_password, $role, $full_name, $email, $phone);
+                
+                if ($stmt->execute()) {
+                    $new_user_id = $stmt->insert_id;
+                    
+                    // Log user creation
+                    log_user_management_event($conn, $_SESSION['user_id'], 'User Created', $new_user_id, 
+                        "New {$role} user created: {$username} ({$full_name})");
+                    
+                    $feedback_message = "Staff member '{$username}' created successfully!";
+                    $feedback_type = 'success';
+                } else {
+                    $feedback_message = "Error: Could not create staff member. There may be a database constraint issue.";
+                    $feedback_type = 'danger';
+                }
+                $stmt->close();
             }
-            $stmt->close();
         } else {
             $feedback_message = "Username, password, and role are required.";
             $feedback_type = 'danger';
