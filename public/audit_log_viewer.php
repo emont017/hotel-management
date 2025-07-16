@@ -242,7 +242,7 @@ $stats_unique_actions = $conn->query("SELECT COUNT(DISTINCT action) as count FRO
                     <th>Date & Time</th>
                     <th>User</th>
                     <th>Role</th>
-                    <th>Action</th>
+                    <th style="min-width: 160px;">Action</th>
                     <th>Target</th>
                     <th>Details</th>
                 </tr>
@@ -275,7 +275,7 @@ $stats_unique_actions = $conn->query("SELECT COUNT(DISTINCT action) as count FRO
                                 <?php endif; ?>
                             </td>
                             <td class="details-cell" title="<?= htmlspecialchars($log['details']) ?>">
-                                <?= htmlspecialchars(strlen($log['details']) > 60 ? substr($log['details'], 0, 60) . '...' : $log['details']) ?>
+                                <?= htmlspecialchars(strlen($log['details']) > 150 ? substr($log['details'], 0, 150) . '...' : $log['details']) ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -362,11 +362,14 @@ $stats_unique_actions = $conn->query("SELECT COUNT(DISTINCT action) as count FRO
 }
 
 .details-cell {
-    max-width: 300px;
+    max-width: 400px;
     word-wrap: break-word;
+    word-break: break-word;
     cursor: help;
     font-family: monospace;
     font-size: 0.9rem;
+    line-height: 1.4;
+    white-space: normal;
 }
 
 .table-container {
@@ -494,6 +497,9 @@ $stats_unique_actions = $conn->query("SELECT COUNT(DISTINCT action) as count FRO
     font-size: 0.85rem;
     font-weight: bold;
     color: #B6862C;
+    white-space: nowrap;
+    display: inline-block;
+    min-width: fit-content;
 }
 
 .alert {
