@@ -89,7 +89,7 @@ try {
     // --- End of User Logic ---
 
     // Find an available room
-    $stmt_room = $conn->prepare("SELECT id FROM rooms WHERE room_type = ? AND status = 'available' AND id NOT IN (SELECT room_id FROM bookings WHERE status != 'cancelled' AND ? < check_out AND ? > check_in) LIMIT 1");
+    $stmt_room = $conn->prepare("SELECT id FROM rooms WHERE room_type = ? AND status = 'available' AND id NOT IN (SELECT room_id FROM bookings WHERE status IN ('confirmed', 'checked-in') AND ? < check_out AND ? > check_in) LIMIT 1");
     $stmt_room->bind_param("sss", $room_type, $checkin_date, $checkout_date);
     $stmt_room->execute();
     $room_result = $stmt_room->get_result();

@@ -28,7 +28,7 @@ try {
         FROM rooms r
         WHERE r.status = 'available' AND r.id NOT IN (
             SELECT b.room_id FROM bookings b
-            WHERE b.status != 'cancelled' AND ? < b.check_out AND ? > b.check_in
+            WHERE b.status IN ('confirmed', 'checked-in') AND ? < b.check_out AND ? > b.check_in
         )
         GROUP BY r.room_type, r.capacity
         HAVING price_per_night IS NOT NULL
