@@ -312,8 +312,8 @@ require_once __DIR__ . '/../includes/header.php';
                     <th>Phone</th>
                     <th>Total Bookings</th>
                     <th>Total Spent</th>
-                    <th>Last Stay</th>
                     <th>First Stay</th>
+                    <th>Last Stay</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -327,8 +327,8 @@ require_once __DIR__ . '/../includes/header.php';
                         <td><?= htmlspecialchars($guest['phone'] ?: 'N/A') ?></td>
                         <td><?= $guest['total_bookings'] ?></td>
                         <td>$<?= number_format($guest['total_spent'], 2) ?></td>
-                        <td><?= $guest['last_stay'] ? date('M j, Y', strtotime($guest['last_stay'])) : 'Never' ?></td>
                         <td><?= $guest['first_stay'] ? date('M j, Y', strtotime($guest['first_stay'])) : 'Never' ?></td>
+                        <td><?= $guest['last_stay'] ? date('M j, Y', strtotime($guest['last_stay'])) : 'Never' ?></td>
                         <td>
                             <a href="admin_guest_profile.php?guest_id=<?= $guest['id'] ?>" 
                                class="btn-link-style">View Profile</a>

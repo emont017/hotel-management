@@ -141,9 +141,24 @@ try {
     $stmt_folio_item->execute();
     $stmt_folio_item->close();
 
+    // Automatically record payment for online booking (simulates online payment)
+    $stmt_payment = $conn->prepare("INSERT INTO payments (booking_id, amount, payment_method, transaction_id, notes, recorded_by) VALUES (?, ?, ?, ?, ?, ?)");
+    $payment_method = "Online Payment";
+    $transaction_id = "WEB_" . date("Ymd") . "_" . strtoupper(bin2hex(random_bytes(4)));
+    $payment_notes = "Automatic payment for online booking";
+    $system_user_id = 1; // System user for automatic payments (or use actual user if admin)
+    $stmt_payment->bind_param("idsssi", $booking_id, $total_price, $payment_method, $transaction_id, $payment_notes, $system_user_id);
+    $stmt_payment->execute();
+    $payment_id = $stmt_payment->insert_id;
+    $stmt_payment->close();
+
     // Log the booking creation
     log_booking_event($conn, $user_id, 'Booking Created', $booking_id, 
         "New booking: {$confirmation_number}, Room: {$room_type}, Dates: {$checkin_date} to {$checkout_date}, Total: $" . number_format($total_price, 2));
+    
+    // Log the automatic payment
+    log_payment_event($conn, $user_id, 'Online Payment Recorded', $payment_id, 
+        "Automatic payment of $" . number_format($total_price, 2) . " for online booking {$confirmation_number}");
 
     $conn->commit();
     
