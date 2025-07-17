@@ -12,15 +12,15 @@ require_once __DIR__ . '/../includes/header.php';
 
 $user_id = $_SESSION['user_id'];
 
-// Get current reservations (upcoming or active)
-$current_sql = "SELECT b.id, r.room_type, r.room_number, b.check_in, b.check_out, b.total_price, b.status, b.confirmation_number FROM bookings b JOIN rooms r ON b.room_id = r.id WHERE b.user_id = ? AND (b.status IN ('confirmed', 'checked-in') OR b.check_out > CURDATE()) ORDER BY b.check_in ASC";
+// Get current reservations (upcoming or active) - based on status, not dates
+$current_sql = "SELECT b.id, r.room_type, r.room_number, b.check_in, b.check_out, b.total_price, b.status, b.confirmation_number FROM bookings b JOIN rooms r ON b.room_id = r.id WHERE b.user_id = ? AND b.status IN ('confirmed', 'checked-in') ORDER BY b.check_in ASC";
 $current_stmt = $conn->prepare($current_sql);
 $current_stmt->bind_param("i", $user_id);
 $current_stmt->execute();
 $current_result = $current_stmt->get_result();
 
-// Get past reservations (completed)
-$past_sql = "SELECT b.id, r.room_type, r.room_number, b.check_in, b.check_out, b.total_price, b.status, b.confirmation_number FROM bookings b JOIN rooms r ON b.room_id = r.id WHERE b.user_id = ? AND b.status = 'checked-out' AND b.check_out <= CURDATE() ORDER BY b.check_out DESC";
+// Get past reservations (completed) - all checked-out bookings regardless of date
+$past_sql = "SELECT b.id, r.room_type, r.room_number, b.check_in, b.check_out, b.total_price, b.status, b.confirmation_number FROM bookings b JOIN rooms r ON b.room_id = r.id WHERE b.user_id = ? AND b.status IN ('checked-out', 'cancelled') ORDER BY b.check_out DESC";
 $past_stmt = $conn->prepare($past_sql);
 $past_stmt->bind_param("i", $user_id);
 $past_stmt->execute();
