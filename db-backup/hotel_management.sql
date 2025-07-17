@@ -266,6 +266,37 @@ INSERT INTO `settings` (`id`, `setting_name`, `setting_value`) VALUES
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `guest_preferences`
+--
+
+CREATE TABLE `guest_preferences` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `preferred_room_type` varchar(50) DEFAULT NULL,
+  `floor_preference` varchar(20) DEFAULT NULL,
+  `bed_preference` enum('single','double','queen','king','twin','no-preference') DEFAULT 'no-preference',
+  `amenities_requested` text DEFAULT NULL,
+  `special_requests` text DEFAULT NULL,
+  `dietary_restrictions` text DEFAULT NULL,
+  `accessibility_needs` text DEFAULT NULL,
+  `marketing_consent` tinyint(1) DEFAULT 0,
+  `notes` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+
+--
+-- Dumping data for table `guest_preferences`
+--
+
+INSERT INTO `guest_preferences` (`id`, `user_id`, `preferred_room_type`, `floor_preference`, `bed_preference`, `amenities_requested`, `special_requests`, `dietary_restrictions`, `accessibility_needs`, `marketing_consent`, `notes`, `created_at`, `updated_at`) VALUES
+(1, 6, 'Double Room', 'high', 'queen', 'WiFi, Coffee Machine', 'Late checkout preferred', 'Vegetarian meals', NULL, 1, 'Regular customer, very satisfied with service', '2025-07-15 17:00:00', '2025-07-15 17:00:00'),
+(2, 7, 'Executive Suite', 'low', 'king', 'Balcony, Room Service', 'Extra towels', NULL, NULL, 0, 'Business traveler', '2025-07-15 17:00:00', '2025-07-15 17:00:00'),
+(3, 8, 'Suite with Balcony', 'high', 'double', 'Ocean view, Mini-bar', 'Quiet room', 'Gluten-free options', NULL, 1, 'Honeymoon couple', '2025-07-15 17:00:00', '2025-07-15 17:00:00');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `users`
 --
 
@@ -377,6 +408,13 @@ ALTER TABLE `salaries`
   ADD KEY `user_id` (`user_id`);
 
 --
+-- Indexes for table `guest_preferences`
+--
+ALTER TABLE `guest_preferences`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `user_id` (`user_id`);
+
+--
 -- Indexes for table `settings`
 --
 ALTER TABLE `settings`
@@ -399,6 +437,12 @@ ALTER TABLE `users`
 --
 ALTER TABLE `audit_logs`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `guest_preferences`
+--
+ALTER TABLE `guest_preferences`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `bookings`
@@ -527,6 +571,12 @@ ALTER TABLE `payments`
 --
 ALTER TABLE `reports`
   ADD CONSTRAINT `reports_ibfk_1` FOREIGN KEY (`generated_by`) REFERENCES `users` (`id`);
+
+--
+-- Constraints for table `guest_preferences`
+--
+ALTER TABLE `guest_preferences`
+  ADD CONSTRAINT `fk_guest_preferences_user_id` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `salaries`

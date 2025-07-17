@@ -139,6 +139,32 @@ if (!empty($params)) {
 $stmt_users->execute();
 $users_result = $stmt_users->get_result();
 
+// --- Guest Data Fetching for CRM ---
+$guest_search = $_GET['guest_search'] ?? '';
+$guest_sql = "SELECT u.id, u.username, u.full_name, u.email, u.phone,
+                     COUNT(b.id) as total_bookings,
+                     COALESCE(SUM(p.amount), 0) as total_spent,
+                     MAX(b.check_out) as last_stay,
+                     MIN(b.check_in) as first_stay
+              FROM users u 
+              LEFT JOIN bookings b ON u.id = b.user_id 
+              LEFT JOIN payments p ON b.id = p.booking_id
+              WHERE u.role = 'guest' AND u.is_active = 1";
+
+if (!empty($guest_search)) {
+    $guest_sql .= " AND (u.full_name LIKE ? OR u.email LIKE ? OR u.username LIKE ?)";
+}
+
+$guest_sql .= " GROUP BY u.id ORDER BY total_spent DESC, u.full_name ASC";
+
+$stmt_guests = $conn->prepare($guest_sql);
+if (!empty($guest_search)) {
+    $search_param = "%{$guest_search}%";
+    $stmt_guests->bind_param("sss", $search_param, $search_param, $search_param);
+}
+$stmt_guests->execute();
+$guests_result = $stmt_guests->get_result();
+
 
 $title = "Staff Management";
 require_once __DIR__ . '/../includes/header.php';
@@ -255,9 +281,74 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
 </div>
 
+<!-- Guest Management Section for CRM -->
+<h3 class="mt-30">Guest Relationship Management</h3>
+<div class="card">
+    <form method="GET" action="users.php" class="mb-20">
+        <label for="guest_search" class="form-label">Search Guests:</label>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <input type="text" name="guest_search" id="guest_search" 
+                   value="<?= htmlspecialchars($guest_search) ?>" 
+                   placeholder="Search by name, email, or username"
+                   class="form-input" style="flex: 1;">
+            <button type="submit" class="btn btn-secondary">Search</button>
+            <?php if (!empty($guest_search)): ?>
+                <a href="users.php" class="btn btn-outline">Clear</a>
+            <?php endif; ?>
+        </div>
+        <!-- Preserve other filters -->
+        <?php if (isset($_GET['filter_role']) && $_GET['filter_role'] !== 'all'): ?>
+            <input type="hidden" name="filter_role" value="<?= htmlspecialchars($_GET['filter_role']) ?>">
+        <?php endif; ?>
+    </form>
 
+    <div style="overflow-x: auto;">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Guest Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Total Bookings</th>
+                    <th>Total Spent</th>
+                    <th>Last Stay</th>
+                    <th>First Stay</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if ($guests_result->num_rows > 0): ?>
+                    <?php while ($guest = $guests_result->fetch_assoc()): ?>
+                    <tr>
+                        <td><?= $guest['id'] ?></td>
+                        <td><?= htmlspecialchars($guest['full_name'] ?: $guest['username']) ?></td>
+                        <td><?= htmlspecialchars($guest['email'] ?: 'N/A') ?></td>
+                        <td><?= htmlspecialchars($guest['phone'] ?: 'N/A') ?></td>
+                        <td><?= $guest['total_bookings'] ?></td>
+                        <td>$<?= number_format($guest['total_spent'], 2) ?></td>
+                        <td><?= $guest['last_stay'] ? date('M j, Y', strtotime($guest['last_stay'])) : 'Never' ?></td>
+                        <td><?= $guest['first_stay'] ? date('M j, Y', strtotime($guest['first_stay'])) : 'Never' ?></td>
+                        <td>
+                            <a href="admin_guest_profile.php?guest_id=<?= $guest['id'] ?>" 
+                               class="btn-link-style">View Profile</a>
+                        </td>
+                    </tr>
+                    <?php endwhile; ?>
+                <?php else: ?>
+                    <tr>
+                        <td colspan="9" class="text-center">
+                            <?= !empty($guest_search) ? 'No guests found matching your search.' : 'No guest accounts found.' ?>
+                        </td>
+                    </tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
 
 <?php
 $stmt_users->close();
+$stmt_guests->close();
 require_once __DIR__ . '/../includes/footer.php';
 ?>
