@@ -194,6 +194,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let blockedDates = [];
     let checkinPicker, checkoutPicker;
     let selectedCheckin = null;
+    let selectedCheckout = null;
     
     // Check if user has complete profile for auto-show guest details
     const hasCompleteProfile = <?= $has_complete_profile ? 'true' : 'false' ?>;
@@ -271,6 +272,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     const currentCheckout = checkoutPicker.selectedDates[0];
                     if (currentCheckout && currentCheckout <= selectedDates[0]) {
                         checkoutPicker.clear();
+                        selectedCheckout = null;
+                    }
+                    
+                    // Update checkout calendar if it's open
+                    if (checkoutPicker.isOpen) {
+                        setTimeout(() => markCheckinInCheckoutCalendar(checkoutPicker), 100);
                     }
                 }
                 
@@ -279,6 +286,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Auto-update availability if section is already visible and we have both dates
                 autoUpdateAvailability();
+            },
+            onOpen: function(selectedDates, dateStr, instance) {
+                // Mark checkout date when checkin calendar opens
+                setTimeout(() => markCheckoutInCheckinCalendar(instance), 100);
+            },
+            onMonthChange: function(selectedDates, dateStr, instance) {
+                // Re-mark checkout date when month changes
+                setTimeout(() => markCheckoutInCheckinCalendar(instance), 100);
+            },
+            onYearChange: function(selectedDates, dateStr, instance) {
+                // Re-mark checkout date when year changes
+                setTimeout(() => markCheckoutInCheckinCalendar(instance), 100);
             }
         });
 
@@ -286,10 +305,29 @@ document.addEventListener('DOMContentLoaded', function() {
         checkoutPicker = flatpickr(checkoutEl, {
             ...baseConfig,
             onChange: function(selectedDates, dateStr, instance) {
+                selectedCheckout = dateStr;
+                
+                // Update checkin calendar if it's open
+                if (checkinPicker && checkinPicker.isOpen) {
+                    setTimeout(() => markCheckoutInCheckinCalendar(checkinPicker), 100);
+                }
+                
                 updateDateSelectionFeedback();
                 
                 // Auto-update availability if section is already visible and we have both dates
                 autoUpdateAvailability();
+            },
+            onOpen: function(selectedDates, dateStr, instance) {
+                // Mark checkin date when checkout calendar opens
+                setTimeout(() => markCheckinInCheckoutCalendar(instance), 100);
+            },
+            onMonthChange: function(selectedDates, dateStr, instance) {
+                // Re-mark checkin date when month changes
+                setTimeout(() => markCheckinInCheckoutCalendar(instance), 100);
+            },
+            onYearChange: function(selectedDates, dateStr, instance) {
+                // Re-mark checkin date when year changes
+                setTimeout(() => markCheckinInCheckoutCalendar(instance), 100);
             }
         });
         
@@ -311,6 +349,238 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function updateDateSelectionFeedback() {
         // Removed redundant feedback - availability is confirmed in the availability confirmation section
+    }
+
+    // Function to mark the check-in date in the checkout calendar
+    function markCheckinInCheckoutCalendar(checkoutPickerInstance) {
+        if (!selectedCheckin || !checkoutPickerInstance) {
+            console.log('markCheckinInCheckoutCalendar: Missing data');
+            return;
+        }
+        
+        console.log(`Marking check-in ${selectedCheckin} in checkout calendar`);
+        
+        // Remove existing indicators and reset styles
+        cleanupIndicators(checkoutPickerInstance, 'checkin-indicator');
+        
+        // Add check-in indicator
+        markDateInCalendar(checkoutPickerInstance, selectedCheckin, 'checkin-indicator');
+        
+        // Also show checkout indicator if both dates are selected
+        if (selectedCheckout) {
+            markDateInCalendar(checkoutPickerInstance, selectedCheckout, 'checkout-indicator');
+        }
+    }
+
+    // Function to mark the check-out date in the checkin calendar
+    function markCheckoutInCheckinCalendar(checkinPickerInstance) {
+        if (!selectedCheckout || !checkinPickerInstance) {
+            console.log('markCheckoutInCheckinCalendar: Missing data');
+            return;
+        }
+        
+        console.log(`Marking check-out ${selectedCheckout} in checkin calendar`);
+        
+        // Remove existing indicators and reset styles
+        cleanupIndicators(checkinPickerInstance, 'checkout-indicator');
+        
+        // Add check-out indicator
+        markDateInCalendar(checkinPickerInstance, selectedCheckout, 'checkout-indicator');
+        
+        // Also show checkin indicator if both dates are selected
+        if (selectedCheckin) {
+            markDateInCalendar(checkinPickerInstance, selectedCheckin, 'checkin-indicator');
+        }
+    }
+
+    // Function to clean up existing indicators
+    function cleanupIndicators(pickerInstance, className) {
+        // Remove range indicators first
+        removeRangeIndicators(pickerInstance);
+        
+        const existingIndicators = pickerInstance.calendarContainer.querySelectorAll(`.${className}`);
+        existingIndicators.forEach(el => {
+            el.classList.remove(className);
+            // Reset inline styles
+            el.style.background = '';
+            el.style.color = '';
+            el.style.fontWeight = '';
+            el.style.border = '';
+            el.style.borderLeft = '';
+            el.style.borderRight = '';
+            el.style.transform = '';
+            el.style.boxShadow = '';
+            el.style.position = '';
+            
+            // Remove text indicator
+            const indicator = el.querySelector('.date-indicator');
+            if (indicator) {
+                indicator.remove();
+            }
+        });
+    }
+
+    // Helper function to mark a specific date in a calendar
+    function markDateInCalendar(pickerInstance, dateStr, className) {
+        if (!dateStr || !pickerInstance) {
+            console.log('markDateInCalendar: Missing dateStr or pickerInstance');
+            return;
+        }
+        
+        console.log(`Marking ${dateStr} with class ${className}`);
+        
+        const targetDate = new Date(dateStr + 'T00:00:00');
+        const allDayElements = pickerInstance.calendarContainer.querySelectorAll('.flatpickr-day');
+        
+        console.log(`Found ${allDayElements.length} day elements`);
+        
+        let found = false;
+        
+        // Remove existing range indicators first
+        removeRangeIndicators(pickerInstance);
+        allDayElements.forEach(dayEl => {
+            if (dayEl.dateObj) {
+                const dayDate = new Date(dayEl.dateObj);
+                
+                // Compare dates (year, month, day)
+                if (dayDate.getFullYear() === targetDate.getFullYear() &&
+                    dayDate.getMonth() === targetDate.getMonth() &&
+                    dayDate.getDate() === targetDate.getDate()) {
+                    
+                    console.log(`Found matching date: ${dateStr}, adding class ${className}`);
+                    dayEl.classList.add(className);
+                    found = true;
+                    
+                    // Add subtle, professional styling
+                    if (className === 'checkin-indicator') {
+                        dayEl.style.background = 'rgba(182, 134, 44, 0.15)';
+                        dayEl.style.color = '#B6862C';
+                        dayEl.style.fontWeight = '600';
+                        dayEl.style.border = '1px solid #B6862C';
+                        dayEl.style.position = 'relative';
+                        dayEl.title = `Check-in Date: ${formatDateForDisplay(dateStr)}`;
+                        
+                        // Add subtle corner indicator
+                        if (!dayEl.querySelector('.date-indicator')) {
+                            const indicator = document.createElement('div');
+                            indicator.className = 'date-indicator';
+                            indicator.style.cssText = `
+                                position: absolute;
+                                top: 2px;
+                                right: 2px;
+                                width: 6px;
+                                height: 6px;
+                                background: #B6862C;
+                                border-radius: 50%;
+                                z-index: 10;
+                            `;
+                            dayEl.appendChild(indicator);
+                        }
+                        
+                    } else if (className === 'checkout-indicator') {
+                        dayEl.style.background = 'rgba(182, 134, 44, 0.08)';
+                        dayEl.style.color = '#B6862C';
+                        dayEl.style.fontWeight = '500';
+                        dayEl.style.border = '1px dashed #B6862C';
+                        dayEl.style.position = 'relative';
+                        dayEl.title = `Check-out Date: ${formatDateForDisplay(dateStr)}`;
+                        
+                        // Add subtle corner indicator
+                        if (!dayEl.querySelector('.date-indicator')) {
+                            const indicator = document.createElement('div');
+                            indicator.className = 'date-indicator';
+                            indicator.style.cssText = `
+                                position: absolute;
+                                top: 2px;
+                                right: 2px;
+                                width: 6px;
+                                height: 6px;
+                                background: transparent;
+                                border: 1px solid #B6862C;
+                                border-radius: 50%;
+                                z-index: 10;
+                            `;
+                            dayEl.appendChild(indicator);
+                        }
+                    }
+                }
+            }
+        });
+        
+        if (!found) {
+            console.log(`Date ${dateStr} not found in current calendar view`);
+        }
+        
+        // Draw range line if both dates are selected and visible
+        drawRangeLine(pickerInstance);
+    }
+
+    // Function to remove existing range indicators
+    function removeRangeIndicators(pickerInstance) {
+        const existingLines = pickerInstance.calendarContainer.querySelectorAll('.range-line, .range-fill');
+        existingLines.forEach(line => line.remove());
+        
+        const existingRangeElements = pickerInstance.calendarContainer.querySelectorAll('.in-range');
+        existingRangeElements.forEach(el => {
+            el.classList.remove('in-range');
+            el.style.background = '';
+        });
+    }
+
+    // Function to draw a subtle line connecting check-in to check-out dates
+    function drawRangeLine(pickerInstance) {
+        if (!selectedCheckin || !selectedCheckout || !pickerInstance) return;
+        
+        const checkinDate = new Date(selectedCheckin + 'T00:00:00');
+        const checkoutDate = new Date(selectedCheckout + 'T00:00:00');
+        
+        // Only draw if checkout is after checkin
+        if (checkoutDate <= checkinDate) return;
+        
+        const allDayElements = pickerInstance.calendarContainer.querySelectorAll('.flatpickr-day');
+        let checkinElement = null;
+        let checkoutElement = null;
+        let rangeDates = [];
+        
+        // Find checkin, checkout, and all dates in between
+        allDayElements.forEach(dayEl => {
+            if (dayEl.dateObj) {
+                const dayDate = new Date(dayEl.dateObj);
+                
+                // Check if this is checkin date
+                if (dayDate.getFullYear() === checkinDate.getFullYear() &&
+                    dayDate.getMonth() === checkinDate.getMonth() &&
+                    dayDate.getDate() === checkinDate.getDate()) {
+                    checkinElement = dayEl;
+                }
+                
+                // Check if this is checkout date
+                if (dayDate.getFullYear() === checkoutDate.getFullYear() &&
+                    dayDate.getMonth() === checkoutDate.getMonth() &&
+                    dayDate.getDate() === checkoutDate.getDate()) {
+                    checkoutElement = dayEl;
+                }
+                
+                // Check if this date is between checkin and checkout
+                if (dayDate > checkinDate && dayDate < checkoutDate) {
+                    rangeDates.push(dayEl);
+                }
+            }
+        });
+        
+        // Add subtle background to dates in between
+        rangeDates.forEach(dayEl => {
+            dayEl.classList.add('in-range');
+            dayEl.style.background = 'rgba(182, 134, 44, 0.05)';
+            dayEl.style.position = 'relative';
+        });
+        
+        // If both dates are visible, draw connecting visual cues
+        if (checkinElement && checkoutElement) {
+            // Add visual connection indicators
+            checkinElement.style.borderRight = '2px solid rgba(182, 134, 44, 0.3)';
+            checkoutElement.style.borderLeft = '2px solid rgba(182, 134, 44, 0.3)';
+        }
     }
 
     function formatDateForDisplay(dateStr) {

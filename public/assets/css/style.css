@@ -477,6 +477,84 @@ nav a:hover, nav a.active { color: #B6862C; }
     opacity: 1;
 }
 
+/* --- DATE INDICATORS FOR CHECK-IN/CHECK-OUT --- */
+.flatpickr-day.checkin-indicator {
+    background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%) !important;
+    color: #fff !important;
+    font-weight: bold !important;
+    position: relative !important;
+    border: 2px solid #fff !important;
+    box-shadow: 0 0 0 2px #2ecc71, 0 4px 8px rgba(46, 204, 113, 0.4) !important;
+    transform: scale(1.1) !important;
+}
+
+.flatpickr-day.checkin-indicator::before {
+    content: "IN" !important;
+    position: absolute !important;
+    top: -12px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    background: #2ecc71 !important;
+    color: #fff !important;
+    font-size: 0.6rem !important;
+    font-weight: bold !important;
+    padding: 2px 6px !important;
+    border-radius: 10px !important;
+    white-space: nowrap !important;
+    border: 1px solid #fff !important;
+    z-index: 10 !important;
+}
+
+.flatpickr-day.checkout-indicator {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%) !important;
+    color: #fff !important;
+    font-weight: bold !important;
+    position: relative !important;
+    border: 2px solid #fff !important;
+    box-shadow: 0 0 0 2px #e74c3c, 0 4px 8px rgba(231, 76, 60, 0.4) !important;
+    transform: scale(1.1) !important;
+}
+
+.flatpickr-day.checkout-indicator::before {
+    content: "OUT" !important;
+    position: absolute !important;
+    top: -12px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    background: #e74c3c !important;
+    color: #fff !important;
+    font-size: 0.6rem !important;
+    font-weight: bold !important;
+    padding: 2px 6px !important;
+    border-radius: 10px !important;
+    white-space: nowrap !important;
+    border: 1px solid #fff !important;
+    z-index: 10 !important;
+}
+
+.flatpickr-day.checkin-indicator:hover,
+.flatpickr-day.checkout-indicator:hover {
+    transform: scale(1.15) !important;
+    transition: transform 0.2s ease !important;
+}
+
+/* --- DATE RANGE CONNECTION STYLING --- */
+.flatpickr-day.in-range {
+    background: rgba(182, 134, 44, 0.05) !important;
+    position: relative !important;
+}
+
+.flatpickr-day.in-range::after {
+    content: '' !important;
+    position: absolute !important;
+    bottom: 2px !important;
+    left: 10% !important;
+    right: 10% !important;
+    height: 1px !important;
+    background: rgba(182, 134, 44, 0.2) !important;
+    z-index: 1 !important;
+}
+
 @keyframes slideIn {
     from {
         opacity: 0;
