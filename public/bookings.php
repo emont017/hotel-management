@@ -1,17 +1,65 @@
 <?php
 session_start();
+require_once __DIR__ . '/../config/db.php';
+
+// Check if a room type was pre-selected from rooms.php
+$preselected_room_type = isset($_GET['type']) ? urldecode($_GET['type']) : null;
+
+// If a room type is preselected, fetch its details
+$room_details = null;
+if ($preselected_room_type) {
+    $sql = "SELECT room_type, price FROM room_rates WHERE rate_name = 'Standard Rate' AND room_type = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $preselected_room_type);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($result && $row = $result->fetch_assoc()) {
+        $room_details = $row;
+    }
+}
+
 $title = "Book Your Stay";
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <div class="booking-container">
-    <div>
-        <h1>Book Your Stay</h1>
-        <p>Select your dates to see available rooms and pricing.</p>
-    </div>
+    <?php if ($preselected_room_type && $room_details): ?>
+        <!-- Pre-selected Room Header -->
+        <div class="card" style="background: linear-gradient(135deg, #081C3A 0%, #122C55 100%); border: 2px solid #B6862C;">
+            <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
+                <div style="flex: 0 0 auto;">
+                    <?php
+                    $image_map = [
+                        'Double Room' => 'room_double.jpg',
+                        'Executive Suite' => 'room_executive.jpg',
+                        'Suite with Balcony' => 'room_balcony.jpg'
+                    ];
+                    $image_file = $image_map[$preselected_room_type] ?? 'room_double.jpg';
+                    ?>
+                    <img src="assets/images/<?= $image_file ?>" alt="<?= htmlspecialchars($preselected_room_type) ?>" 
+                         style="width: 120px; height: 80px; object-fit: cover; border-radius: 8px; border: 2px solid #B6862C;">
+                </div>
+                <div style="flex: 1; min-width: 200px;">
+                    <h2 style="margin-bottom: 5px; color: #B6862C;">Selected: <?= htmlspecialchars($preselected_room_type) ?></h2>
+                    <p style="margin-bottom: 5px; font-size: 1.1rem;">Starting at <strong>$<?= number_format($room_details['price'], 2) ?></strong> per night</p>
+                    <p style="margin: 0; font-size: 0.9rem; color: #ccc;">✓ Room type selected - Now choose your dates below</p>
+                </div>
+                <div style="flex: 0 0 auto;">
+                    <a href="rooms.php" class="btn btn-secondary btn-sm">Change Room</a>
+                </div>
+            </div>
+        </div>
+    <?php else: ?>
+        <!-- Regular Booking Header -->
+        <div>
+            <h1>Book Your Stay</h1>
+            <p>Select your dates to see available rooms and pricing.</p>
+        </div>
+    <?php endif; ?>
 
+    <!-- Date Selection Form -->
     <div class="card">
-        <h3>Step 1: Select Your Dates</h3>
+        <h3><?= $preselected_room_type ? 'Choose Your Dates' : 'Step 1: Select Your Dates' ?></h3>
         <div id="date-selection" class="date-selection-form" style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
             <div style="flex: 1; min-width: 200px;">
                 <label for="checkin_date" class="form-label">Check-in Date</label>
@@ -22,25 +70,39 @@ require_once __DIR__ . '/../includes/header.php';
                 <input type="date" id="checkout_date" name="checkout_date" class="form-input" required>
             </div>
             <div style="flex: 0 0 auto; align-self: flex-end;">
-                <button id="check-availability-btn" class="btn btn-primary" style="height: 40px; padding: 0 20px; transform: translateY(-22px);">Check Availability</button>
+                <button id="check-availability-btn" class="btn btn-primary" style="height: 40px; padding: 0 20px; transform: translateY(-22px);">
+                    <?= $preselected_room_type ? 'Check Availability' : 'Check Availability' ?>
+                </button>
             </div>
         </div>
     </div>
 
+    <!-- Results Section -->
     <div id="booking-step-2" style="display: none;">
         <div class="card">
-            <h3>Step 2: Choose Your Room</h3>
+            <h3><?= $preselected_room_type ? 'Availability Confirmation' : 'Step 2: Choose Your Room' ?></h3>
             <div id="availability-results" class="mt-30"></div>
             <div id="results-loader" style="display: none;" class="loader"></div>
             <p id="results-message"></p>
         </div>
 
+        <!-- Guest Details Form -->
         <form id="guest-details-form" action="/api/submit_booking.php" method="post" class="card mt-30">
-            <h3>Step 3: Enter Your Details</h3>
+            <h3><?= $preselected_room_type ? 'Complete Your Booking' : 'Step 3: Enter Your Details' ?></h3>
             
-            <input type="hidden" id="selected_room_type" name="room_type">
+            <input type="hidden" id="selected_room_type" name="room_type" value="<?= htmlspecialchars($preselected_room_type ?? '') ?>">
             <input type="hidden" id="form_checkin_date" name="checkin_date">
             <input type="hidden" id="form_checkout_date" name="checkout_date">
+
+            <?php if ($preselected_room_type): ?>
+                <!-- Show booking summary for preselected room -->
+                <div style="background: #06172D; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #B6862C;">
+                    <h4 style="margin-bottom: 10px; color: #B6862C;">Booking Summary</h4>
+                    <div id="booking-summary-content" style="display: none;">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                </div>
+            <?php endif; ?>
 
             <div>
                 <label for="full_name" class="form-label">Full Name</label>
@@ -70,10 +132,43 @@ document.addEventListener('DOMContentLoaded', function() {
     const selectedRoomInput = document.getElementById('selected_room_type');
     const formCheckinInput = document.getElementById('form_checkin_date');
     const formCheckoutInput = document.getElementById('form_checkout_date');
+    const bookingSummaryContent = document.getElementById('booking-summary-content');
+    
+    // Check if we have a preselected room type
+    const preselectedRoomType = selectedRoomInput.value;
 
+    // Set minimum dates
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('checkin_date').setAttribute('min', today);
     document.getElementById('checkout_date').setAttribute('min', today);
+
+    function updateBookingSummary(roomType, checkin, checkout, pricePerNight) {
+        if (!bookingSummaryContent) return;
+        
+        const nights = Math.ceil((new Date(checkout) - new Date(checkin)) / (1000 * 60 * 60 * 24));
+        const totalPrice = (pricePerNight * nights).toFixed(2);
+        
+        const checkinFormatted = new Date(checkin).toLocaleDateString('en-US', { 
+            weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' 
+        });
+        const checkoutFormatted = new Date(checkout).toLocaleDateString('en-US', { 
+            weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' 
+        });
+        
+        bookingSummaryContent.innerHTML = `
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 0.95rem;">
+                <div><strong>Room:</strong><br>${roomType}</div>
+                <div><strong>Duration:</strong><br>${nights} night${nights > 1 ? 's' : ''}</div>
+                <div><strong>Check-in:</strong><br>${checkinFormatted}</div>
+                <div><strong>Check-out:</strong><br>${checkoutFormatted}</div>
+            </div>
+            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #122C55; text-align: center;">
+                <div style="font-size: 1.2rem;"><strong>Total: $${totalPrice}</strong></div>
+                <div style="font-size: 0.9rem; color: #ccc;">($${pricePerNight}/night × ${nights} night${nights > 1 ? 's' : ''})</div>
+            </div>
+        `;
+        bookingSummaryContent.style.display = 'block';
+    }
 
     checkBtn.addEventListener('click', function() {
         const checkin = document.getElementById('checkin_date').value;
@@ -103,59 +198,125 @@ document.addEventListener('DOMContentLoaded', function() {
                 loader.style.display = 'none';
                 if (data.error) throw new Error(data.error);
                 
-                if (data.length === 0) {
-                    messageP.textContent = 'No rooms available for the selected dates. Please try different dates.';
-                    messageP.style.color = 'white';
-                } else {
-                    const nights = Math.ceil((new Date(checkout) - new Date(checkin)) / (1000 * 60 * 60 * 24));
-                    data.forEach(room => {
-                        const totalPrice = (room.price_per_night * nights).toFixed(2);
-                        
-                        let imageFile = '';
-                        switch (room.room_type) {
-                            case 'Double Room':
-                                imageFile = 'room_double.jpg';
-                                break;
-                            case 'Executive Suite':
-                                imageFile = 'room_executive.jpg';
-                                break;
-                            case 'Suite with Balcony':
-                                imageFile = 'room_balcony.jpg';
-                                break;
-                            default:
-                                imageFile = ''; 
-                        }
-                        const roomImage = `assets/images/${imageFile}`;
-
-                        const cardHTML = `
-                            <div class="room-card-select">
-                                <img src="${roomImage}" alt="${room.room_type}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
-                                <div class="room-card-no-img" style="display:none; text-align:center; padding: 70px 20px; background: #06172D;">${room.room_type}</div>
-                                <div class="card-content">
-                                    <h3>${room.room_type}</h3>
-                                    <p>Capacity: ${room.capacity} guests</p>
-                                    <div class="price">$${totalPrice} <span>for ${nights} nights</span></div>
-                                    <button class="btn btn-primary mt-30 select-room-btn" data-room-type="${room.room_type}">Select Room</button>
+                // Filter data if we have a preselected room type
+                let availableRooms = data;
+                if (preselectedRoomType) {
+                    availableRooms = data.filter(room => room.room_type === preselectedRoomType);
+                }
+                
+                if (availableRooms.length === 0) {
+                    if (preselectedRoomType) {
+                        messageP.innerHTML = `
+                            <div style="text-align: center; padding: 20px;">
+                                <p style="color: #f1c40f; margin-bottom: 15px;">
+                                    ⚠️ The ${preselectedRoomType} is not available for the selected dates.
+                                </p>
+                                <p style="margin-bottom: 15px;">Would you like to:</p>
+                                <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                                    <button onclick="document.getElementById('checkin_date').focus()" class="btn btn-secondary btn-sm">
+                                        Try Different Dates
+                                    </button>
+                                    <a href="bookings.php?check_in=${checkin}&check_out=${checkout}" class="btn btn-primary btn-sm">
+                                        See All Available Rooms
+                                    </a>
                                 </div>
                             </div>
                         `;
-                        resultsDiv.insertAdjacentHTML('beforeend', cardHTML);
-                    });
-
-                    document.querySelectorAll('.select-room-btn').forEach(button => {
-                        button.addEventListener('click', function() {
-                            const selectedType = this.getAttribute('data-room-type');
-                            selectedRoomInput.value = selectedType;
-                            formCheckinInput.value = checkin;
-                            formCheckoutInput.value = checkout;
-
-                            guestForm.style.display = 'block';
-                            guestForm.scrollIntoView({ behavior: 'smooth' });
+                    } else {
+                        messageP.textContent = 'No rooms available for the selected dates. Please try different dates.';
+                        messageP.style.color = 'white';
+                    }
+                } else {
+                    const nights = Math.ceil((new Date(checkout) - new Date(checkin)) / (1000 * 60 * 60 * 24));
+                    
+                    if (preselectedRoomType && availableRooms.length === 1) {
+                        // For preselected room type, show confirmation and auto-proceed
+                        const room = availableRooms[0];
+                        const totalPrice = (room.price_per_night * nights).toFixed(2);
+                        
+                        resultsDiv.innerHTML = `
+                            <div style="text-align: center; padding: 30px; background: linear-gradient(135deg, #06172D 0%, #081C3A 100%); border-radius: 10px; border: 2px solid #2ecc71;">
+                                <div style="font-size: 3rem; color: #2ecc71; margin-bottom: 15px;">✓</div>
+                                <h3 style="color: #2ecc71; margin-bottom: 10px;">Great! Your room is available</h3>
+                                <p style="font-size: 1.1rem; margin-bottom: 20px;">
+                                    ${room.room_type} for ${nights} night${nights > 1 ? 's' : ''} - <strong>$${totalPrice}</strong>
+                                </p>
+                                <p style="color: #ccc; margin-bottom: 25px;">
+                                    ${new Date(checkin).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })} to 
+                                    ${new Date(checkout).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                                </p>
+                                <button class="btn btn-primary" style="padding: 12px 30px; font-size: 1.1rem;" onclick="proceedToGuestDetails()">
+                                    Continue to Guest Details
+                                </button>
+                            </div>
+                        `;
+                        
+                        // Auto-fill the form
+                        selectedRoomInput.value = room.room_type;
+                        formCheckinInput.value = checkin;
+                        formCheckoutInput.value = checkout;
+                        
+                        // Update booking summary
+                        updateBookingSummary(room.room_type, checkin, checkout, room.price_per_night);
+                        
+                    } else {
+                        // Show available rooms for selection
+                        availableRooms.forEach(room => {
+                            const totalPrice = (room.price_per_night * nights).toFixed(2);
                             
-                            document.querySelectorAll('.room-card-select').forEach(c => c.style.border = '1px solid #122C55');
-                            this.closest('.room-card-select').style.border = '2px solid #F7B223';
+                            let imageFile = '';
+                            switch (room.room_type) {
+                                case 'Double Room':
+                                    imageFile = 'room_double.jpg';
+                                    break;
+                                case 'Executive Suite':
+                                    imageFile = 'room_executive.jpg';
+                                    break;
+                                case 'Suite with Balcony':
+                                    imageFile = 'room_balcony.jpg';
+                                    break;
+                                default:
+                                    imageFile = ''; 
+                            }
+                            const roomImage = `assets/images/${imageFile}`;
+
+                            const cardHTML = `
+                                <div class="room-card-select">
+                                    <img src="${roomImage}" alt="${room.room_type}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+                                    <div class="room-card-no-img" style="display:none; text-align:center; padding: 70px 20px; background: #06172D;">${room.room_type}</div>
+                                    <div class="card-content">
+                                        <h3>${room.room_type}</h3>
+                                        <p>Capacity: ${room.capacity} guests</p>
+                                        <div class="price">$${totalPrice} <span>for ${nights} nights</span></div>
+                                        <button class="btn btn-primary mt-30 select-room-btn" data-room-type="${room.room_type}" data-price="${room.price_per_night}">Select Room</button>
+                                    </div>
+                                </div>
+                            `;
+                            resultsDiv.insertAdjacentHTML('beforeend', cardHTML);
                         });
-                    });
+
+                        // Add event listeners for room selection
+                        document.querySelectorAll('.select-room-btn').forEach(button => {
+                            button.addEventListener('click', function() {
+                                const selectedType = this.getAttribute('data-room-type');
+                                const pricePerNight = parseFloat(this.getAttribute('data-price'));
+                                
+                                selectedRoomInput.value = selectedType;
+                                formCheckinInput.value = checkin;
+                                formCheckoutInput.value = checkout;
+
+                                // Update booking summary if element exists
+                                updateBookingSummary(selectedType, checkin, checkout, pricePerNight);
+
+                                guestForm.style.display = 'block';
+                                guestForm.scrollIntoView({ behavior: 'smooth' });
+                                
+                                // Visual feedback
+                                document.querySelectorAll('.room-card-select').forEach(c => c.style.border = '1px solid #122C55');
+                                this.closest('.room-card-select').style.border = '2px solid #B6862C';
+                            });
+                        });
+                    }
                 }
             })
             .catch(error => {
@@ -165,6 +326,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.error('Availability check failed:', error);
             });
     });
+
+    // Global function for proceed button
+    window.proceedToGuestDetails = function() {
+        guestForm.style.display = 'block';
+        guestForm.scrollIntoView({ behavior: 'smooth' });
+    };
 });
 </script>
 
