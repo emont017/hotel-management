@@ -20,6 +20,10 @@ if ($preselected_room_type) {
 
 $title = "Book Your Stay";
 require_once __DIR__ . '/../includes/header.php';
+
+// Add Flatpickr CSS and JS for professional date blocking
+echo '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">';
+echo '<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>';
 ?>
 
 <div class="booking-container">
@@ -63,11 +67,11 @@ require_once __DIR__ . '/../includes/header.php';
         <div id="date-selection" class="date-selection-form" style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
             <div style="flex: 1; min-width: 200px;">
                 <label for="checkin_date" class="form-label">Check-in Date</label>
-                <input type="date" id="checkin_date" name="checkin_date" class="form-input" required>
+                <input type="text" id="checkin_date" name="checkin_date" class="form-input date-picker" placeholder="Select check-in date" readonly required>
             </div>
             <div style="flex: 1; min-width: 200px;">
                 <label for="checkout_date" class="form-label">Check-out Date</label>
-                <input type="date" id="checkout_date" name="checkout_date" class="form-input" required>
+                <input type="text" id="checkout_date" name="checkout_date" class="form-input date-picker" placeholder="Select check-out date" readonly required>
             </div>
             <div style="flex: 0 0 auto; align-self: flex-end;">
                 <button id="check-availability-btn" class="btn btn-primary" style="height: 40px; padding: 0 20px; transform: translateY(-22px);">
@@ -136,11 +140,144 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Check if we have a preselected room type
     const preselectedRoomType = selectedRoomInput.value;
+    let blockedDates = [];
+    let checkinPicker, checkoutPicker;
+    let selectedCheckin = null;
 
-    // Set minimum dates
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('checkin_date').setAttribute('min', today);
-    document.getElementById('checkout_date').setAttribute('min', today);
+    // Small delay to ensure DOM is ready
+    setTimeout(() => {
+        // Load blocked dates and initialize date pickers
+        if (preselectedRoomType) {
+            loadBlockedDates(preselectedRoomType);
+        } else {
+            initializeDatePickers([]);
+        }
+    }, 100);
+
+    function loadBlockedDates(roomType) {
+        fetch(`/api/get_blocked_dates.php?room_type=${encodeURIComponent(roomType)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.blocked_dates) {
+                    blockedDates = data.blocked_dates;
+                    initializeDatePickers(blockedDates);
+                }
+            })
+            .catch(error => {
+                initializeDatePickers([]);
+            });
+    }
+
+    function initializeDatePickers(disabledDates) {
+        const today = new Date();
+        
+        // Check if elements exist
+        const checkinEl = document.getElementById('checkin_date');
+        const checkoutEl = document.getElementById('checkout_date');
+        
+        if (!checkinEl || !checkoutEl) {
+            console.error('Date input elements not found');
+            return;
+        }
+        
+        // Convert blocked dates to Date objects for Flatpickr
+        const disabledDateObjects = disabledDates.map(date => new Date(date + 'T00:00:00'));
+        
+        // Destroy existing pickers if they exist
+        if (checkinPicker) {
+            checkinPicker.destroy();
+        }
+        if (checkoutPicker) {
+            checkoutPicker.destroy();
+        }
+        
+        // Base configuration for both pickers
+        const baseConfig = {
+            minDate: today,
+            disable: disabledDateObjects,
+            dateFormat: "Y-m-d",
+            allowInput: false,
+            clickOpens: true,
+            static: false
+        };
+
+        // Check-in date picker
+        checkinPicker = flatpickr(checkinEl, {
+            ...baseConfig,
+            onChange: function(selectedDates, dateStr, instance) {
+                selectedCheckin = dateStr;
+                
+                // Update checkout picker constraints
+                if (checkoutPicker && dateStr) {
+                    const nextDay = new Date(dateStr + 'T00:00:00');
+                    nextDay.setDate(nextDay.getDate() + 1);
+                    checkoutPicker.set('minDate', nextDay);
+                    
+                    // Clear checkout if it's invalid
+                    const currentCheckout = checkoutPicker.selectedDates[0];
+                    if (currentCheckout && currentCheckout <= selectedDates[0]) {
+                        checkoutPicker.clear();
+                    }
+                }
+                
+                // Update visual feedback
+                updateDateSelectionFeedback();
+            }
+        });
+
+        // Check-out date picker
+        checkoutPicker = flatpickr(checkoutEl, {
+            ...baseConfig,
+            onChange: function(selectedDates, dateStr, instance) {
+                updateDateSelectionFeedback();
+            }
+        });
+        
+        // Add fallback click handlers
+        if (checkinPicker && checkoutPicker) {
+            checkinEl.addEventListener('click', function() {
+                if (checkinPicker && !checkinPicker.isOpen) {
+                    checkinPicker.open();
+                }
+            });
+            
+            checkoutEl.addEventListener('click', function() {
+                if (checkoutPicker && !checkoutPicker.isOpen) {
+                    checkoutPicker.open();
+                }
+            });
+        }
+    }
+
+    function updateDateSelectionFeedback() {
+        // Removed redundant feedback - availability is confirmed in the availability confirmation section
+    }
+
+    function formatDateForDisplay(dateStr) {
+        // Fix timezone issue by creating date object properly
+        const dateParts = dateStr.split('-');
+        const year = parseInt(dateParts[0]);
+        const month = parseInt(dateParts[1]) - 1; // Month is 0-indexed
+        const day = parseInt(dateParts[2]);
+        
+        const date = new Date(year, month, day);
+        return date.toLocaleDateString('en-US', { 
+            weekday: 'short', month: 'short', day: 'numeric' 
+        });
+    }
+
+    function formatDateLong(dateStr) {
+        // Same timezone-safe approach for long format
+        const dateParts = dateStr.split('-');
+        const year = parseInt(dateParts[0]);
+        const month = parseInt(dateParts[1]) - 1; // Month is 0-indexed
+        const day = parseInt(dateParts[2]);
+        
+        const date = new Date(year, month, day);
+        return date.toLocaleDateString('en-US', { 
+            weekday: 'long', month: 'long', day: 'numeric' 
+        });
+    }
 
     function updateBookingSummary(roomType, checkin, checkout, pricePerNight) {
         if (!bookingSummaryContent) return;
@@ -148,12 +285,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const nights = Math.ceil((new Date(checkout) - new Date(checkin)) / (1000 * 60 * 60 * 24));
         const totalPrice = (pricePerNight * nights).toFixed(2);
         
-        const checkinFormatted = new Date(checkin).toLocaleDateString('en-US', { 
-            weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' 
-        });
-        const checkoutFormatted = new Date(checkout).toLocaleDateString('en-US', { 
-            weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' 
-        });
+        const checkinFormatted = formatDateForDisplay(checkin);
+        const checkoutFormatted = formatDateForDisplay(checkout);
         
         bookingSummaryContent.innerHTML = `
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 0.95rem;">
@@ -182,6 +315,9 @@ document.addEventListener('DOMContentLoaded', function() {
             loader.style.display = 'none';
             return;
         }
+
+        // Since we're using Flatpickr with disabled dates, blocked dates can't be selected
+        // No need for manual validation here - the calendar prevents selection of blocked dates
 
         loader.style.display = 'block';
         resultsDiv.innerHTML = '';
@@ -242,8 +378,8 @@ document.addEventListener('DOMContentLoaded', function() {
                                     ${room.room_type} for ${nights} night${nights > 1 ? 's' : ''} - <strong>$${totalPrice}</strong>
                                 </p>
                                 <p style="color: #ccc; margin-bottom: 25px;">
-                                    ${new Date(checkin).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })} to 
-                                    ${new Date(checkout).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                                    ${formatDateLong(checkin)} to 
+                                    ${formatDateLong(checkout)}
                                 </p>
                                 <button class="btn btn-primary" style="padding: 12px 30px; font-size: 1.1rem;" onclick="proceedToGuestDetails()">
                                     Continue to Guest Details
@@ -314,6 +450,11 @@ document.addEventListener('DOMContentLoaded', function() {
                                 // Visual feedback
                                 document.querySelectorAll('.room-card-select').forEach(c => c.style.border = '1px solid #122C55');
                                 this.closest('.room-card-select').style.border = '2px solid #B6862C';
+                                
+                                // If this is a different room type, reload blocked dates
+                                if (selectedType !== preselectedRoomType) {
+                                    loadBlockedDates(selectedType);
+                                }
                             });
                         });
                     }

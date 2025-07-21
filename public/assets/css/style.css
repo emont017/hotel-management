@@ -318,6 +318,185 @@ nav a:hover, nav a.active { color: #B6862C; }
 }
 
 
+/* --- DATE BLOCKING SYSTEM --- */
+.form-input.date-blocked {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+.form-input.date-warning {
+    border-color: #f1c40f !important;
+    box-shadow: 0 0 0 0.2rem rgba(241, 196, 15, 0.25);
+}
+
+.date-validation-message {
+    animation: slideIn 0.3s ease-out;
+}
+
+.date-blocking-info {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* --- FLATPICKR CUSTOM STYLING --- */
+.flatpickr-calendar {
+    background: #081C3A !important;
+    border: 2px solid #B6862C !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4) !important;
+}
+
+.flatpickr-calendar.open {
+    z-index: 9999 !important;
+}
+
+.flatpickr-months {
+    background: #081E3F !important;
+    border-bottom: 1px solid #B6862C !important;
+}
+
+.flatpickr-current-month {
+    color: #B6862C !important;
+}
+
+.flatpickr-weekdays {
+    background: #06172D !important;
+}
+
+.flatpickr-weekday {
+    color: #B6862C !important;
+    font-weight: bold !important;
+}
+
+.flatpickr-day {
+    background: #081C3A !important;
+    color: #ffffff !important;
+    border: 1px solid transparent !important;
+}
+
+.flatpickr-day:hover {
+    background: #122C55 !important;
+    border-color: #B6862C !important;
+}
+
+.flatpickr-day.selected {
+    background: #B6862C !important;
+    color: #081C3A !important;
+    font-weight: bold !important;
+}
+
+.flatpickr-day.today {
+    border-color: #B6862C !important;
+    background: #122C55 !important;
+}
+
+.flatpickr-day.disabled {
+    background: #2c3e50 !important;
+    color: #7f8c8d !important;
+    cursor: not-allowed !important;
+    text-decoration: line-through !important;
+    opacity: 0.4 !important;
+}
+
+.flatpickr-day.disabled:hover {
+    background: #2c3e50 !important;
+    border-color: transparent !important;
+}
+
+.flatpickr-prev-month,
+.flatpickr-next-month {
+    color: #B6862C !important;
+}
+
+.flatpickr-prev-month:hover,
+.flatpickr-next-month:hover {
+    color: #ffffff !important;
+}
+
+.date-picker {
+    cursor: pointer !important;
+    background: #ffffff !important;
+}
+
+.date-picker:focus {
+    border-color: #B6862C !important;
+    box-shadow: 0 0 0 0.2rem rgba(182, 134, 44, 0.25) !important;
+}
+
+.room-availability-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.85rem;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-weight: 500;
+}
+
+.availability-excellent {
+    background: rgba(46, 204, 113, 0.1);
+    color: #2ecc71;
+    border: 1px solid rgba(46, 204, 113, 0.3);
+}
+
+.availability-good {
+    background: rgba(241, 196, 15, 0.1);
+    color: #f1c40f;
+    border: 1px solid rgba(241, 196, 15, 0.3);
+}
+
+.availability-limited {
+    background: rgba(231, 76, 60, 0.1);
+    color: #e74c3c;
+    border: 1px solid rgba(231, 76, 60, 0.3);
+}
+
+.blocked-date-tooltip {
+    position: relative;
+    cursor: help;
+}
+
+.blocked-date-tooltip::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #081C3A;
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+    border: 1px solid #B6862C;
+    z-index: 1000;
+}
+
+.blocked-date-tooltip:hover::after {
+    opacity: 1;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
 /* --- UTILITIES --- */
 .mt-30 { margin-top: 30px; }
 .mb-20 { margin-bottom: 20px; }
