@@ -33,6 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['user_id'] = $stmt_insert->insert_id;
                 $_SESSION['role'] = $role;
                 $_SESSION['username'] = $username;
+                $_SESSION['full_name'] = $full_name; // Store full name for immediate auto-population
                 session_regenerate_id(true);
                 header("Location: welcome.php");
                 exit;

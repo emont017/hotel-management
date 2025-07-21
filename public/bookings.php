@@ -18,6 +18,33 @@ if ($preselected_room_type) {
     }
 }
 
+// Fetch logged-in user's profile data for auto-population
+$user_profile = null;
+if (isset($_SESSION['user_id'])) {
+    // First try to use session data (faster)
+    if (isset($_SESSION['full_name']) && isset($_SESSION['email'])) {
+        $user_profile = [
+            'full_name' => $_SESSION['full_name'],
+            'email' => $_SESSION['email'],
+            'phone' => $_SESSION['phone'] ?? ''
+        ];
+    } else {
+        // Fallback to database query for older sessions
+        $stmt = $conn->prepare("SELECT full_name, email, phone FROM users WHERE id = ?");
+        $stmt->bind_param("i", $_SESSION['user_id']);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if ($result && $row = $result->fetch_assoc()) {
+            $user_profile = $row;
+            // Update session for future use
+            $_SESSION['full_name'] = $row['full_name'];
+            $_SESSION['email'] = $row['email'];
+            $_SESSION['phone'] = $row['phone'];
+        }
+        $stmt->close();
+    }
+}
+
 $title = "Book Your Stay";
 require_once __DIR__ . '/../includes/header.php';
 
@@ -92,7 +119,28 @@ echo '<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>';
 
         <!-- Guest Details Form -->
         <form id="guest-details-form" action="/api/submit_booking.php" method="post" class="card mt-30">
-            <h3><?= $preselected_room_type ? 'Complete Your Booking' : 'Step 3: Enter Your Details' ?></h3>
+            <?php
+            // Check if user is logged in and has complete profile
+            $has_complete_profile = $user_profile && 
+                                  !empty($user_profile['full_name']) && 
+                                  !empty($user_profile['email']);
+            
+            if ($has_complete_profile):
+            ?>
+                <h3><?= $preselected_room_type ? 'Complete Your Booking' : 'Step 3: Confirm Your Details' ?></h3>
+                
+                <div style="background: #06172D; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #2ecc71;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                        <div style="color: #2ecc71; font-size: 1.2rem;">✓</div>
+                        <h4 style="margin: 0; color: #2ecc71;">Information Auto-Filled</h4>
+                    </div>
+                    <p style="margin: 0; color: #ccc; font-size: 0.9rem;">
+                        We've pre-filled your details from your account. You can edit any information below if needed.
+                    </p>
+                </div>
+            <?php else: ?>
+                <h3><?= $preselected_room_type ? 'Complete Your Booking' : 'Step 3: Enter Your Details' ?></h3>
+            <?php endif; ?>
             
             <input type="hidden" id="selected_room_type" name="room_type" value="<?= htmlspecialchars($preselected_room_type ?? '') ?>">
             <input type="hidden" id="form_checkin_date" name="checkin_date">
@@ -110,15 +158,18 @@ echo '<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>';
 
             <div>
                 <label for="full_name" class="form-label">Full Name</label>
-                <input type="text" id="full_name" name="full_name" class="form-input" required>
+                <input type="text" id="full_name" name="full_name" class="form-input" 
+                       value="<?= $has_complete_profile ? htmlspecialchars($user_profile['full_name']) : '' ?>" required>
             </div>
             <div>
                 <label for="email" class="form-label">Email Address</label>
-                <input type="email" id="email" name="email" class="form-input" required>
+                <input type="email" id="email" name="email" class="form-input" 
+                       value="<?= $has_complete_profile ? htmlspecialchars($user_profile['email']) : '' ?>" required>
             </div>
             <div>
                 <label for="phone" class="form-label">Phone Number</label>
-                <input type="tel" id="phone" name="phone" class="form-input">
+                <input type="tel" id="phone" name="phone" class="form-input" 
+                       value="<?= $has_complete_profile ? htmlspecialchars($user_profile['phone'] ?? '') : '' ?>">
             </div>
             <button type="submit" class="btn btn-primary btn-lg" style="width: 100%;">Complete Booking</button>
         </form>
@@ -143,6 +194,9 @@ document.addEventListener('DOMContentLoaded', function() {
     let blockedDates = [];
     let checkinPicker, checkoutPicker;
     let selectedCheckin = null;
+    
+    // Check if user has complete profile for auto-show guest details
+    const hasCompleteProfile = <?= $has_complete_profile ? 'true' : 'false' ?>;
 
     // Small delay to ensure DOM is ready
     setTimeout(() => {
@@ -408,9 +462,10 @@ document.addEventListener('DOMContentLoaded', function() {
                                     ${formatDateLong(checkin)} to 
                                     ${formatDateLong(checkout)}
                                 </p>
-                                <button class="btn btn-primary" style="padding: 12px 30px; font-size: 1.1rem;" onclick="proceedToGuestDetails()">
-                                    Continue to Guest Details
-                                </button>
+                                ${hasCompleteProfile ? 
+                                    '<p style="color: #2ecc71; margin-bottom: 15px; font-size: 0.9rem;">✓ Your details are ready - proceeding to booking form...</p>' :
+                                    '<button class="btn btn-primary" style="padding: 12px 30px; font-size: 1.1rem;" onclick="proceedToGuestDetails()">Continue to Guest Details</button>'
+                                }
                             </div>
                         `;
                         
@@ -421,6 +476,13 @@ document.addEventListener('DOMContentLoaded', function() {
                         
                         // Update booking summary
                         updateBookingSummary(room.room_type, checkin, checkout, room.price_per_night);
+                        
+                        // For users with complete profiles, automatically show guest details form
+                        if (hasCompleteProfile) {
+                            setTimeout(() => {
+                                proceedToGuestDetails();
+                            }, 1500); // Small delay to let user see the confirmation
+                        }
                         
                     } else {
                         // Show available rooms for selection

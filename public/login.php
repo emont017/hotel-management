@@ -19,20 +19,23 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if (empty($username) || empty($password)) {
         $error = "Please enter both username and password.";
     } else {
-        $sql = "SELECT id, username, role, password FROM users WHERE username = ?";
+        $sql = "SELECT id, username, role, password, full_name, email, phone FROM users WHERE username = ?";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("s", $username);
         $stmt->execute();
         $stmt->store_result();
         
         if ($stmt->num_rows > 0) {
-            $stmt->bind_result($user_id, $db_username, $user_role, $hashed_password);
+            $stmt->bind_result($user_id, $db_username, $user_role, $hashed_password, $full_name, $email, $phone);
             $stmt->fetch();
             if (password_verify($password, $hashed_password)) {
                 session_regenerate_id(true);
                 $_SESSION['user_id'] = $user_id;
                 $_SESSION['role'] = $user_role;
                 $_SESSION['username'] = $db_username;
+                $_SESSION['full_name'] = $full_name;
+                $_SESSION['email'] = $email;
+                $_SESSION['phone'] = $phone;
                 
                 // Log successful login
                 log_auth_event($conn, $user_id, 'User Login', "Successful login");
