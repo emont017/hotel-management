@@ -222,6 +222,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Update visual feedback
                 updateDateSelectionFeedback();
+                
+                // Auto-update availability if section is already visible and we have both dates
+                autoUpdateAvailability();
             }
         });
 
@@ -230,6 +233,9 @@ document.addEventListener('DOMContentLoaded', function() {
             ...baseConfig,
             onChange: function(selectedDates, dateStr, instance) {
                 updateDateSelectionFeedback();
+                
+                // Auto-update availability if section is already visible and we have both dates
+                autoUpdateAvailability();
             }
         });
         
@@ -303,7 +309,28 @@ document.addEventListener('DOMContentLoaded', function() {
         bookingSummaryContent.style.display = 'block';
     }
 
-    checkBtn.addEventListener('click', function() {
+    // Function to auto-update availability when dates change and section is visible
+    function autoUpdateAvailability() {
+        // Only auto-update if we have a preselected room type and the availability section is visible
+        if (!preselectedRoomType || step2Div.style.display === 'none') {
+            return;
+        }
+        
+        const checkin = document.getElementById('checkin_date').value;
+        const checkout = document.getElementById('checkout_date').value;
+        
+        // Only proceed if both dates are selected and valid
+        if (checkin && checkout && checkin < checkout) {
+            // Add a small delay to avoid multiple rapid calls
+            clearTimeout(window.autoUpdateTimeout);
+            window.autoUpdateTimeout = setTimeout(() => {
+                performAvailabilityCheck();
+            }, 300);
+        }
+    }
+
+    // Refactored availability check function
+    function performAvailabilityCheck() {
         const checkin = document.getElementById('checkin_date').value;
         const checkout = document.getElementById('checkout_date').value;
 
@@ -466,6 +493,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 messageP.style.color = 'red';
                 console.error('Availability check failed:', error);
             });
+    }
+
+    checkBtn.addEventListener('click', function() {
+        performAvailabilityCheck();
     });
 
     // Global function for proceed button
