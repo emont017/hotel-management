@@ -146,8 +146,8 @@ try {
     $payment_method = "Online Payment";
     $transaction_id = "WEB_" . date("Ymd") . "_" . strtoupper(bin2hex(random_bytes(4)));
     $payment_notes = "Automatic payment for online booking";
-    $system_user_id = 1; // System user for automatic payments (or use actual user if admin)
-    $stmt_payment->bind_param("idsssi", $booking_id, $total_price, $payment_method, $transaction_id, $payment_notes, $system_user_id);
+    // Use the actual user's ID for the 'recorded_by' field. This is the fix.
+    $stmt_payment->bind_param("idsssi", $booking_id, $total_price, $payment_method, $transaction_id, $payment_notes, $user_id);
     $stmt_payment->execute();
     $payment_id = $stmt_payment->insert_id;
     $stmt_payment->close();
