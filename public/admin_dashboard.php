@@ -1,5 +1,6 @@
 <?php
 session_start();
+date_default_timezone_set('America/New_York');
 require_once __DIR__ . '/../config/db.php';
 
 if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['admin', 'manager', 'front_desk'])) {

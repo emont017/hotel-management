@@ -1,4 +1,5 @@
 <?php
+date_default_timezone_set('America/New_York');
 if (session_status() === PHP_SESSION_NONE) session_start();
 $current_page = basename($_SERVER['PHP_SELF']);
 
