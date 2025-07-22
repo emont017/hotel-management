@@ -20,7 +20,7 @@ $is_audit_page = in_array($current_page, ['night_audit.php', 'audit_log_viewer.p
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@700&family=Orbitron:wght@700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="/assets/css/style.css"> 
+  <link rel="stylesheet" href="/assets/css/style.css?v=<?= time() ?>"> 
   
   <link rel="icon" type="image/png" href="/assets/images/FIUFavicon.png">
 </head>

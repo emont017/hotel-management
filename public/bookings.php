@@ -451,57 +451,22 @@ document.addEventListener('DOMContentLoaded', function() {
                     dayEl.classList.add(className);
                     found = true;
                     
-                    // Add subtle, professional styling
+                    // Add clean, professional styling
                     if (className === 'checkin-indicator') {
-                        dayEl.style.background = 'rgba(182, 134, 44, 0.15)';
-                        dayEl.style.color = '#B6862C';
-                        dayEl.style.fontWeight = '600';
-                        dayEl.style.border = '1px solid #B6862C';
+                        dayEl.style.background = 'rgba(26, 188, 156, 0.12)';
+                        dayEl.style.color = '#1abc9c';
+                        dayEl.style.fontWeight = '500';
+                        dayEl.style.borderLeft = '2px solid rgba(26, 188, 156, 0.5)';
                         dayEl.style.position = 'relative';
                         dayEl.title = `Check-in Date: ${formatDateForDisplay(dateStr)}`;
                         
-                        // Add subtle corner indicator
-                        if (!dayEl.querySelector('.date-indicator')) {
-                            const indicator = document.createElement('div');
-                            indicator.className = 'date-indicator';
-                            indicator.style.cssText = `
-                                position: absolute;
-                                top: 2px;
-                                right: 2px;
-                                width: 6px;
-                                height: 6px;
-                                background: #B6862C;
-                                border-radius: 50%;
-                                z-index: 10;
-                            `;
-                            dayEl.appendChild(indicator);
-                        }
-                        
                     } else if (className === 'checkout-indicator') {
-                        dayEl.style.background = 'rgba(182, 134, 44, 0.08)';
-                        dayEl.style.color = '#B6862C';
-                        dayEl.style.fontWeight = '500';
-                        dayEl.style.border = '1px dashed #B6862C';
+                        dayEl.style.background = 'rgba(255, 159, 67, 0.12)';
+                        dayEl.style.color = '#ff9f43';
+                        dayEl.style.fontWeight = '400';
+                        dayEl.style.borderRight = '2px solid rgba(255, 159, 67, 0.5)';
                         dayEl.style.position = 'relative';
                         dayEl.title = `Check-out Date: ${formatDateForDisplay(dateStr)}`;
-                        
-                        // Add subtle corner indicator
-                        if (!dayEl.querySelector('.date-indicator')) {
-                            const indicator = document.createElement('div');
-                            indicator.className = 'date-indicator';
-                            indicator.style.cssText = `
-                                position: absolute;
-                                top: 2px;
-                                right: 2px;
-                                width: 6px;
-                                height: 6px;
-                                background: transparent;
-                                border: 1px solid #B6862C;
-                                border-radius: 50%;
-                                z-index: 10;
-                            `;
-                            dayEl.appendChild(indicator);
-                        }
                     }
                 }
             }
@@ -571,15 +536,15 @@ document.addEventListener('DOMContentLoaded', function() {
         // Add subtle background to dates in between
         rangeDates.forEach(dayEl => {
             dayEl.classList.add('in-range');
-            dayEl.style.background = 'rgba(182, 134, 44, 0.05)';
+            dayEl.style.background = 'rgba(255, 159, 67, 0.04)';
             dayEl.style.position = 'relative';
         });
         
         // If both dates are visible, draw connecting visual cues
         if (checkinElement && checkoutElement) {
             // Add visual connection indicators
-            checkinElement.style.borderRight = '2px solid rgba(182, 134, 44, 0.3)';
-            checkoutElement.style.borderLeft = '2px solid rgba(182, 134, 44, 0.3)';
+            checkinElement.style.borderRight = '2px solid rgba(255, 159, 67, 0.3)';
+            checkoutElement.style.borderLeft = '2px solid rgba(255, 159, 67, 0.3)';
         }
     }
 
