@@ -87,7 +87,7 @@ $top_rooms_stmt->close();
         <div class="value"><?= $total_bookings ?></div>
     </div>
     <div class="stat-card">
-        <div class="label">Occupancy Rate</div>
+        <div class="label">Occupancy Rate (Monthly)</div>
         <div class="value"><?= $occupancy_rate ?>%</div>
     </div>
 </div>

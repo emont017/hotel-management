@@ -35,7 +35,6 @@ $is_audit_page = in_array($current_page, ['night_audit.php', 'audit_log_viewer.p
         <nav>
             <a href="/index.php" class="<?= $current_page == 'index.php' ? 'active' : '' ?>">Home</a>
 
-            <!-- Hotel Info Dropdown -->
             <div class="nav-item dropdown">
                 <a href="/hotel.php" class="dropdown-toggle <?= $is_hotel_info_page ? 'active' : '' ?>">Hotel Info</a>
                 <div class="dropdown-menu">
@@ -86,6 +85,7 @@ $is_audit_page = in_array($current_page, ['night_audit.php', 'audit_log_viewer.p
                     </div>
 
 					<a href="/users.php" class="<?= $current_page == 'users.php' ? 'active' : '' ?>">Staff</a>
+                    <a href="/admin_rates.php" class="<?= $current_page == 'admin_rates.php' ? 'active' : '' ?>">Rate Management</a>
 
                 <?php // --- Accountant View ---
                 elseif ($role === 'accountant'): ?>

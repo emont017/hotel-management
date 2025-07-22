@@ -1,0 +1,140 @@
+This document outlines the testing strategy, success metrics, and specific test cases for the Hotel Management System to ensure all features function as designed.
+
+1. Feature Success Metrics
+User Authentication: Success is when a registered user can log in and access resources appropriate to their role, while an unregistered or unauthorized user is denied access. 100% of login/logout actions must be recorded in the audit log.
+
+Guest Booking Flow: Success is when a guest can select dates, choose an available room, enter their details, and receive a booking confirmation. The new booking must be accurately reflected in the database and the admin's "Manage Bookings" view.
+
+Admin Booking Management: Success is when an admin can perform check-in, check-out, and booking modification actions, and the changes to the booking status and room status are immediately and accurately reflected across all relevant parts of the system.
+
+Housekeeping Flow: Success is a 100% match between the status updated by a housekeeper and the status reflected in the manager's "Master List" view. Task assignment must correctly appear in the designated housekeeper's "My Tasks" view.
+
+Night Audit: Success is the transactional completion of all audit steps without error. This means the business date advances by exactly one day, daily charges are posted to all checked-in guest folios, and no-shows for the audited day are correctly cancelled.
+
+Financial Reporting: Success is when the generated report for a given date range accurately calculates and displays Total Revenue and Occupancy Rate that matches a manual verification against the bookings and payments tables.
+
+User/Guest Management (CRM): Success is when an admin can create, edit, and deactivate staff members, and when guest profile data accurately reflects the information in the database.
+
+Security & Access Control: Success is when a user logged in with a specific role is completely blocked from accessing pages outside their defined permissions.
+
+2. Detailed Test Cases
+2.1. Guest Booking Flow
+Test Case 1: Successful Booking by New Guest
+
+Objective: Verify that a new, unregistered user can complete the booking process, which should automatically create a guest account for them.
+
+Steps:
+
+Open the website in a private/incognito browser window.
+
+Navigate to the "Book a Room" page.
+
+Select a valid check-in and check-out date.
+
+Click "Check Availability".
+
+From the available rooms, click "Select Room" for the "Executive Suite".
+
+In the guest details form, enter a unique Full Name, Email, and Phone Number.
+
+Click the "Complete Booking" button.
+
+Expected Result:
+
+The user is redirected to the "Booking Confirmed!" success page, displaying a confirmation number.
+
+A new entry is created in the users table with the role guest.
+
+A new entry is created in the bookings table linked to the new user's ID and an available "Executive Suite" room ID.
+
+A new entry is created in the folios table linked to the new booking ID.
+
+A new entry is created in the payments table for the full amount of the stay.
+
+An audit log event for "Booking Created" is generated.
+
+2.2. Night Audit Process
+Test Case 2: Successful Night Audit Execution
+
+Objective: Verify that the Night Audit correctly processes daily transactions and advances the business date.
+
+Preconditions:
+
+The current business date in the settings table is 2025-07-22.
+
+There is one booking (Booking A) that is currently checked-in.
+
+There is one booking (Booking B) with a check-in date of 2025-07-22 that is still in confirmed status (a no-show).
+
+Steps:
+
+Log in as an admin user.
+
+Navigate to the "Night Audit" > "Run Audit" page.
+
+Verify the "Pre-Audit Checklist" shows "1" for "Potential No-Shows to Process".
+
+Click the "RUN NIGHT AUDIT" button.
+
+Confirm the action in the browser prompt.
+
+Expected Result:
+
+A success message is displayed.
+
+The business_date in the settings table is updated to 2025-07-23.
+
+The status of Booking B in the bookings table is changed from confirmed to cancelled.
+
+A new "Room & Tax" charge for 2025-07-22 is added to the folio_items for Booking A.
+
+The balance on the folio for Booking A is increased by the amount of the new charge.
+
+A new audit_logs entry is created with the action "Night Audit".
+
+2.3. Housekeeping Task Assignment & Completion
+Test Case 3: End-to-End Housekeeping Workflow
+
+Objective: Verify the complete lifecycle of a cleaning task, from assignment to completion.
+
+Preconditions:
+
+A guest has just checked out of Room 101, and its housekeeping_status is dirty.
+
+There is a staff member with the housekeeping role.
+
+Steps:
+
+Manager Action: Log in as a manager.
+
+Navigate to "Housekeeping" > "Assign Tasks".
+
+Verify that "Room 101" appears in the "Unassigned Dirty Rooms" list.
+
+Select "Housekeeper1" from the dropdown menu.
+
+Check the box next to "Room 101".
+
+Click "Assign Selected Rooms".
+
+Housekeeper Action: Log out and log back in as "Housekeeper1".
+
+Navigate to "Housekeeping" > "My Tasks".
+
+Verify that "Room 101" is listed as an assignment.
+
+Click the "Mark as Clean" button next to Room 101.
+
+Manager Verification: Log out and log back in as the manager.
+
+Navigate to "Housekeeping" > "Master List".
+
+Expected Result:
+
+After step 6, a new entry is created in the housekeeping_tasks table for Room 101, assigned to "Housekeeper1".
+
+After step 10, the status of the task in the housekeeping_tasks table is changed to completed.
+
+Simultaneously, the housekeeping_status for Room 101 in the rooms table is updated to clean.
+
+When the manager views the Master List in step 12, Room 101 should now have a "Clean & Ready" status.

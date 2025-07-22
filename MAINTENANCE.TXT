@@ -1,0 +1,84 @@
+This document provides essential instructions for system administrators responsible for the long-term maintenance, backup, and updating of the Hotel Management System.
+
+1. Database Backup and Restoration
+Regular database backups are critical to prevent data loss. It is recommended to perform a full backup at least once every 24 hours, ideally before running the Night Audit.
+
+1.1. Creating a Backup
+The most reliable way to back up the MySQL database is using the mysqldump utility, which is included with XAMPP.
+
+Steps:
+
+Open a command prompt or terminal.
+
+Navigate to the bin directory of your MySQL installation.
+
+Windows: cd C:\xampp\mysql\bin
+
+macOS: cd /Applications/XAMPP/xamppfiles/bin
+
+Run the following command. You will be prompted for the database user's password.
+
+mysqldump -u [username] -p [database_name] > path/to/your/backup_file.sql
+
+Example using project defaults:
+The database credentials can be found in config/db.php. Using the default values:
+
+mysqldump -u root -p hotel_management > C:\backups\hotel_backup_%date:~10,4%-%date:~4,2%-%date:~7,2%.sql
+
+(This Windows example creates a file named hotel_backup_2025-07-22.sql)
+
+1.2. Restoring from a Backup
+Restoring will overwrite the current database. This action cannot be undone.
+
+Steps:
+
+Ensure you have a valid .sql backup file.
+
+Open a command prompt or terminal and navigate to the MySQL bin directory as above.
+
+Run the following command to import the backup file:
+
+mysql -u [username] -p [database_name] < path/to/your/backup_file.sql
+
+2. Locating System Error Logs
+The system has two primary locations for error logs: the Apache web server logs and the PHP application logs.
+
+2.1. Apache & PHP Error Logs
+These logs capture server-level errors and critical PHP errors. The db.php file is configured to send database connection failures here.
+
+Default Locations in XAMPP:
+
+Apache Error Log: C:\xampp\apache\logs\error.log
+
+PHP Error Log: C:\xampp\php\logs\php_error_log
+
+Check these files first when the website is inaccessible or displaying a generic server error message.
+
+2.2. Application-Specific Logs
+The application's custom error_log() calls are typically directed to the PHP error log specified above. For detailed user actions and system events, refer to the Audit Log Viewer within the application itself.
+
+3. Updating the Application
+Updates to the application code should be managed through Git to ensure version control and a consistent deployment process.
+
+3.1. Pulling Updates from Git
+This procedure assumes the application was initially set up by cloning the Git repository.
+
+Steps:
+
+Open a command prompt, terminal, or Git Bash.
+
+Navigate to the root directory of the project.
+
+Windows: cd C:\xampp\htdocs\hotel-management
+
+macOS: cd /Applications/XAMPP/xamppfiles/htdocs/hotel-management
+
+Fetch the latest changes from the remote repository to see what's new:
+
+git fetch origin
+
+Pull the changes from the main branch into your local directory. This will merge the updates into your live application files.
+
+git pull origin main
+
+Check for Database Migrations: After pulling an update, always check the project's documentation or commit messages for any new .sql files that need to be run against the database to update its schema.
