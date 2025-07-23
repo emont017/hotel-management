@@ -74,6 +74,7 @@ $is_audit_page = in_array($current_page, ['night_audit.php', 'audit_log_viewer.p
                         <div class="dropdown-menu">
                             <a href="/payments.php">Payments</a>
                             <a href="/reports.php">Reports</a>
+							<a href="/admin_rates.php">Rate Management</a>
                         </div>
                     </div>
 
@@ -86,8 +87,7 @@ $is_audit_page = in_array($current_page, ['night_audit.php', 'audit_log_viewer.p
                     </div>
 
 					<a href="/users.php" class="<?= $current_page == 'users.php' ? 'active' : '' ?>">Staff</a>
-                    <a href="/admin_rates.php" class="<?= $current_page == 'admin_rates.php' ? 'active' : '' ?>">Rate Management</a>
-
+                    
                 <?php // --- Accountant View ---
                 elseif ($role === 'accountant'): ?>
 
