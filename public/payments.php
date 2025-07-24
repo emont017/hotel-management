@@ -9,7 +9,7 @@ if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['admin', 'mana
     exit;
 }
 
-$title = "Manage Payments";
+$title = "Payment Management";
 $message = '';
 $error = '';
 
@@ -64,87 +64,195 @@ if (!empty($sql_params)) {
 }
 $stmt_fetch->execute();
 $payments_result = $stmt_fetch->get_result();
+
+// Calculate total payments for display
+$total_payments = $payments_result->num_rows;
 ?>
 
-<h2>Manage Payments</h2>
-
-<?php if ($message): ?><p class="alert alert-success"><?= htmlspecialchars($message) ?></p><?php endif; ?>
-<?php if ($error): ?><p class="alert alert-danger"><?= htmlspecialchars($error) ?></p><?php endif; ?>
-
-<form id="payment-form" method="post" action="payments.php" class="card mt-30 mb-20">
-    <h3>Record New Payment</h3>
-    <div style="display: flex; gap: 15px; align-items: flex-end; margin-bottom: 15px;">
-        <div style="flex-grow: 1;">
-            <label for="booking_id" class="form-label">Booking ID:</label>
-            <input type="text" id="booking_id" name="booking_id" class="form-input" required>
-        </div>
-        <button type="button" id="fetch-details-btn" class="btn btn-primary">Fetch Details</button>
+<div class="dashboard-header">
+    <div>
+        <h1>Payment Management</h1>
+        <p>Record new payments, track transaction history, and manage financial records for guest bookings.</p>
     </div>
-    <div style="display: flex; gap: 15px; margin-bottom: 15px;">
-        <div style="flex-basis: 50%;">
+</div>
+
+<?php if ($message): ?>
+    <div class="alert alert-success" style="margin-bottom: 30px;">
+        <span class="alert-icon">✓</span>
+        <span><?= htmlspecialchars($message) ?></span>
+    </div>
+<?php endif; ?>
+
+<?php if ($error): ?>
+    <div class="alert alert-danger" style="margin-bottom: 30px;">
+        <span class="alert-icon">⚠️</span>
+        <span><?= htmlspecialchars($error) ?></span>
+    </div>
+<?php endif; ?>
+
+<!-- Main Content Grid -->
+<div class="detail-grid" style="margin-top: 20px;">
+    <!-- Payment Form -->
+    <div class="card">
+        <h3 style="margin-bottom: 10px; color: #B6862C;">Record New Payment</h3>
+        <p style="color: #8892a7; margin-bottom: 25px; font-size: 0.9rem;">Process and record payments for guest bookings with automatic details retrieval.</p>
+        
+        <form id="payment-form" method="post" action="payments.php">
+            <div style="display: flex; gap: 15px; align-items: flex-end; margin-bottom: 20px;">
+                <div style="flex-grow: 1;">
+                    <label for="booking_id" class="form-label">Booking ID:</label>
+                    <input type="text" id="booking_id" name="booking_id" class="form-input" placeholder="Enter booking number" required>
+                </div>
+                <button type="button" id="fetch-details-btn" class="btn btn-secondary">Fetch Details</button>
+            </div>
+
             <label for="guest_name" class="form-label">Guest Name:</label>
-            <input type="text" id="guest_name" name="guest_name" class="form-input" readonly>
-        </div>
-        <div style="flex-basis: 50%;">
-            <label for="amount" class="form-label">Amount ($):</label>
-            <input type="text" id="amount" name="amount" placeholder="e.g., 120.50" class="form-input" required>
-        </div>
-    </div>
-    <div style="margin-bottom: 15px;">
-        <label for="payment_method" class="form-label">Payment Method:</label>
-        <select id="payment_method" name="payment_method" class="form-select" required>
-            <option value="Credit Card">Credit Card</option>
-            <option value="Debit Card">Debit Card</option>
-            <option value="Cash">Cash</option>
-            <option value="Bank Transfer">Bank Transfer</option>
-        </select>
-    </div>
-    <div style="margin-bottom: 15px;">
-        <label for="transaction_id" class="form-label">Transaction ID (Optional):</label>
-        <input type="text" id="transaction_id" name="transaction_id" class="form-input">
-    </div>
-     <div style="margin-bottom: 20px;">
-        <label for="notes" class="form-label">Notes (Optional):</label>
-        <textarea id="notes" name="notes" rows="3" class="form-input"></textarea>
-    </div>
-    <input type="submit" name="create_payment" value="Record Payment" class="btn btn-primary" style="font-size: 1.1rem;">
-</form>
+            <input type="text" id="guest_name" name="guest_name" class="form-input" placeholder="Will be filled automatically" readonly style="background-color: #f8f9fa;">
 
-<h3>Payment History</h3>
-<form method="get" action="payments.php" class="mb-20">
-    <input type="text" name="search" placeholder="Search by Booking ID or Guest Name..." value="<?= htmlspecialchars($search_query) ?>" class="form-input" style="width: 300px; display: inline-block;">
-    <button type="submit" class="btn btn-primary">Search</button>
-</form>
+            <label for="amount" class="form-label">Payment Amount ($):</label>
+            <input type="text" id="amount" name="amount" placeholder="0.00" class="form-input" required>
 
-<div style="overflow-x: auto;">
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th>Payment ID</th> <th>Booking ID</th> <th>Guest Name</th> <th>Amount</th> <th>Method</th> <th>Transaction ID</th> <th>Notes</th> <th>Recorded By</th> <th>Date</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php if ($payments_result && $payments_result->num_rows > 0): ?>
-                <?php while ($row = $payments_result->fetch_assoc()): ?>
-                    <tr>
-                        <td><?= $row['payment_id'] ?></td>
-                        <td><a href="admin_booking_detail.php?booking_id=<?= $row['booking_id'] ?>"><?= $row['booking_id'] ?></a></td>
-                        <td><?= htmlspecialchars($row['guest_name'] ?? 'N/A') ?></td>
-                        <td>$<?= number_format($row['amount'], 2) ?></td>
-                        <td><?= htmlspecialchars($row['payment_method'] ?? '') ?></td>
-                        <td><?= htmlspecialchars($row['transaction_id'] ?? 'N/A') ?></td>
-                        <td><?= htmlspecialchars($row['notes'] ?? 'N/A') ?></td>
-                        <td><?= htmlspecialchars($row['recorded_by_username'] ?? 'N/A') ?></td>
-                        <td><?= date("Y-m-d H:i", strtotime($row['payment_date'])) ?></td>
-                    </tr>
-                <?php endwhile; ?>
-            <?php else: ?>
-                <tr>
-                    <td colspan="9" class="text-center">No payments found.</td>
-                </tr>
+            <label for="payment_method" class="form-label">Payment Method:</label>
+            <select id="payment_method" name="payment_method" class="form-select" required>
+                <option value="">Select payment method</option>
+                <option value="Credit Card">Credit Card</option>
+                <option value="Debit Card">Debit Card</option>
+                <option value="Cash">Cash</option>
+                <option value="Bank Transfer">Bank Transfer</option>
+            </select>
+
+            <label for="transaction_id" class="form-label">Transaction ID:</label>
+            <input type="text" id="transaction_id" name="transaction_id" class="form-input" placeholder="Optional - for card payments">
+
+            <label for="notes" class="form-label">Notes:</label>
+            <textarea id="notes" name="notes" rows="3" class="form-input" placeholder="Optional notes about this payment"></textarea>
+
+            <button type="submit" name="create_payment" class="btn btn-primary" style="margin-top: 20px; width: 100%;">Record Payment</button>
+        </form>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="card">
+        <h3 style="margin-bottom: 10px; color: #B6862C;">Payment Overview</h3>
+        <p style="color: #8892a7; margin-bottom: 20px; font-size: 0.9rem;">Current payment activity and totals.</p>
+        
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                <span style="color: #fff; font-size: 0.9rem;">Total Payments</span>
+                <span style="color: #B6862C; font-weight: 600; font-size: 0.9rem;"><?= $total_payments ?></span>
+            </div>
+            
+            <?php 
+            // Get payment method breakdown
+            $method_stats = $conn->query("SELECT payment_method, COUNT(*) as count FROM payments GROUP BY payment_method ORDER BY count DESC LIMIT 4");
+            while($method = $method_stats->fetch_assoc()): 
+            ?>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <span style="color: #fff; font-size: 0.9rem;"><?= htmlspecialchars($method['payment_method']) ?></span>
+                    <span style="color: #8892a7; font-weight: 500; font-size: 0.9rem;"><?= $method['count'] ?></span>
+                </div>
+            <?php endwhile; ?>
+        </div>
+    </div>
+</div>
+
+<!-- Payment History -->
+<div class="card" style="margin-top: 30px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <div>
+            <h3 style="margin: 0; color: #B6862C;">Payment History</h3>
+            <p style="margin: 5px 0 0 0; color: #8892a7; font-size: 0.9rem;">
+                View and search all recorded payments and transactions
+            </p>
+        </div>
+        <div style="color: #8892a7; font-size: 0.85rem; font-weight: 500;">
+            <?= number_format($total_payments) ?> payment<?= $total_payments !== 1 ? 's' : '' ?> recorded
+        </div>
+    </div>
+
+    <form method="get" action="payments.php" style="margin-bottom: 20px;">
+        <label for="search" class="form-label">Search Payments:</label>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <input type="text" name="search" id="search" placeholder="Search by Booking ID or Guest Name..." 
+                   value="<?= htmlspecialchars($search_query) ?>" class="form-input" style="flex: 1;">
+            <button type="submit" class="btn btn-secondary">Search</button>
+            <?php if (!empty($search_query)): ?>
+                <a href="payments.php" class="btn btn-secondary" style="background-color: #6c757d;">Clear</a>
             <?php endif; ?>
-        </tbody>
-    </table>
+        </div>
+    </form>
+
+    <div class="table-container" style="max-height: 600px; overflow-y: auto;">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th style="position: sticky; top: 0; background-color: #122C55; z-index: 10;">Payment ID</th>
+                    <th style="position: sticky; top: 0; background-color: #122C55; z-index: 10;">Booking ID</th>
+                    <th style="position: sticky; top: 0; background-color: #122C55; z-index: 10;">Guest Name</th>
+                    <th style="position: sticky; top: 0; background-color: #122C55; z-index: 10;">Amount</th>
+                    <th style="position: sticky; top: 0; background-color: #122C55; z-index: 10;">Method</th>
+                    <th style="position: sticky; top: 0; background-color: #122C55; z-index: 10;">Transaction ID</th>
+                    <th style="position: sticky; top: 0; background-color: #122C55; z-index: 10;">Notes</th>
+                    <th style="position: sticky; top: 0; background-color: #122C55; z-index: 10;">Recorded By</th>
+                    <th style="position: sticky; top: 0; background-color: #122C55; z-index: 10;">Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if ($payments_result && $payments_result->num_rows > 0): ?>
+                    <?php 
+                    $payments_result->data_seek(0); // Reset pointer
+                    while ($row = $payments_result->fetch_assoc()): 
+                    ?>
+                        <tr>
+                            <td><?= $row['payment_id'] ?></td>
+                            <td>
+                                <a href="admin_booking_detail.php?booking_id=<?= $row['booking_id'] ?>" 
+                                   style="color: #B6862C; font-weight: 600;">
+                                    #<?= $row['booking_id'] ?>
+                                </a>
+                            </td>
+                            <td><?= htmlspecialchars($row['guest_name'] ?? 'N/A') ?></td>
+                            <td>
+                                <span style="font-family: monospace; font-weight: 600; color: #2ecc71;">
+                                    $<?= number_format($row['amount'], 2) ?>
+                                </span>
+                            </td>
+                            <td>
+                                <span class="role-badge" style="background-color: #3498db; color: white; padding: 4px 8px; border-radius: 12px; font-size: 0.75rem;">
+                                    <?= strtoupper(str_replace(' ', '', htmlspecialchars($row['payment_method'] ?? ''))) ?>
+                                </span>
+                            </td>
+                            <td style="color: #8892a7; font-family: monospace; font-size: 0.85rem;">
+                                <?= htmlspecialchars($row['transaction_id'] ?? 'N/A') ?>
+                            </td>
+                            <td style="color: #8892a7; font-size: 0.9rem;">
+                                <?= htmlspecialchars($row['notes'] ?? 'N/A') ?>
+                            </td>
+                            <td style="color: #8892a7;"><?= htmlspecialchars($row['recorded_by_username'] ?? 'N/A') ?></td>
+                            <td style="font-size: 0.9rem;">
+                                <?= date("M j, Y", strtotime($row['payment_date'])) ?><br>
+                                <span style="color: #8892a7; font-size: 0.8rem;">
+                                    <?= date("H:i", strtotime($row['payment_date'])) ?>
+                                </span>
+                            </td>
+                        </tr>
+                    <?php endwhile; ?>
+                <?php else: ?>
+                    <tr>
+                        <td colspan="9" style="text-align: center; padding: 40px 20px; color: #8892a7;">
+                            <div style="font-size: 2rem; margin-bottom: 10px;">💳</div>
+                            <div style="font-size: 1.1rem; margin-bottom: 8px;">
+                                <?= !empty($search_query) ? 'No payments found matching your search.' : 'No payments recorded yet.' ?>
+                            </div>
+                            <?php if (empty($search_query)): ?>
+                                <div style="font-size: 0.9rem;">Use the form above to record your first payment.</div>
+                            <?php endif; ?>
+                        </td>
+                    </tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <script>
@@ -154,6 +262,10 @@ document.getElementById('fetch-details-btn').addEventListener('click', function(
         alert('Please enter a Booking ID.');
         return;
     }
+
+    // Show loading state
+    this.textContent = 'Loading...';
+    this.disabled = true;
 
     // Corrected URL to point to the new API endpoint
     fetch(`/api/get_booking_details.php?booking_id=${bookingId}`)
@@ -168,7 +280,15 @@ document.getElementById('fetch-details-btn').addEventListener('click', function(
                 document.getElementById('amount').value = data.total_price;
             }
         })
-        .catch(error => console.error('Error fetching booking details:', error));
+        .catch(error => {
+            console.error('Error fetching booking details:', error);
+            alert('Error fetching booking details. Please try again.');
+        })
+        .finally(() => {
+            // Reset button state
+            this.textContent = 'Fetch Details';
+            this.disabled = false;
+        });
 });
 </script>
 

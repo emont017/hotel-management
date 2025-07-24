@@ -8,7 +8,7 @@ if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['admin', 'mana
     exit;
 }
 
-$title = "Hotel Reports";
+$title = "Hotel Reports & Analytics";
 require_once __DIR__ . '/../includes/header.php';
 
 // --- Report Generation Logic ---
@@ -59,85 +59,201 @@ $top_rooms_stmt->bind_param("ss", $start_date_str, $end_date_str);
 $top_rooms_stmt->execute();
 $top_rooms_result = $top_rooms_stmt->get_result();
 $top_rooms_stmt->close();
+
+// Format date range for display
+$start_formatted = date('M j, Y', strtotime($start_date_str));
+$end_formatted = date('M j, Y', strtotime($end_date_str));
 ?>
 
-<h2>Hotel Reports</h2>
-
-<form method="get" class="card mb-20">
-    <div style="display:flex; align-items:flex-end; gap:20px; flex-wrap:wrap;">
-        <div>
-            <label class="form-label">Start Date:</label>
-            <input type="date" name="start_date" class="form-input" value="<?= htmlspecialchars($start_date_str) ?>" required>
-        </div>
-        <div>
-            <label class="form-label">End Date:</label>
-            <input type="date" name="end_date" class="form-input" value="<?= htmlspecialchars($end_date_str) ?>" required>
-        </div>
-        <button type="submit" class="btn btn-primary">Generate Report</button>
-    </div>
-</form>
-
-<div class="dashboard-grid mb-20">
-    <div class="stat-card">
-        <div class="label">Total Revenue</div>
-        <div class="value">$<?= number_format($total_revenue, 2) ?></div>
-    </div>
-    <div class="stat-card">
-        <div class="label">Total Bookings</div>
-        <div class="value"><?= $total_bookings ?></div>
-    </div>
-    <div class="stat-card">
-        <div class="label">Occupancy Rate (Monthly)</div>
-        <div class="value"><?= $occupancy_rate ?>%</div>
+<div class="dashboard-header">
+    <div>
+        <h1>Hotel Reports & Analytics</h1>
+        <p>Generate comprehensive reports and analyze key performance metrics for data-driven hotel management decisions.</p>
     </div>
 </div>
 
-<div style="display: flex; flex-wrap: wrap; gap: 40px;">
-    <div style="flex: 1; min-width: 400px;">
-        <h3>Booking Status Breakdown</h3>
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Status</th>
-                    <th>Count</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if ($status_counts && $status_counts->num_rows > 0): ?>
-                    <?php while ($row = $status_counts->fetch_assoc()): ?>
-                    <tr><td class="text-capitalize"><?= htmlspecialchars($row['status']) ?></td><td><?= $row['count'] ?></td></tr>
-                    <?php endwhile; ?>
-                <?php else: ?>
-                     <tr><td colspan="2" class="text-center">No data for this period.</td></tr>
-                <?php endif; ?>
-            </tbody>
-        </table>
+<!-- Date Range Filter -->
+<div class="card" style="margin-top: 20px; margin-bottom: 30px;">
+    <h3 style="margin-bottom: 10px; color: #B6862C;">Report Parameters</h3>
+    <p style="color: #8892a7; margin-bottom: 20px; font-size: 0.9rem;">
+        Select date range to generate custom reports and analytics
+    </p>
+    
+    <form method="get" action="reports.php">
+        <div style="display: flex; align-items: flex-end; gap: 20px; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 200px;">
+                <label class="form-label">Start Date:</label>
+                <input type="date" name="start_date" class="form-input" value="<?= htmlspecialchars($start_date_str) ?>" required>
+            </div>
+            <div style="flex: 1; min-width: 200px;">
+                <label class="form-label">End Date:</label>
+                <input type="date" name="end_date" class="form-input" value="<?= htmlspecialchars($end_date_str) ?>" required>
+            </div>
+            <button type="submit" class="btn btn-primary" style="white-space: nowrap;">Generate Report</button>
+        </div>
+    </form>
+    
+    <?php if (isset($_GET['start_date']) || isset($_GET['end_date'])): ?>
+        <div style="margin-top: 15px; padding: 10px; background-color: rgba(182, 134, 44, 0.1); border-radius: 6px; border-left: 3px solid #B6862C;">
+            <span style="color: #B6862C; font-weight: 600; font-size: 0.9rem;">
+                📊 Report Period: <?= $start_formatted ?> to <?= $end_formatted ?>
+            </span>
+        </div>
+    <?php endif; ?>
+</div>
+
+<!-- Key Metrics -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
+    <div class="card" style="text-align: center; padding: 20px;">
+        <div style="font-size: 2rem; font-weight: 700; color: #2ecc71; margin-bottom: 8px; font-family: 'Orbitron', sans-serif;">
+            $<?= number_format($total_revenue, 0) ?>
+        </div>
+        <div style="font-size: 0.85rem; color: #B6862C; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+            Total Revenue
+        </div>
+        <div style="font-size: 0.75rem; color: #8892a7; margin-top: 4px;">
+            Period earnings
+        </div>
+    </div>
+    
+    <div class="card" style="text-align: center; padding: 20px;">
+        <div style="font-size: 2rem; font-weight: 700; color: #3498db; margin-bottom: 8px; font-family: 'Orbitron', sans-serif;">
+            <?= number_format($total_bookings) ?>
+        </div>
+        <div style="font-size: 0.85rem; color: #B6862C; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+            Total Bookings
+        </div>
+        <div style="font-size: 0.75rem; color: #8892a7; margin-top: 4px;">
+            Confirmed reservations
+        </div>
+    </div>
+    
+    <div class="card" style="text-align: center; padding: 20px;">
+        <div style="font-size: 2rem; font-weight: 700; color: #f39c12; margin-bottom: 8px; font-family: 'Orbitron', sans-serif;">
+            <?= $occupancy_rate ?>%
+        </div>
+        <div style="font-size: 0.85rem; color: #B6862C; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+            Occupancy Rate
+        </div>
+        <div style="font-size: 0.75rem; color: #8892a7; margin-top: 4px;">
+            Room utilization
+        </div>
+    </div>
+</div>
+
+<!-- Report Tables -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 30px;">
+    
+    <!-- Booking Status Breakdown -->
+    <div class="card">
+        <div style="margin-bottom: 20px;">
+            <h3 style="margin: 0; color: #B6862C;">Booking Status Breakdown</h3>
+            <p style="margin: 5px 0 0 0; color: #8892a7; font-size: 0.9rem;">
+                Distribution of bookings by current status
+            </p>
+        </div>
+        
+        <div class="table-container" style="max-height: 400px; overflow-y: auto;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="position: sticky; top: 0; background-color: #122C55; z-index: 10;">Status</th>
+                        <th style="position: sticky; top: 0; background-color: #122C55; z-index: 10;">Count</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if ($status_counts && $status_counts->num_rows > 0): ?>
+                        <?php 
+                        $status_colors = [
+                            'confirmed' => '#3498db',
+                            'checked-in' => '#2ecc71', 
+                            'checked-out' => '#95a5a6',
+                            'cancelled' => '#e74c3c'
+                        ];
+                        $status_counts->data_seek(0);
+                        while ($row = $status_counts->fetch_assoc()): 
+                            $color = $status_colors[$row['status']] ?? '#8892a7';
+                        ?>
+                            <tr>
+                                <td>
+                                    <span class="role-badge" style="background-color: <?= $color ?>; color: white; padding: 4px 8px; border-radius: 12px; font-size: 0.75rem;">
+                                        <?= strtoupper(str_replace('-', ' ', htmlspecialchars($row['status']))) ?>
+                                    </span>
+                                </td>
+                                <td style="font-weight: 600; color: #B6862C;"><?= $row['count'] ?></td>
+                            </tr>
+                        <?php endwhile; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="2" style="text-align: center; padding: 40px 20px; color: #8892a7;">
+                                <div style="font-size: 2rem; margin-bottom: 10px;">📊</div>
+                                <div>No booking data for this period</div>
+                            </td>
+                        </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
     </div>
 
-    <div style="flex: 1; min-width: 400px;">
-        <h3>Top Room Types by Revenue</h3>
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Room Type</th>
-                    <th>Bookings</th>
-                    <th>Revenue</th>
-                </tr>
-            </thead>
-            <tbody>
-                 <?php if ($top_rooms_result && $top_rooms_result->num_rows > 0): ?>
-                    <?php while ($row = $top_rooms_result->fetch_assoc()): ?>
+    <!-- Top Room Types by Revenue -->
+    <div class="card">
+        <div style="margin-bottom: 20px;">
+            <h3 style="margin: 0; color: #B6862C;">Top Room Types by Revenue</h3>
+            <p style="margin: 5px 0 0 0; color: #8892a7; font-size: 0.9rem;">
+                Best performing room categories by earnings
+            </p>
+        </div>
+        
+        <div class="table-container" style="max-height: 400px; overflow-y: auto;">
+            <table class="data-table">
+                <thead>
                     <tr>
-                        <td><?= htmlspecialchars($row['room_type']) ?></td>
-                        <td><?= $row['bookings_count'] ?></td>
-                        <td>$<?= number_format($row['revenue'], 2) ?></td>
+                        <th style="position: sticky; top: 0; background-color: #122C55; z-index: 10;">Room Type</th>
+                        <th style="position: sticky; top: 0; background-color: #122C55; z-index: 10;">Bookings</th>
+                        <th style="position: sticky; top: 0; background-color: #122C55; z-index: 10;">Revenue</th>
                     </tr>
-                    <?php endwhile; ?>
-                <?php else: ?>
-                     <tr><td colspan="3" class="text-center">No data for this period.</td></tr>
-                <?php endif; ?>
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    <?php if ($top_rooms_result && $top_rooms_result->num_rows > 0): ?>
+                        <?php 
+                        $top_rooms_result->data_seek(0);
+                        $rank = 1;
+                        while ($row = $top_rooms_result->fetch_assoc()): 
+                        ?>
+                            <tr>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <span style="background-color: #B6862C; color: #081C3A; font-weight: 600; font-size: 0.7rem; padding: 2px 6px; border-radius: 10px; min-width: 16px; text-align: center;">
+                                            <?= $rank ?>
+                                        </span>
+                                        <span style="font-weight: 600; color: #fff;">
+                                            <?= htmlspecialchars($row['room_type']) ?>
+                                        </span>
+                                    </div>
+                                </td>
+                                <td style="color: #8892a7;"><?= $row['bookings_count'] ?></td>
+                                <td>
+                                    <span style="font-family: monospace; font-weight: 600; color: #2ecc71;">
+                                        $<?= number_format($row['revenue'], 2) ?>
+                                    </span>
+                                </td>
+                            </tr>
+                        <?php 
+                        $rank++;
+                        endwhile; 
+                        ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="3" style="text-align: center; padding: 40px 20px; color: #8892a7;">
+                                <div style="font-size: 2rem; margin-bottom: 10px;">🏨</div>
+                                <div>No room revenue data for this period</div>
+                            </td>
+                        </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
