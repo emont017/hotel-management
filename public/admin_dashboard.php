@@ -265,7 +265,7 @@ $departures_list = $departures_list_stmt->get_result();
                         <?php 
                         $arrivals_list->data_seek(0); // Reset pointer
                         $count = 0;
-                        while($row = $arrivals_list->fetch_assoc() && $count < 3): 
+                        while(($row = $arrivals_list->fetch_assoc()) && $count < 3): 
                             $count++;
                         ?>
                             <div class="schedule-item">
@@ -295,7 +295,7 @@ $departures_list = $departures_list_stmt->get_result();
                         <?php 
                         $departures_list->data_seek(0); // Reset pointer
                         $count = 0;
-                        while($row = $departures_list->fetch_assoc() && $count < 3): 
+                        while(($row = $departures_list->fetch_assoc()) && $count < 3): 
                             $count++;
                         ?>
                             <div class="schedule-item">
