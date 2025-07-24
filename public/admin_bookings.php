@@ -92,16 +92,6 @@ $stats = $stats_result->fetch_assoc();
         <h1>Booking Management</h1>
         <p>Comprehensive view and control of all guest reservations</p>
     </div>
-    <div class="quick-actions">
-        <a href="admin_rooms.php" class="quick-btn">
-            <span class="quick-icon">🛏️</span>
-            <span>Rooms</span>
-        </a>
-        <a href="reports.php" class="quick-btn">
-            <span class="quick-icon">📊</span>
-            <span>Reports</span>
-        </a>
-    </div>
 </div>
 
 <!-- KPI Dashboard -->

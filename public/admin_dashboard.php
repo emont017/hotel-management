@@ -70,22 +70,6 @@ $departures_list = $departures_list_stmt->get_result();
         <h1>Welcome, <?= $username ?>!</h1>
         <p>Here is your hotel's operational summary for <?= date('l, F j, Y') ?>.</p>
     </div>
-    <div class="header-actions">
-        <div class="quick-actions">
-            <button class="quick-btn" onclick="location.href='admin_bookings.php'">
-                <span class="quick-icon">📅</span>
-                <span>New Booking</span>
-            </button>
-            <button class="quick-btn" onclick="location.href='housekeeping_tasks.php'">
-                <span class="quick-icon">🧹</span>
-                <span>Housekeeping</span>
-            </button>
-            <button class="quick-btn" onclick="location.href='admin_rooms.php'">
-                <span class="quick-icon">🏨</span>
-                <span>Room Status</span>
-            </button>
-        </div>
-    </div>
 </div>
 
 <!-- Notifications & Alerts Bar -->
