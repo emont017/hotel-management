@@ -71,110 +71,211 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+// Get rate statistics for KPI cards
 $rates = $conn->query("SELECT * FROM room_rates ORDER BY room_type, date_start DESC");
+$total_rates = $rates->num_rows;
+
+$active_rates_query = $conn->query("SELECT COUNT(*) as count FROM room_rates WHERE CURDATE() BETWEEN date_start AND date_end");
+$active_rates = $active_rates_query->fetch_assoc()['count'] ?? 0;
+
+$avg_price_query = $conn->query("SELECT AVG(price) as avg_price FROM room_rates WHERE CURDATE() BETWEEN date_start AND date_end");
+$avg_price = $avg_price_query->fetch_assoc()['avg_price'] ?? 0;
+
+$room_types_covered_query = $conn->query("SELECT COUNT(DISTINCT room_type) as count FROM room_rates WHERE CURDATE() BETWEEN date_start AND date_end");
+$room_types_covered = $room_types_covered_query->fetch_assoc()['count'] ?? 0;
+
 $room_types_result = $conn->query("SELECT DISTINCT room_type FROM rooms ORDER BY room_type ASC");
 
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
-<h2>Rate Management</h2>
-<p>Create, view, and edit pricing rules for different room types and date ranges.</p>
+<div class="dashboard-header">
+    <div>
+        <h1>Rate Management</h1>
+        <p>Create, view, and edit pricing rules for different room types and date ranges to optimize revenue and manage seasonal pricing.</p>
+    </div>
+</div>
 
 <?php if ($message): ?>
-    <div class="alert alert-<?= $message_type === 'success' ? 'success' : 'danger' ?>">
-        <?= htmlspecialchars($message) ?>
+    <div class="alert alert-<?= $message_type === 'success' ? 'success' : 'danger' ?>" style="margin-bottom: 30px;">
+        <span class="alert-icon"><?= $message_type === 'success' ? '✓' : '⚠️' ?></span>
+        <span><?= htmlspecialchars($message) ?></span>
     </div>
 <?php endif; ?>
 
-<div class="dashboard-columns mt-30">
-    <div class="main-column">
-        <div class="card">
-            <h3 id="form-title">Add New Rate Rule</h3>
-            <form id="rate-form" method="POST" action="admin_rates.php">
-                <input type="hidden" name="action" id="form-action" value="create">
-                <input type="hidden" name="rate_id" id="form-rate-id" value="">
-
-                <label class="form-label" for="rate_name">Rate Name:</label>
-                <input type="text" id="rate_name" name="rate_name" class="form-input" placeholder="e.g., Standard Rate, Weekend Special" required>
-
-                <label class="form-label" for="room_type">Room Type:</label>
-                <select id="room_type" name="room_type" class="form-select" required>
-                    <option value="" disabled selected>-- Select a Room Type --</option>
-                    <?php while ($type = $room_types_result->fetch_assoc()): ?>
-                        <option value="<?= htmlspecialchars($type['room_type']) ?>"><?= htmlspecialchars($type['room_type']) ?></option>
-                    <?php endwhile; ?>
-                </select>
-
-                <label class="form-label" for="price">Price per Night ($):</label>
-                <input type="number" id="price" name="price" class="form-input" step="0.01" min="0" placeholder="e.g., 150.50" required>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label" for="date_start">Start Date:</label>
-                        <input type="date" id="date_start" name="date_start" class="form-input" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="date_end">End Date:</label>
-                        <input type="date" id="date_end" name="date_end" class="form-input" required>
-                    </div>
-                </div>
-
-                <div class="form-actions mt-30">
-                    <button type="submit" id="submit-button" class="btn btn-primary">Add Rate Rule</button>
-                    <button type="button" id="cancel-edit" class="btn btn-secondary" style="display: none;">Cancel Edit</button>
-                </div>
-            </form>
+<!-- KPI Statistics -->
+<div class="kpi-grid-professional" style="margin-bottom: 30px;">
+    <div class="kpi-card-pro">
+        <div class="kpi-content-pro">
+            <div class="kpi-value-pro"><?= number_format($total_rates) ?></div>
+            <div class="kpi-label-pro">Total Rate Rules</div>
+            <div class="kpi-sub-pro">All configured rates</div>
         </div>
     </div>
 
-    <div class="side-column">
-        <div class="card">
-            <h3>Existing Rate Rules</h3>
-            <div style="max-height: 600px; overflow-y: auto;">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Room Type</th>
-                            <th>Rate Name</th>
-                            <th>Price</th>
-                            <th>Effective Dates</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if ($rates->num_rows > 0): ?>
-                            <?php while ($rate = $rates->fetch_assoc()): ?>
-                                <tr>
-                                    <td><?= htmlspecialchars($rate['room_type']) ?></td>
-                                    <td><?= htmlspecialchars($rate['rate_name']) ?></td>
-                                    <td>$<?= number_format($rate['price'], 2) ?></td>
-                                    <td><?= htmlspecialchars($rate['date_start']) ?> to <?= htmlspecialchars($rate['date_end']) ?></td>
-                                    <td>
-                                        <div class="action-buttons">
-                                            <button class="btn-link-style edit-btn"
-                                                data-id="<?= $rate['id'] ?>"
-                                                data-name="<?= htmlspecialchars($rate['rate_name']) ?>"
-                                                data-type="<?= htmlspecialchars($rate['room_type']) ?>"
-                                                data-price="<?= $rate['price'] ?>"
-                                                data-start="<?= $rate['date_start'] ?>"
-                                                data-end="<?= $rate['date_end'] ?>">
-                                                Edit
-                                            </button>
-                                            <form method="POST" action="admin_rates.php" onsubmit="return confirm('Are you sure you want to delete this rate? This cannot be undone.');" style="display:inline;">
-                                                <input type="hidden" name="action" value="delete">
-                                                <input type="hidden" name="rate_id" value="<?= $rate['id'] ?>">
-                                                <button type="submit" class="btn-link-style-danger">Delete</button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                </tr>
-                            <?php endwhile; ?>
-                        <?php else: ?>
-                            <tr><td colspan="5" class="text-center">No rate rules found.</td></tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
+    <div class="kpi-card-pro">
+        <div class="kpi-content-pro">
+            <div class="kpi-value-pro"><?= number_format($active_rates) ?></div>
+            <div class="kpi-label-pro">Active Rates</div>
+            <div class="kpi-sub-pro">Currently effective</div>
+        </div>
+    </div>
+
+    <div class="kpi-card-pro">
+        <div class="kpi-content-pro">
+            <div class="kpi-value-pro">$<?= number_format($avg_price, 0) ?></div>
+            <div class="kpi-label-pro">Average Rate</div>
+            <div class="kpi-sub-pro">Active rates only</div>
+        </div>
+    </div>
+
+    <div class="kpi-card-pro">
+        <div class="kpi-content-pro">
+            <div class="kpi-value-pro"><?= number_format($room_types_covered) ?></div>
+            <div class="kpi-label-pro">Room Types</div>
+            <div class="kpi-sub-pro">With active rates</div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content Grid -->
+<div class="detail-grid">
+    <!-- Rate Form -->
+    <div class="card" id="rate-form-card">
+        <h3 id="form-title">Add New Rate Rule</h3>
+        <p style="color: #8892a7; margin-bottom: 25px;">Configure pricing rules for specific room types and date ranges to manage revenue optimization.</p>
+        
+        <form id="rate-form" method="POST" action="admin_rates.php">
+            <input type="hidden" name="action" id="form-action" value="create">
+            <input type="hidden" name="rate_id" id="form-rate-id" value="">
+
+            <label class="form-label" for="rate_name">Rate Name:</label>
+            <input type="text" id="rate_name" name="rate_name" class="form-input" placeholder="e.g., Standard Rate, Weekend Special, Holiday Premium" required>
+
+            <label class="form-label" for="room_type">Room Type:</label>
+            <select id="room_type" name="room_type" class="form-select" required>
+                <option value="" disabled selected>-- Select a Room Type --</option>
+                <?php 
+                $room_types_result->data_seek(0); // Reset pointer
+                while ($type = $room_types_result->fetch_assoc()): 
+                ?>
+                    <option value="<?= htmlspecialchars($type['room_type']) ?>"><?= htmlspecialchars($type['room_type']) ?></option>
+                <?php endwhile; ?>
+            </select>
+
+            <label class="form-label" for="price">Price per Night ($):</label>
+            <input type="number" id="price" name="price" class="form-input" step="0.01" min="0" placeholder="e.g., 150.50" required>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <label class="form-label" for="date_start">Start Date:</label>
+                    <input type="date" id="date_start" name="date_start" class="form-input" required>
+                </div>
+                <div>
+                    <label class="form-label" for="date_end">End Date:</label>
+                    <input type="date" id="date_end" name="date_end" class="form-input" required>
+                </div>
             </div>
+
+            <div class="form-actions" style="margin-top: 30px; display: flex; gap: 15px;">
+                <button type="submit" id="submit-button" class="btn btn-primary" style="flex: 1;">Add Rate Rule</button>
+                <button type="button" id="cancel-edit" class="btn btn-secondary" style="display: none; flex: 1;">Cancel Edit</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Rates Table -->
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div>
+                <h3 style="margin: 0; color: #B6862C;">Current Rate Rules</h3>
+                <p style="margin: 5px 0 0 0; color: #8892a7; font-size: 0.9rem;">
+                    Manage all pricing rules and their effective date ranges
+                </p>
+            </div>
+            <?php if ($total_rates > 0): ?>
+                <div style="color: #B6862C; font-size: 0.9rem; font-weight: 600;">
+                    <?= number_format($total_rates) ?> rate<?= $total_rates !== 1 ? 's' : '' ?> configured
+                </div>
+            <?php endif; ?>
+        </div>
+
+        <div class="table-container" style="max-height: 600px; overflow-y: auto;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="position: sticky; top: 0; background-color: #122C55; z-index: 10;">Room Type</th>
+                        <th style="position: sticky; top: 0; background-color: #122C55; z-index: 10;">Rate Name</th>
+                        <th style="position: sticky; top: 0; background-color: #122C55; z-index: 10;">Price</th>
+                        <th style="position: sticky; top: 0; background-color: #122C55; z-index: 10;">Effective Period</th>
+                        <th style="position: sticky; top: 0; background-color: #122C55; z-index: 10; width: 120px;">Status</th>
+                        <th style="position: sticky; top: 0; background-color: #122C55; z-index: 10; width: 140px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if ($total_rates > 0): ?>
+                        <?php 
+                        $rates->data_seek(0); // Reset pointer
+                        while ($rate = $rates->fetch_assoc()): 
+                            $is_active = (date('Y-m-d') >= $rate['date_start'] && date('Y-m-d') <= $rate['date_end']);
+                        ?>
+                            <tr>
+                                <td>
+                                    <span style="font-weight: 600; color: #B6862C;"><?= htmlspecialchars($rate['room_type']) ?></span>
+                                </td>
+                                <td><?= htmlspecialchars($rate['rate_name']) ?></td>
+                                <td>
+                                    <span style="font-family: monospace; font-size: 1.1rem; font-weight: 600; color: #2ecc71;">
+                                        $<?= number_format($rate['price'], 2) ?>
+                                    </span>
+                                </td>
+                                <td style="font-size: 0.9rem;">
+                                    <?= date('M j, Y', strtotime($rate['date_start'])) ?><br>
+                                    <span style="color: #8892a7;">to <?= date('M j, Y', strtotime($rate['date_end'])) ?></span>
+                                </td>
+                                <td>
+                                    <?php if ($is_active): ?>
+                                        <span class="role-badge" style="background-color: #2ecc71; color: white; padding: 4px 8px; border-radius: 12px; font-size: 0.75rem;">ACTIVE</span>
+                                    <?php elseif (date('Y-m-d') < $rate['date_start']): ?>
+                                        <span class="role-badge" style="background-color: #f39c12; color: white; padding: 4px 8px; border-radius: 12px; font-size: 0.75rem;">FUTURE</span>
+                                    <?php else: ?>
+                                        <span class="role-badge" style="background-color: #95a5a6; color: white; padding: 4px 8px; border-radius: 12px; font-size: 0.75rem;">EXPIRED</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <div style="display: flex; gap: 8px; align-items: center;">
+                                        <button class="btn-link-style edit-btn" style="font-size: 0.85rem; padding: 4px 8px; cursor: pointer;"
+                                            data-id="<?= $rate['id'] ?>"
+                                            data-name="<?= htmlspecialchars($rate['rate_name']) ?>"
+                                            data-type="<?= htmlspecialchars($rate['room_type']) ?>"
+                                            data-price="<?= $rate['price'] ?>"
+                                            data-start="<?= $rate['date_start'] ?>"
+                                            data-end="<?= $rate['date_end'] ?>">
+                                            Edit
+                                        </button>
+                                        <form method="POST" action="admin_rates.php" onsubmit="return confirm('Are you sure you want to delete this rate rule? This action cannot be undone.');" style="display:inline;">
+                                            <input type="hidden" name="action" value="delete">
+                                            <input type="hidden" name="rate_id" value="<?= $rate['id'] ?>">
+                                            <button type="submit" class="btn-link-style" style="color: #e74c3c; font-size: 0.85rem; padding: 4px 8px; cursor: pointer;">Delete</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endwhile; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 60px 20px; color: #8892a7;">
+                                <div style="font-size: 3rem; margin-bottom: 15px;">💰</div>
+                                <div style="font-size: 1.1rem; margin-bottom: 8px;">No rate rules configured yet</div>
+                                <div style="font-size: 0.9rem;">Create your first rate rule to start managing pricing for different room types and seasons.</div>
+                                <button onclick="scrollToForm()" class="btn btn-primary" style="margin-top: 20px;">
+                                    Add Your First Rate Rule
+                                </button>
+                            </td>
+                        </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
@@ -194,10 +295,22 @@ document.addEventListener('DOMContentLoaded', function() {
         actionInput.value = 'create';
         rateIdInput.value = '';
         submitButton.textContent = 'Add Rate Rule';
-        submitButton.classList.replace('btn-secondary', 'btn-primary');
+        submitButton.classList.remove('btn-secondary');
+        submitButton.classList.add('btn-primary');
         cancelEditButton.style.display = 'none';
         document.getElementById('rate_name').focus();
     }
+
+    function scrollToForm() {
+        document.getElementById('rate-form-card').scrollIntoView({ 
+            behavior: 'smooth',
+            block: 'start'
+        });
+        document.getElementById('rate_name').focus();
+    }
+
+    // Make scrollToForm globally available
+    window.scrollToForm = scrollToForm;
 
     document.querySelectorAll('.edit-btn').forEach(button => {
         button.addEventListener('click', function() {
@@ -218,14 +331,25 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('date_end').value = end;
 
             submitButton.textContent = 'Update Rate Rule';
-            submitButton.classList.replace('btn-primary', 'btn-secondary');
-            cancelEditButton.style.display = 'inline-block';
+            submitButton.classList.remove('btn-primary');
+            submitButton.classList.add('btn-secondary');
+            cancelEditButton.style.display = 'block';
             
-            form.scrollIntoView({ behavior: 'smooth' });
+            scrollToForm();
         });
     });
 
     cancelEditButton.addEventListener('click', resetForm);
+
+    // Set minimum date to today for new rates
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('date_start').min = today;
+    document.getElementById('date_end').min = today;
+
+    // Update end date minimum when start date changes
+    document.getElementById('date_start').addEventListener('change', function() {
+        document.getElementById('date_end').min = this.value;
+    });
 });
 </script>
 
