@@ -21,55 +21,80 @@ unset($_SESSION['feedback_message'], $_SESSION['feedback_type']);
 
 
 // Handle POST Actions
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $admin_user_id = $_SESSION['user_id'];
-    $admin_username = $_SESSION['username'];
-    
-    // --- Handle Check-in / Check-out / Re-Check-in ---
-    if (isset($_POST['check_in_guest'])) {
-        $room_id = (int)$_POST['room_id'];
-        $conn->begin_transaction();
-        try {
-            $conn->prepare("UPDATE bookings SET status = 'checked-in' WHERE id = ?")->execute([$booking_id]);
-            $conn->prepare("UPDATE rooms SET housekeeping_status = 'occupied' WHERE id = ?")->execute([$room_id]);
-            log_booking_event($conn, $admin_user_id, 'Guest Checked In', $booking_id, "Guest checked in by admin: {$admin_username}");
-            $conn->commit();
-            $_SESSION['feedback_message'] = "Guest successfully checked in!";
-            $_SESSION['feedback_type'] = 'success';
-        } catch (Exception $e) {
-            $conn->rollback();
-            $_SESSION['feedback_message'] = "Error checking in guest: " . $e->getMessage();
-            $_SESSION['feedback_type'] = 'danger';
-        }
-        header("Location: admin_booking_detail.php?booking_id={$booking_id}");
-        exit;
+if (isset($_POST['check_in_guest'])) {
+    $room_id = (int)$_POST['room_id'];
+    $conn->begin_transaction();
+    try {
+        $stmt = $conn->prepare("UPDATE bookings SET status = 'checked-in' WHERE id = ?");
+        $stmt->bind_param("i", $booking_id);
+        $stmt->execute();
+        $stmt->close();
+
+        $stmt = $conn->prepare("UPDATE rooms SET housekeeping_status = 'occupied' WHERE id = ?");
+        $stmt->bind_param("i", $room_id);
+        $stmt->execute();
+        $stmt->close();
+
+        log_booking_event($conn, $admin_user_id, 'Guest Checked In', $booking_id, "Guest checked in by admin: {$admin_username}");
+        $conn->commit();
+        $_SESSION['feedback_message'] = "Guest successfully checked in!";
+        $_SESSION['feedback_type'] = 'success';
+    } catch (Exception $e) {
+        $conn->rollback();
+        $_SESSION['feedback_message'] = "Error checking in guest: " . $e->getMessage();
+        $_SESSION['feedback_type'] = 'danger';
     }
+    header("Location: admin_booking_detail.php?booking_id={$booking_id}");
+    exit;
+}
+
     
-    if (isset($_POST['check_out_guest'])) {
-        $room_id = (int)$_POST['room_id'];
-        $conn->begin_transaction();
-        try {
-            $conn->prepare("UPDATE bookings SET status = 'checked-out' WHERE id = ?")->execute([$booking_id]);
-            $conn->prepare("UPDATE rooms SET housekeeping_status = 'dirty' WHERE id = ?")->execute([$room_id]);
-            $conn->prepare("UPDATE folios SET status = 'closed' WHERE booking_id = ?")->execute([$booking_id]);
-            log_booking_event($conn, $admin_user_id, 'Guest Checked Out', $booking_id, "Guest checked out by admin: {$admin_username}");
-            $conn->commit();
-            $_SESSION['feedback_message'] = "Guest successfully checked out!";
-            $_SESSION['feedback_type'] = 'success';
-        } catch (Exception $e) {
-            $conn->rollback();
-            $_SESSION['feedback_message'] = "Error checking out guest: " . $e->getMessage();
-            $_SESSION['feedback_type'] = 'danger';
-        }
-        header("Location: admin_booking_detail.php?booking_id={$booking_id}");
-        exit;
+   if (isset($_POST['check_out_guest'])) {
+    $room_id = (int)$_POST['room_id'];
+    $conn->begin_transaction();
+    try {
+        // Update booking status
+        $stmt = $conn->prepare("UPDATE bookings SET status = 'checked-out' WHERE id = ?");
+        $stmt->bind_param("i", $booking_id);
+        $stmt->execute();
+        $stmt->close();
+
+        // Update housekeeping status
+        $stmt = $conn->prepare("UPDATE rooms SET housekeeping_status = 'dirty' WHERE id = ?");
+        $stmt->bind_param("i", $room_id);
+        $stmt->execute();
+        $stmt->close();
+
+        // Update folio status
+        $stmt = $conn->prepare("UPDATE folios SET status = 'closed' WHERE booking_id = ?");
+        $stmt->bind_param("i", $booking_id);
+        $stmt->execute();
+        $stmt->close();
+
+        // Log event
+        log_booking_event($conn, $admin_user_id, 'Guest Checked Out', $booking_id, "Guest checked out by admin: {$admin_username}");
+        
+        $conn->commit();
+        $_SESSION['feedback_message'] = "Guest successfully checked out!";
+        $_SESSION['feedback_type'] = 'success';
+    } catch (Exception $e) {
+        $conn->rollback();
+        $_SESSION['feedback_message'] = "Error checking out guest: " . $e->getMessage();
+        $_SESSION['feedback_type'] = 'danger';
     }
+    header("Location: admin_booking_detail.php?booking_id={$booking_id}");
+    exit;
+}
+
     
     if (isset($_POST['re_check_in_guest'])) {
         $room_id = (int)$_POST['room_id'];
         $conn->begin_transaction();
         try {
-            $conn->prepare("UPDATE bookings SET status = 'checked-in' WHERE id = ?")->execute([$booking_id]);
+            $stmt = $conn->prepare("UPDATE bookings SET status = 'checked-in' WHERE id = ?");
+$stmt->bind_param("i", $booking_id);
+$stmt->execute();
+$stmt->close();
             $conn->prepare("UPDATE rooms SET housekeeping_status = 'occupied' WHERE id = ?")->execute([$room_id]);
             $conn->prepare("UPDATE folios SET status = 'open' WHERE booking_id = ?")->execute([$booking_id]);
             log_booking_event($conn, $admin_user_id, 'Guest Re-Checked In', $booking_id, "Guest re-checked in by admin: {$admin_username}");
@@ -130,7 +155,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header("Location: admin_booking_detail.php?booking_id={$booking_id}");
         exit;
     }
-}
 
 // --- Data Fetching ---
 // Fetch Booking, User, and Room details

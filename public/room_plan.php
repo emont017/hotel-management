@@ -618,6 +618,50 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+// --- CLICK TO ADD BOOKING FEATURE ---
+document.querySelectorAll('.droppable').forEach(cell => {
+    cell.addEventListener('click', () => {
+        const roomId = cell.getAttribute('data-room-id');
+        const checkInDate = cell.getAttribute('data-date');
+
+        // Create a simple modal to select departure date
+        const modal = document.createElement('div');
+        modal.className = 'drag-confirm-modal';
+        modal.innerHTML = `
+            <div class="drag-confirm-content">
+                <h3>Create Booking</h3>
+                <p>Room ${roomId} - Check-in: ${checkInDate}</p>
+                <label>Departure (Check-out):</label>
+                <input type="date" id="newBookingCheckout" min="${checkInDate}" style="margin: 10px 0; padding: 5px; border-radius: 4px;">
+                <div class="drag-confirm-buttons">
+                    <button class="btn btn-primary" id="confirmAddBooking">Continue</button>
+                    <button class="btn btn-secondary" id="cancelAddBooking">Cancel</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        document.getElementById('confirmAddBooking').onclick = () => {
+            const checkOutDate = document.getElementById('newBookingCheckout').value;
+            if (!checkOutDate) {
+                alert('Please select a departure date.');
+                return;
+            }
+            window.location.href = `/bookings.php?room_id=${roomId}&check_in=${checkInDate}&check_out=${checkOutDate}&staff=1`;
+        };
+
+        document.getElementById('cancelAddBooking').onclick = () => {
+            document.body.removeChild(modal);
+        };
+
+        modal.onclick = (e) => {
+            if (e.target === modal) {
+                document.body.removeChild(modal);
+            }
+        };
+    });
+});
+
 </script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

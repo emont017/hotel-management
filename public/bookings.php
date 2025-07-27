@@ -1,9 +1,50 @@
 <?php
 session_start();
 require_once __DIR__ . '/../config/db.php';
+$is_staff_booking = false;
+
+if (isset($_GET['staff']) && $_GET['staff'] == 1) {
+    $is_staff_booking = true;
+    
+    // Get parameters from the URL
+    $staff_room_id = intval($_GET['room_id'] ?? 0);
+    $staff_check_in = $_GET['check_in'] ?? '';
+    $staff_check_out = $_GET['check_out'] ?? '';
+
+    // Fetch the room type from the database
+    if ($staff_room_id > 0) {
+        $stmt = $conn->prepare("SELECT room_type FROM rooms WHERE id = ?");
+        $stmt->bind_param("i", $staff_room_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if ($row = $result->fetch_assoc()) {
+            $preselected_room_type = $row['room_type'];
+        }
+        $stmt->close();
+    }
+}
+
+
+// Staff booking detection
+$is_staff_booking = isset($_GET['staff']) && $_GET['staff'] == '1';
+$staff_room_id = $_GET['room_id'] ?? null;
+$staff_check_in = $_GET['check_in'] ?? null;
+$staff_check_out = $_GET['check_out'] ?? null;
 
 // Check if a room type was pre-selected from rooms.php
 $preselected_room_type = isset($_GET['type']) ? urldecode($_GET['type']) : null;
+
+// If staff booking, fetch room type for the given room_id
+if ($is_staff_booking && $staff_room_id) {
+    $stmt = $conn->prepare("SELECT room_type FROM rooms WHERE id = ?");
+    $stmt->bind_param("i", $staff_room_id);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    if ($res && $row = $res->fetch_assoc()) {
+        $preselected_room_type = $row['room_type'];
+    }
+    $stmt->close();
+}
 
 // If a room type is preselected, fetch its details
 $room_details = null;
@@ -73,7 +114,7 @@ echo '<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>';
                 <div style="flex: 1; min-width: 200px;">
                     <h2 style="margin-bottom: 5px; color: #B6862C;">Selected: <?= htmlspecialchars($preselected_room_type) ?></h2>
                     <p style="margin-bottom: 5px; font-size: 1.1rem;">Starting at <strong>$<?= number_format($room_details['price'], 2) ?></strong> per night</p>
-                    <p style="margin: 0; font-size: 0.9rem; color: #ccc;">✓ Room type selected - Now choose your dates below</p>
+                    <p style="margin: 0; font-size: 0.9rem; color: #ccc;">✓ Room type selected - Complete booking below</p>
                 </div>
                 <div style="flex: 0 0 auto;">
                     <a href="rooms.php" class="btn btn-secondary btn-sm">Change Room</a>
@@ -89,8 +130,14 @@ echo '<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>';
     <?php endif; ?>
 
     <!-- Date Selection Form -->
-    <div class="card">
-        <h3><?= $preselected_room_type ? 'Choose Your Dates' : 'Step 1: Select Your Dates' ?></h3>
+<div class="card" <?= $is_staff_booking ? 'style="display:none;"' : '' ?>>
+
+        <h3>
+    <?= $is_staff_booking 
+        ? 'Complete Your Booking' 
+        : ($preselected_room_type ? 'Choose Your Dates' : 'Step 1: Select Your Dates') ?>
+</h3>
+
         <div id="date-selection" class="date-selection-form" style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
             <div style="flex: 1; min-width: 200px;">
                 <label for="checkin_date" class="form-label">Check-in Date</label>
@@ -107,15 +154,16 @@ echo '<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>';
             </div>
         </div>
     </div>
-
-    <!-- Results Section -->
     <div id="booking-step-2" style="display: none;">
-        <div class="card">
-            <h3><?= $preselected_room_type ? 'Availability Confirmation' : 'Step 2: Choose Your Room' ?></h3>
-            <div id="availability-results" class="mt-30"></div>
-            <div id="results-loader" style="display: none;" class="loader"></div>
-            <p id="results-message"></p>
-        </div>
+    <div id="results-loader" style="display:none;">Loading...</div>
+    <p id="results-message"></p>
+    <div id="availability-results"></div>
+</div>
+
+    
+<div id="booking-step-2" style="<?= $is_staff_booking ? 'display:block;' : 'display:none;' ?>"></div>
+
+
 
         <!-- Guest Details Form -->
         <form id="guest-details-form" action="/api/submit_booking.php" method="post" class="card mt-30">
@@ -145,6 +193,12 @@ echo '<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>';
             <input type="hidden" id="selected_room_type" name="room_type" value="<?= htmlspecialchars($preselected_room_type ?? '') ?>">
             <input type="hidden" id="form_checkin_date" name="checkin_date">
             <input type="hidden" id="form_checkout_date" name="checkout_date">
+
+            <?php if ($is_staff_booking && isset($_GET['room_id'])): ?>
+    <input type="hidden" name="room_id" value="<?= htmlspecialchars($_GET['room_id']) ?>">
+<?php endif; ?>
+
+
 
             <?php if ($preselected_room_type): ?>
                 <!-- Show booking summary for preselected room -->
@@ -177,7 +231,19 @@ echo '<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>';
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
+    // --- Flags and Data ---
+    const isStaff = <?= $is_staff_booking ? 'true' : 'false' ?>;
+    const staffCheckIn = "<?= $staff_check_in ?>";
+    const staffCheckOut = "<?= $staff_check_out ?>";
+    const preselectedRoomType = "<?= htmlspecialchars($preselected_room_type ?? '') ?>";
+    const price = <?= isset($room_details['price']) ? $room_details['price'] : 0 ?>;
+    const hasCompleteProfile = <?= $has_complete_profile ? 'true' : 'false' ?>;
+
+    // --- Elements ---
+    const formCheckinInput = document.getElementById('form_checkin_date');
+    const formCheckoutInput = document.getElementById('form_checkout_date');
+    const bookingSummaryContent = document.getElementById('booking-summary-content');
     const checkBtn = document.getElementById('check-availability-btn');
     const resultsDiv = document.getElementById('availability-results');
     const loader = document.getElementById('results-loader');
@@ -185,23 +251,28 @@ document.addEventListener('DOMContentLoaded', function() {
     const step2Div = document.getElementById('booking-step-2');
     const guestForm = document.getElementById('guest-details-form');
     const selectedRoomInput = document.getElementById('selected_room_type');
-    const formCheckinInput = document.getElementById('form_checkin_date');
-    const formCheckoutInput = document.getElementById('form_checkout_date');
-    const bookingSummaryContent = document.getElementById('booking-summary-content');
-    
-    // Check if we have a preselected room type
-    const preselectedRoomType = selectedRoomInput.value;
+
+    // --- Staff Pre-fill ---
+    if (isStaff) {
+        formCheckinInput.value = staffCheckIn;
+        formCheckoutInput.value = staffCheckOut;
+        bookingSummaryContent.style.display = 'block';
+
+        if (preselectedRoomType && staffCheckIn && staffCheckOut) {
+            updateBookingSummary(preselectedRoomType, staffCheckIn, staffCheckOut, price);
+        }
+
+        guestForm.style.display = 'block';
+        step2Div.style.display = 'block';
+    }
+
+    // --- Date Picker Initialization ---
     let blockedDates = [];
     let checkinPicker, checkoutPicker;
     let selectedCheckin = null;
     let selectedCheckout = null;
-    
-    // Check if user has complete profile for auto-show guest details
-    const hasCompleteProfile = <?= $has_complete_profile ? 'true' : 'false' ?>;
 
-    // Small delay to ensure DOM is ready
     setTimeout(() => {
-        // Load blocked dates and initialize date pickers
         if (preselectedRoomType) {
             loadBlockedDates(preselectedRoomType);
         } else {
@@ -209,408 +280,69 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }, 100);
 
+    // --- Fetch Blocked Dates ---
     function loadBlockedDates(roomType) {
         fetch(`/api/get_blocked_dates.php?room_type=${encodeURIComponent(roomType)}`)
             .then(response => response.json())
             .then(data => {
-                if (data.blocked_dates) {
-                    blockedDates = data.blocked_dates;
-                    initializeDatePickers(blockedDates);
-                }
+                blockedDates = data.blocked_dates || [];
+                initializeDatePickers(blockedDates);
             })
-            .catch(error => {
-                initializeDatePickers([]);
-            });
+            .catch(() => initializeDatePickers([]));
     }
 
+    // --- Initialize Flatpickr ---
     function initializeDatePickers(disabledDates) {
         const today = new Date();
-        
-        // Check if elements exist
         const checkinEl = document.getElementById('checkin_date');
         const checkoutEl = document.getElementById('checkout_date');
-        
-        if (!checkinEl || !checkoutEl) {
-            console.error('Date input elements not found');
-            return;
-        }
-        
-        // Convert blocked dates to Date objects for Flatpickr
+
+        if (!checkinEl || !checkoutEl) return;
+
         const disabledDateObjects = disabledDates.map(date => new Date(date + 'T00:00:00'));
-        
-        // Destroy existing pickers if they exist
-        if (checkinPicker) {
-            checkinPicker.destroy();
-        }
-        if (checkoutPicker) {
-            checkoutPicker.destroy();
-        }
-        
-        // Base configuration for both pickers
+
+        if (checkinPicker) checkinPicker.destroy();
+        if (checkoutPicker) checkoutPicker.destroy();
+
         const baseConfig = {
             minDate: today,
             disable: disabledDateObjects,
             dateFormat: "Y-m-d",
             allowInput: false,
-            clickOpens: true,
-            static: false
         };
 
-        // Check-in date picker
         checkinPicker = flatpickr(checkinEl, {
             ...baseConfig,
-            onChange: function(selectedDates, dateStr, instance) {
+            onChange: (selectedDates, dateStr) => {
                 selectedCheckin = dateStr;
-                
-                // Update checkout picker constraints
-                if (checkoutPicker && dateStr) {
-                    const nextDay = new Date(dateStr + 'T00:00:00');
-                    nextDay.setDate(nextDay.getDate() + 1);
-                    checkoutPicker.set('minDate', nextDay);
-                    
-                    // Clear checkout if it's invalid
-                    const currentCheckout = checkoutPicker.selectedDates[0];
-                    if (currentCheckout && currentCheckout <= selectedDates[0]) {
-                        checkoutPicker.clear();
-                        selectedCheckout = null;
-                    }
-                    
-                    // Update checkout calendar if it's open
-                    if (checkoutPicker.isOpen) {
-                        setTimeout(() => markCheckinInCheckoutCalendar(checkoutPicker), 100);
-                    }
-                }
-                
-                // Update visual feedback
-                updateDateSelectionFeedback();
-                
-                // Auto-update availability if section is already visible and we have both dates
+                formCheckinInput.value = dateStr;
+                adjustCheckoutPicker(dateStr);
                 autoUpdateAvailability();
-            },
-            onOpen: function(selectedDates, dateStr, instance) {
-                // Mark checkout date when checkin calendar opens
-                setTimeout(() => markCheckoutInCheckinCalendar(instance), 100);
-            },
-            onMonthChange: function(selectedDates, dateStr, instance) {
-                // Re-mark checkout date when month changes
-                setTimeout(() => markCheckoutInCheckinCalendar(instance), 100);
-            },
-            onYearChange: function(selectedDates, dateStr, instance) {
-                // Re-mark checkout date when year changes
-                setTimeout(() => markCheckoutInCheckinCalendar(instance), 100);
             }
         });
 
-        // Check-out date picker
         checkoutPicker = flatpickr(checkoutEl, {
             ...baseConfig,
-            onChange: function(selectedDates, dateStr, instance) {
+            onChange: (selectedDates, dateStr) => {
                 selectedCheckout = dateStr;
-                
-                // Update checkin calendar if it's open
-                if (checkinPicker && checkinPicker.isOpen) {
-                    setTimeout(() => markCheckoutInCheckinCalendar(checkinPicker), 100);
-                }
-                
-                updateDateSelectionFeedback();
-                
-                // Auto-update availability if section is already visible and we have both dates
+                formCheckoutInput.value = dateStr;
                 autoUpdateAvailability();
-            },
-            onOpen: function(selectedDates, dateStr, instance) {
-                // Mark checkin date when checkout calendar opens
-                setTimeout(() => markCheckinInCheckoutCalendar(instance), 100);
-            },
-            onMonthChange: function(selectedDates, dateStr, instance) {
-                // Re-mark checkin date when month changes
-                setTimeout(() => markCheckinInCheckoutCalendar(instance), 100);
-            },
-            onYearChange: function(selectedDates, dateStr, instance) {
-                // Re-mark checkin date when year changes
-                setTimeout(() => markCheckinInCheckoutCalendar(instance), 100);
-            }
-        });
-        
-        // Add fallback click handlers
-        if (checkinPicker && checkoutPicker) {
-            checkinEl.addEventListener('click', function() {
-                if (checkinPicker && !checkinPicker.isOpen) {
-                    checkinPicker.open();
-                }
-            });
-            
-            checkoutEl.addEventListener('click', function() {
-                if (checkoutPicker && !checkoutPicker.isOpen) {
-                    checkoutPicker.open();
-                }
-            });
-        }
-    }
-
-    function updateDateSelectionFeedback() {
-        // Removed redundant feedback - availability is confirmed in the availability confirmation section
-    }
-
-    // Function to mark the check-in date in the checkout calendar
-    function markCheckinInCheckoutCalendar(checkoutPickerInstance) {
-        if (!selectedCheckin || !checkoutPickerInstance) {
-            console.log('markCheckinInCheckoutCalendar: Missing data');
-            return;
-        }
-        
-        console.log(`Marking check-in ${selectedCheckin} in checkout calendar`);
-        
-        // Remove existing indicators and reset styles
-        cleanupIndicators(checkoutPickerInstance, 'checkin-indicator');
-        
-        // Add check-in indicator
-        markDateInCalendar(checkoutPickerInstance, selectedCheckin, 'checkin-indicator');
-        
-        // Also show checkout indicator if both dates are selected
-        if (selectedCheckout) {
-            markDateInCalendar(checkoutPickerInstance, selectedCheckout, 'checkout-indicator');
-        }
-    }
-
-    // Function to mark the check-out date in the checkin calendar
-    function markCheckoutInCheckinCalendar(checkinPickerInstance) {
-        if (!selectedCheckout || !checkinPickerInstance) {
-            console.log('markCheckoutInCheckinCalendar: Missing data');
-            return;
-        }
-        
-        console.log(`Marking check-out ${selectedCheckout} in checkin calendar`);
-        
-        // Remove existing indicators and reset styles
-        cleanupIndicators(checkinPickerInstance, 'checkout-indicator');
-        
-        // Add check-out indicator
-        markDateInCalendar(checkinPickerInstance, selectedCheckout, 'checkout-indicator');
-        
-        // Also show checkin indicator if both dates are selected
-        if (selectedCheckin) {
-            markDateInCalendar(checkinPickerInstance, selectedCheckin, 'checkin-indicator');
-        }
-    }
-
-    // Function to clean up existing indicators
-    function cleanupIndicators(pickerInstance, className) {
-        // Remove range indicators first
-        removeRangeIndicators(pickerInstance);
-        
-        const existingIndicators = pickerInstance.calendarContainer.querySelectorAll(`.${className}`);
-        existingIndicators.forEach(el => {
-            el.classList.remove(className);
-            // Reset inline styles
-            el.style.background = '';
-            el.style.color = '';
-            el.style.fontWeight = '';
-            el.style.border = '';
-            el.style.borderLeft = '';
-            el.style.borderRight = '';
-            el.style.transform = '';
-            el.style.boxShadow = '';
-            el.style.position = '';
-            
-            // Remove text indicator
-            const indicator = el.querySelector('.date-indicator');
-            if (indicator) {
-                indicator.remove();
             }
         });
     }
 
-    // Helper function to mark a specific date in a calendar
-    function markDateInCalendar(pickerInstance, dateStr, className) {
-        if (!dateStr || !pickerInstance) {
-            console.log('markDateInCalendar: Missing dateStr or pickerInstance');
-            return;
-        }
-        
-        console.log(`Marking ${dateStr} with class ${className}`);
-        
-        const targetDate = new Date(dateStr + 'T00:00:00');
-        const allDayElements = pickerInstance.calendarContainer.querySelectorAll('.flatpickr-day');
-        
-        console.log(`Found ${allDayElements.length} day elements`);
-        
-        let found = false;
-        
-        // Remove existing range indicators first
-        removeRangeIndicators(pickerInstance);
-        allDayElements.forEach(dayEl => {
-            if (dayEl.dateObj) {
-                const dayDate = new Date(dayEl.dateObj);
-                
-                // Compare dates (year, month, day)
-                if (dayDate.getFullYear() === targetDate.getFullYear() &&
-                    dayDate.getMonth() === targetDate.getMonth() &&
-                    dayDate.getDate() === targetDate.getDate()) {
-                    
-                    console.log(`Found matching date: ${dateStr}, adding class ${className}`);
-                    dayEl.classList.add(className);
-                    found = true;
-                    
-                    // Add clean, professional styling
-                    if (className === 'checkin-indicator') {
-                        dayEl.style.background = 'rgba(26, 188, 156, 0.12)';
-                        dayEl.style.color = '#1abc9c';
-                        dayEl.style.fontWeight = '500';
-                        dayEl.style.borderLeft = '2px solid rgba(26, 188, 156, 0.5)';
-                        dayEl.style.position = 'relative';
-                        dayEl.title = `Check-in Date: ${formatDateForDisplay(dateStr)}`;
-                        
-                    } else if (className === 'checkout-indicator') {
-                        dayEl.style.background = 'rgba(255, 159, 67, 0.12)';
-                        dayEl.style.color = '#ff9f43';
-                        dayEl.style.fontWeight = '400';
-                        dayEl.style.borderRight = '2px solid rgba(255, 159, 67, 0.5)';
-                        dayEl.style.position = 'relative';
-                        dayEl.title = `Check-out Date: ${formatDateForDisplay(dateStr)}`;
-                    }
-                }
-            }
-        });
-        
-        if (!found) {
-            console.log(`Date ${dateStr} not found in current calendar view`);
-        }
-        
-        // Draw range line if both dates are selected and visible
-        drawRangeLine(pickerInstance);
-    }
-
-    // Function to remove existing range indicators
-    function removeRangeIndicators(pickerInstance) {
-        const existingLines = pickerInstance.calendarContainer.querySelectorAll('.range-line, .range-fill');
-        existingLines.forEach(line => line.remove());
-        
-        const existingRangeElements = pickerInstance.calendarContainer.querySelectorAll('.in-range');
-        existingRangeElements.forEach(el => {
-            el.classList.remove('in-range');
-            el.style.background = '';
-        });
-    }
-
-    // Function to draw a subtle line connecting check-in to check-out dates
-    function drawRangeLine(pickerInstance) {
-        if (!selectedCheckin || !selectedCheckout || !pickerInstance) return;
-        
-        const checkinDate = new Date(selectedCheckin + 'T00:00:00');
-        const checkoutDate = new Date(selectedCheckout + 'T00:00:00');
-        
-        // Only draw if checkout is after checkin
-        if (checkoutDate <= checkinDate) return;
-        
-        const allDayElements = pickerInstance.calendarContainer.querySelectorAll('.flatpickr-day');
-        let checkinElement = null;
-        let checkoutElement = null;
-        let rangeDates = [];
-        
-        // Find checkin, checkout, and all dates in between
-        allDayElements.forEach(dayEl => {
-            if (dayEl.dateObj) {
-                const dayDate = new Date(dayEl.dateObj);
-                
-                // Check if this is checkin date
-                if (dayDate.getFullYear() === checkinDate.getFullYear() &&
-                    dayDate.getMonth() === checkinDate.getMonth() &&
-                    dayDate.getDate() === checkinDate.getDate()) {
-                    checkinElement = dayEl;
-                }
-                
-                // Check if this is checkout date
-                if (dayDate.getFullYear() === checkoutDate.getFullYear() &&
-                    dayDate.getMonth() === checkoutDate.getMonth() &&
-                    dayDate.getDate() === checkoutDate.getDate()) {
-                    checkoutElement = dayEl;
-                }
-                
-                // Check if this date is between checkin and checkout
-                if (dayDate > checkinDate && dayDate < checkoutDate) {
-                    rangeDates.push(dayEl);
-                }
-            }
-        });
-        
-        // Add subtle background to dates in between
-        rangeDates.forEach(dayEl => {
-            dayEl.classList.add('in-range');
-            dayEl.style.background = 'rgba(255, 159, 67, 0.04)';
-            dayEl.style.position = 'relative';
-        });
-        
-        // If both dates are visible, draw connecting visual cues
-        if (checkinElement && checkoutElement) {
-            // Add visual connection indicators
-            checkinElement.style.borderRight = '2px solid rgba(255, 159, 67, 0.3)';
-            checkoutElement.style.borderLeft = '2px solid rgba(255, 159, 67, 0.3)';
+    function adjustCheckoutPicker(checkinDate) {
+        if (checkoutPicker && checkinDate) {
+            const nextDay = new Date(checkinDate + 'T00:00:00');
+            nextDay.setDate(nextDay.getDate() + 1);
+            checkoutPicker.set('minDate', nextDay);
         }
     }
 
-    function formatDateForDisplay(dateStr) {
-        // Fix timezone issue by creating date object properly
-        const dateParts = dateStr.split('-');
-        const year = parseInt(dateParts[0]);
-        const month = parseInt(dateParts[1]) - 1; // Month is 0-indexed
-        const day = parseInt(dateParts[2]);
-        
-        const date = new Date(year, month, day);
-        return date.toLocaleDateString('en-US', { 
-            weekday: 'short', month: 'short', day: 'numeric' 
-        });
-    }
-
-    function formatDateLong(dateStr) {
-        // Same timezone-safe approach for long format
-        const dateParts = dateStr.split('-');
-        const year = parseInt(dateParts[0]);
-        const month = parseInt(dateParts[1]) - 1; // Month is 0-indexed
-        const day = parseInt(dateParts[2]);
-        
-        const date = new Date(year, month, day);
-        return date.toLocaleDateString('en-US', { 
-            weekday: 'long', month: 'long', day: 'numeric' 
-        });
-    }
-
-    function updateBookingSummary(roomType, checkin, checkout, pricePerNight) {
-        if (!bookingSummaryContent) return;
-        
-        const nights = Math.ceil((new Date(checkout) - new Date(checkin)) / (1000 * 60 * 60 * 24));
-        const totalPrice = (pricePerNight * nights).toFixed(2);
-        
-        const checkinFormatted = formatDateForDisplay(checkin);
-        const checkoutFormatted = formatDateForDisplay(checkout);
-        
-        bookingSummaryContent.innerHTML = `
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 0.95rem;">
-                <div><strong>Room:</strong><br>${roomType}</div>
-                <div><strong>Duration:</strong><br>${nights} night${nights > 1 ? 's' : ''}</div>
-                <div><strong>Check-in:</strong><br>${checkinFormatted}</div>
-                <div><strong>Check-out:</strong><br>${checkoutFormatted}</div>
-            </div>
-            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #122C55; text-align: center;">
-                <div style="font-size: 1.2rem;"><strong>Total: $${totalPrice}</strong></div>
-                <div style="font-size: 0.9rem; color: #ccc;">($${pricePerNight}/night × ${nights} night${nights > 1 ? 's' : ''})</div>
-            </div>
-        `;
-        bookingSummaryContent.style.display = 'block';
-    }
-
-    // Function to auto-update availability when dates change and section is visible
+    // --- Auto Update Availability ---
     function autoUpdateAvailability() {
-        // Only auto-update if we have a preselected room type and the availability section is visible
-        if (!preselectedRoomType || step2Div.style.display === 'none') {
-            return;
-        }
-        
-        const checkin = document.getElementById('checkin_date').value;
-        const checkout = document.getElementById('checkout_date').value;
-        
-        // Only proceed if both dates are selected and valid
-        if (checkin && checkout && checkin < checkout) {
-            // Add a small delay to avoid multiple rapid calls
+        if (!selectedCheckin || !selectedCheckout || step2Div.style.display === 'none') return;
+        if (selectedCheckin < selectedCheckout) {
             clearTimeout(window.autoUpdateTimeout);
             window.autoUpdateTimeout = setTimeout(() => {
                 performAvailabilityCheck();
@@ -618,8 +350,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Refactored availability check function
+    // --- Perform Availability Check ---
     function performAvailabilityCheck() {
+        if (!resultsDiv || !loader || !messageP || !step2Div || !guestForm) {
+            console.error("One or more elements not found.");
+            return;
+        }
+
         const checkin = document.getElementById('checkin_date').value;
         const checkout = document.getElementById('checkout_date').value;
 
@@ -632,9 +369,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Since we're using Flatpickr with disabled dates, blocked dates can't be selected
-        // No need for manual validation here - the calendar prevents selection of blocked dates
-
         loader.style.display = 'block';
         resultsDiv.innerHTML = '';
         messageP.textContent = '';
@@ -642,166 +376,96 @@ document.addEventListener('DOMContentLoaded', function() {
         guestForm.style.display = 'none';
 
         fetch(`/api/check_availability.php?check_in=${checkin}&check_out=${checkout}`)
-            .then(response => {
-                if (!response.ok) throw new Error(`Server responded with status: ${response.status}`);
-                return response.json();
-            })
+            .then(response => response.json())
             .then(data => {
                 loader.style.display = 'none';
-                if (data.error) throw new Error(data.error);
-                
-                // Filter data if we have a preselected room type
-                let availableRooms = data;
-                if (preselectedRoomType) {
-                    availableRooms = data.filter(room => room.room_type === preselectedRoomType);
-                }
-                
-                if (availableRooms.length === 0) {
-                    if (preselectedRoomType) {
-                        messageP.innerHTML = `
-                            <div style="text-align: center; padding: 20px;">
-                                <p style="color: #f1c40f; margin-bottom: 15px;">
-                                    ⚠️ The ${preselectedRoomType} is not available for the selected dates.
-                                </p>
-                                <p style="margin-bottom: 15px;">Would you like to:</p>
-                                <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
-                                    <button onclick="document.getElementById('checkin_date').focus()" class="btn btn-secondary btn-sm">
-                                        Try Different Dates
-                                    </button>
-                                    <a href="bookings.php?check_in=${checkin}&check_out=${checkout}" class="btn btn-primary btn-sm">
-                                        See All Available Rooms
-                                    </a>
-                                </div>
-                            </div>
-                        `;
-                    } else {
-                        messageP.textContent = 'No rooms available for the selected dates. Please try different dates.';
-                        messageP.style.color = 'white';
-                    }
-                } else {
-                    const nights = Math.ceil((new Date(checkout) - new Date(checkin)) / (1000 * 60 * 60 * 24));
-                    
-                    if (preselectedRoomType && availableRooms.length === 1) {
-                        // For preselected room type, show confirmation and auto-proceed
-                        const room = availableRooms[0];
-                        const totalPrice = (room.price_per_night * nights).toFixed(2);
-                        
-                        resultsDiv.innerHTML = `
-                            <div style="text-align: center; padding: 30px; background: linear-gradient(135deg, #06172D 0%, #081C3A 100%); border-radius: 10px; border: 2px solid #2ecc71;">
-                                <div style="font-size: 3rem; color: #2ecc71; margin-bottom: 15px;">✓</div>
-                                <h3 style="color: #2ecc71; margin-bottom: 10px;">Great! Your room is available</h3>
-                                <p style="font-size: 1.1rem; margin-bottom: 20px;">
-                                    ${room.room_type} for ${nights} night${nights > 1 ? 's' : ''} - <strong>$${totalPrice}</strong>
-                                </p>
-                                <p style="color: #ccc; margin-bottom: 25px;">
-                                    ${formatDateLong(checkin)} to 
-                                    ${formatDateLong(checkout)}
-                                </p>
-                                ${hasCompleteProfile ? 
-                                    '<p style="color: #2ecc71; margin-bottom: 15px; font-size: 0.9rem;">✓ Your details are ready - proceeding to booking form...</p>' :
-                                    '<button class="btn btn-primary" style="padding: 12px 30px; font-size: 1.1rem;" onclick="proceedToGuestDetails()">Continue to Guest Details</button>'
-                                }
-                            </div>
-                        `;
-                        
-                        // Auto-fill the form
-                        selectedRoomInput.value = room.room_type;
-                        formCheckinInput.value = checkin;
-                        formCheckoutInput.value = checkout;
-                        
-                        // Update booking summary
-                        updateBookingSummary(room.room_type, checkin, checkout, room.price_per_night);
-                        
-                        // For users with complete profiles, automatically show guest details form
-                        if (hasCompleteProfile) {
-                            setTimeout(() => {
-                                proceedToGuestDetails();
-                            }, 1500); // Small delay to let user see the confirmation
-                        }
-                        
-                    } else {
-                        // Show available rooms for selection
-                        availableRooms.forEach(room => {
-                            const totalPrice = (room.price_per_night * nights).toFixed(2);
-                            
-                            let imageFile = '';
-                            switch (room.room_type) {
-                                case 'Double Room':
-                                    imageFile = 'room_double.jpg';
-                                    break;
-                                case 'Executive Suite':
-                                    imageFile = 'room_executive.jpg';
-                                    break;
-                                case 'Suite with Balcony':
-                                    imageFile = 'room_balcony.jpg';
-                                    break;
-                                default:
-                                    imageFile = ''; 
-                            }
-                            const roomImage = `assets/images/${imageFile}`;
-
-                            const cardHTML = `
-                                <div class="room-card-select">
-                                    <img src="${roomImage}" alt="${room.room_type}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
-                                    <div class="room-card-no-img" style="display:none; text-align:center; padding: 70px 20px; background: #06172D;">${room.room_type}</div>
-                                    <div class="card-content">
-                                        <h3>${room.room_type}</h3>
-                                        <p>Capacity: ${room.capacity} guests</p>
-                                        <div class="price">$${totalPrice} <span>for ${nights} nights</span></div>
-                                        <button class="btn btn-primary mt-30 select-room-btn" data-room-type="${room.room_type}" data-price="${room.price_per_night}">Select Room</button>
-                                    </div>
-                                </div>
-                            `;
-                            resultsDiv.insertAdjacentHTML('beforeend', cardHTML);
-                        });
-
-                        // Add event listeners for room selection
-                        document.querySelectorAll('.select-room-btn').forEach(button => {
-                            button.addEventListener('click', function() {
-                                const selectedType = this.getAttribute('data-room-type');
-                                const pricePerNight = parseFloat(this.getAttribute('data-price'));
-                                
-                                selectedRoomInput.value = selectedType;
-                                formCheckinInput.value = checkin;
-                                formCheckoutInput.value = checkout;
-
-                                // Update booking summary if element exists
-                                updateBookingSummary(selectedType, checkin, checkout, pricePerNight);
-
-                                guestForm.style.display = 'block';
-                                guestForm.scrollIntoView({ behavior: 'smooth' });
-                                
-                                // Visual feedback
-                                document.querySelectorAll('.room-card-select').forEach(c => c.style.border = '1px solid #122C55');
-                                this.closest('.room-card-select').style.border = '2px solid #B6862C';
-                                
-                                // If this is a different room type, reload blocked dates
-                                if (selectedType !== preselectedRoomType) {
-                                    loadBlockedDates(selectedType);
-                                }
-                            });
-                        });
-                    }
-                }
+                console.log('Availability Data:', data);
+                renderAvailability(data, checkin, checkout);
             })
             .catch(error => {
                 loader.style.display = 'none';
-                messageP.textContent = `Error: ${error.message}. Please check the browser console for more details.`;
+                messageP.textContent = `Error: ${error.message}`;
                 messageP.style.color = 'red';
                 console.error('Availability check failed:', error);
             });
     }
 
-    checkBtn.addEventListener('click', function() {
-        performAvailabilityCheck();
+function renderAvailability(availableRooms, checkin, checkout) {
+    resultsDiv.innerHTML = ''; // Clear previous results
+
+    if (!availableRooms || availableRooms.length === 0) {
+        messageP.textContent = 'No rooms available for the selected dates.';
+        messageP.style.color = 'white';
+        return;
+    }
+
+    const nights = Math.ceil((new Date(checkout) - new Date(checkin)) / (1000 * 60 * 60 * 24));
+
+    availableRooms.forEach(room => {
+        const totalPrice = (parseFloat(room.price_per_night) * nights).toFixed(2);
+
+        // Map room_type to an image file
+        let roomImage = 'default_room.jpg'; // fallback
+        if (room.room_type === 'Double Room') roomImage = 'room_double.jpg';
+        if (room.room_type === 'Executive Suite') roomImage = 'room_executive.jpg';
+        if (room.room_type === 'Suite with Balcony') roomImage = 'room_balcony.jpg';
+
+        const card = document.createElement('div');
+        card.classList.add('room-card');
+        card.style = 'background: #06172D; padding: 15px; margin-bottom: 20px; border-radius: 8px; border: 1px solid #122C55;';
+
+        card.innerHTML = `
+            <img src="assets/images/${roomImage}" alt="${room.room_type}" 
+                 style="width: 100%; height: 180px; object-fit: cover; border-radius: 6px; margin-bottom: 10px;">
+            <h3 style="color: #B6862C; margin-bottom: 10px;">${room.room_type}</h3>
+            <p>Capacity: ${room.capacity}</p>
+            <p>Price: $${parseFloat(room.price_per_night).toFixed(2)} per night</p>
+            <p>Total: $${totalPrice} (${nights} night${nights > 1 ? 's' : ''})</p>
+            <button class="select-room-btn" data-room="${room.room_type}" 
+                style="margin-top: 10px; background: #B6862C; border: none; color: white; padding: 8px 12px; cursor: pointer; border-radius: 5px;">
+                Select Room
+            </button>
+        `;
+
+        resultsDiv.appendChild(card);
     });
 
-    // Global function for proceed button
-    window.proceedToGuestDetails = function() {
-        guestForm.style.display = 'block';
-        guestForm.scrollIntoView({ behavior: 'smooth' });
-    };
+    messageP.textContent = ''; 
+
+    // Add event listeners to "Select Room" buttons
+    document.querySelectorAll('.select-room-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const selectedRoom = this.getAttribute('data-room');
+            selectedRoomInput.value = selectedRoom; // Hidden input
+            step2Div.style.display = 'none'; // Hide step 2
+            guestForm.style.display = 'block'; // Show guest details form
+        });
+    });
+}
+
+
+
+    // --- Update Booking Summary ---
+    function updateBookingSummary(roomType, checkin, checkout, pricePerNight) {
+        if (!bookingSummaryContent) return;
+        const nights = Math.ceil((new Date(checkout) - new Date(checkin)) / (1000 * 60 * 60 * 24));
+        const totalPrice = (pricePerNight * nights).toFixed(2);
+        bookingSummaryContent.innerHTML = `
+            <div><strong>Room:</strong> ${roomType}</div>
+            <div><strong>Check-in:</strong> ${checkin}</div>
+            <div><strong>Check-out:</strong> ${checkout}</div>
+            <div><strong>Total:</strong> $${totalPrice} (${nights} nights)</div>`;
+        bookingSummaryContent.style.display = 'block';
+    }
+
+    // --- Button Event ---
+    if (checkBtn) {
+        checkBtn.addEventListener('click', performAvailabilityCheck);
+    }
 });
 </script>
+
+
+<?php ?>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

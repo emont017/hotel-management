@@ -1,6 +1,9 @@
 <?php
 session_start();
 
+$room_id = intval($_POST['room_id'] ?? 0);
+
+
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../includes/email_functions.php';
 require_once __DIR__ . '/../includes/audit_functions.php';
@@ -89,16 +92,41 @@ try {
     // --- End of User Logic ---
 
     // Find an available room
-    $stmt_room = $conn->prepare("SELECT id FROM rooms WHERE room_type = ? AND status = 'available' AND id NOT IN (SELECT room_id FROM bookings WHERE status IN ('confirmed', 'checked-in') AND ? < check_out AND ? > check_in) LIMIT 1");
+    if ($room_id > 0) {
+    // Staff selected a specific room, verify it's available
+    $stmt_room = $conn->prepare("
+        SELECT id FROM rooms 
+        WHERE id = ? AND status = 'available' 
+        AND id NOT IN (
+            SELECT room_id FROM bookings 
+            WHERE status IN ('confirmed', 'checked-in') 
+            AND ? < check_out AND ? > check_in
+        )
+    ");
+    $stmt_room->bind_param("iss", $room_id, $checkin_date, $checkout_date);
+} else {
+    // Regular customer flow - find first available room by type
+    $stmt_room = $conn->prepare("
+        SELECT id FROM rooms 
+        WHERE room_type = ? AND status = 'available' 
+        AND id NOT IN (
+            SELECT room_id FROM bookings 
+            WHERE status IN ('confirmed', 'checked-in') 
+            AND ? < check_out AND ? > check_in
+        ) 
+        LIMIT 1
+    ");
     $stmt_room->bind_param("sss", $room_type, $checkin_date, $checkout_date);
-    $stmt_room->execute();
-    $room_result = $stmt_room->get_result();
-    if ($room_result->num_rows === 0) {
-        throw new Exception("Sorry, no available rooms of type '$room_type' for the selected dates.");
-    }
-    $room = $room_result->fetch_assoc();
-    $room_id = $room['id'];
-    $stmt_room->close();
+}
+$stmt_room->execute();
+$room_result = $stmt_room->get_result();
+if ($room_result->num_rows === 0) {
+    throw new Exception("Sorry, no available rooms for the selected dates.");
+}
+$room = $room_result->fetch_assoc();
+$room_id = $room['id'];
+$stmt_room->close();
+
 
     // Get the price for the room
     $stmt_rate = $conn->prepare("SELECT price FROM room_rates WHERE room_type = ? AND ? BETWEEN date_start AND date_end ORDER BY rate_name LIMIT 1");
@@ -153,9 +181,9 @@ try {
     $stmt_payment->close();
 
     // Log the booking creation
-    log_booking_event($conn, $user_id, 'Booking Created', $booking_id, 
-        "New booking: {$confirmation_number}, Room: {$room_type}, Dates: {$checkin_date} to {$checkout_date}, Total: $" . number_format($total_price, 2));
-    
+   log_booking_event($conn, $user_id, 'Booking Created', $booking_id, 
+    "New booking: {$confirmation_number}, Room ID: {$room_id} ({$room_type}), Dates: {$checkin_date} to {$checkout_date}, Total: $" . number_format($total_price, 2));
+
     // Log the automatic payment
     log_payment_event($conn, $user_id, 'Online Payment Recorded', $payment_id, 
         "Automatic payment of $" . number_format($total_price, 2) . " for online booking {$confirmation_number}");
